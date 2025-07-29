@@ -1,0 +1,1339 @@
+#!/usr/bin/env bash
+
+# NSX Installation and Management Script
+# Project directory: /usr/local/nsx
+# Supports Docker and local installation, certificate management, and configuration management
+
+# Set language
+export LANG=en_US.UTF-8
+
+# Colors for output
+echoContent() {
+    case $1 in
+        "red") echo -e "\033[31m${2}\033[0m" ;;
+        "green") echo -e "\033[32m${2}\033[0m" ;;
+        "yellow") echo -e "\033[33m${2}\033[0m" ;;
+        "skyBlue") echo -e "\033[1;36m${2}\033[0m" ;;
+    esac
+}
+
+# Define variables
+BASE_DIR="/usr/local/nsx"
+CERT_DIR="${BASE_DIR}/certs"
+NGINX_DIR="${BASE_DIR}/nginx"
+XRAY_DIR="${BASE_DIR}/xray"
+SINGBOX_DIR="${BASE_DIR}/sing-box"
+WWW_DIR="${BASE_DIR}/www"
+SUBSCRIBE_DIR="${BASE_DIR}/www/subscribe"
+COMPOSE_FILE="${BASE_DIR}/docker-compose.yml"
+NGINX_CONF="${NGINX_DIR}/nginx.conf"
+XRAY_CONF="${XRAY_DIR}/config.json"
+SINGBOX_CONF="${SINGBOX_DIR}/config.json"
+NGINX_SHM_DIR="/dev/shm/nsx"
+NGINX_LOG_DIR="${NGINX_DIR}/log"
+NGINX_CACHE_DIR="${NGINX_DIR}/cache"
+NGINX_RUN_DIR="${NGINX_DIR}/run"
+NGINX_CONF_DIR="${NGINX_DIR}/conf.d"
+XRAY_LOG_DIR="${XRAY_DIR}/log"
+SINGBOX_LOG_DIR="${SINGBOX_DIR}/log"
+ACME_DIR="${BASE_DIR}/acme"
+ACME_LOG="${ACME_DIR}/acme.log"
+TOTAL_PROGRESS=5
+
+# Check system information
+checkSystem() {
+    echoContent skyBlue "检查系统..."
+    if [[ -n $(find /etc -name "redhat-release") ]] || grep -q -i "centos" /etc/os-release || grep -q -i "rocky" /etc/os-release; then
+        release="centos"
+        installType='yum -y install'
+        upgradeType='yum -y update'
+    elif grep -q -i "ubuntu" /etc/os-release; then
+        release="ubuntu"
+        installType='apt -y install'
+        upgradeType='apt -y upgrade'
+    elif grep -q -i "debian" /etc/os-release; then
+        release="debian"
+        installType='apt -y install'
+        upgradeType='apt -y upgrade'
+    else
+        echoContent red "不支持的操作系统，脚本仅支持 CentOS、Rocky Linux、Ubuntu 或 Debian."
+        exit 1
+    fi
+
+    LOCAL_IP=$(ip addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v "127.0.0.1" | head -n 1)
+    echoContent green "系统: $release"
+    echoContent green "本地 IP: $LOCAL_IP"
+}
+
+# Check SELinux
+checkCentosSELinux() {
+    if [[ "$release" == "centos" ]] && [[ -f "/etc/selinux/config" ]] && ! grep -q "SELINUX=disabled" /etc/selinux/config; then
+        echoContent yellow "禁用 SELinux 以确保兼容性..."
+        sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+        setenforce 0
+    fi
+}
+
+# Install tools
+installTools() {
+    echoContent skyBlue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
+    ${installType} curl wget sudo lsof unzip socat jq ping6 dig qrencode -y
+    if [[ "$release" != "centos" ]]; then
+        ${upgradeType}
+    fi
+}
+
+# Install Docker and Docker Compose
+installDocker() {
+    echoContent skyBlue "\n进度 2/${TOTAL_PROGRESS} : 检查 Docker 安装..."
+    if ! command -v docker &> /dev/null; then
+        echoContent yellow "安装 Docker..."
+        curl -fsSL https://get.docker.com | bash
+        if [ $? -ne 0 ]; then
+            echoContent red "安装 Docker 失败，请参考 https://docs.docker.com/engine/install/."
+            exit 1
+        fi
+        systemctl enable docker
+        systemctl start docker
+    else
+        echoContent green "Docker 已安装."
+    fi
+
+    # Check for Docker Compose plugin
+    if ! docker compose version &> /dev/null; then
+        echoContent yellow "安装 Docker Compose 插件..."
+        if [[ "$release" == "ubuntu" || "$release" == "debian" ]]; then
+            ${upgradeType}
+            ${installType} docker-compose-plugin
+            if [ $? -ne 0 ]; then
+                echoContent red "通过 apt 安装 Docker Compose 插件失败."
+                exit 1
+            fi
+        elif [[ "$release" == "centos" ]]; then
+            # Install Docker Compose plugin binary for CentOS/Rocky Linux
+            mkdir -p /usr/libexec/docker/cli-plugins
+            curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/libexec/docker/cli-plugins/docker-compose
+            chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+            if [ $? -ne 0 ]; then
+                echoContent red "安装 Docker Compose 插件二进制文件失败."
+                exit 1
+            fi
+        else
+            echoContent red "不支持的操作系统，无法安装 Docker Compose 插件."
+            exit 1
+        fi
+    else
+        echoContent green "Docker Compose 插件已安装."
+    fi
+
+    # Verify Docker Compose version
+    docker compose version
+    if [ $? -eq 0 ]; then
+        echoContent green "Docker Compose 插件验证成功: $(docker compose version --short)"
+    else
+        echoContent red "Docker Compose 插件验证失败，请手动安装."
+        exit 1
+    fi
+}
+
+# Create directories
+createDirectories() {
+    echoContent skyBlue "\n进度 3/${TOTAL_PROGRESS} : 创建目录..."
+    for DIR in "$CERT_DIR" "$NGINX_DIR" "$NGINX_LOG_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$XRAY_DIR" "$XRAY_LOG_DIR" "$SINGBOX_DIR" "$SINGBOX_LOG_DIR" "$WWW_DIR"  "$SUBSCRIBE_DIR" "$WWW_DIR/wwwroot/blog" "$WWW_DIR/wwwroot/video" "$NGINX_SHM_DIR" "$ACME_DIR"; do
+        if [ ! -d "$DIR" ]; then
+            echoContent yellow "创建目录 $DIR..."
+            mkdir -p "$DIR"
+        else
+            echoContent green "目录 $DIR 已存在."
+        fi
+    done
+
+    echoContent yellow "设置权限..."
+    chown -R nobody:nogroup "$NGINX_SHM_DIR" "$NGINX_LOG_DIR" "$XRAY_LOG_DIR" "$SINGBOX_LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
+    chmod -R 700 "$NGINX_SHM_DIR" "$NGINX_LOG_DIR" "$XRAY_LOG_DIR" "$SINGBOX_LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
+}
+
+# Install acme.sh
+installAcme() {
+    if [[ ! -d "$HOME/.acme.sh" ]] || [[ -d "$HOME/.acme.sh" && -z $(find "$HOME/.acme.sh/acme.sh") ]]; then
+        echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装证书程序 acme.sh..."
+        curl https://get.acme.sh | sh
+        if [[ $? -ne 0 ]]; then
+            echoContent red "安装 acme.sh 失败，请参考 https://github.com/acmesh-official/acme.sh."
+            exit 1
+        fi
+    else
+        echoContent green "acme.sh 已安装."
+    fi
+}
+
+# Manage certificates
+manageCertificates() {
+    echoContent skyBlue "\n证书管理菜单"
+    echoContent yellow "1. 安装 acme.sh 并申请通配符证书 (Cloudflare API)"
+    echoContent yellow "2. 安装 acme.sh 并申请通配符证书 (手动 DNS)"
+    echoContent yellow "3. 更新通配符证书"
+    echoContent yellow "4. 安装 acme.sh 并申请独立证书"
+    echoContent yellow "5. 更新独立证书"
+    echoContent yellow "6. 安装自签证书"
+    echoContent yellow "7. 退出"
+    read -r -p "请选择一个选项 [1-7]: " cert_option
+
+    case $cert_option in
+        1)
+            installAcme
+            read -r -p "请输入通配符证书域名 (例如: yourdomain.com): " DOMAIN
+            read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " CF_TOKEN
+            if [[ -n "$CF_TOKEN" ]]; then
+                export CF_Token="$CF_TOKEN"
+            else
+                read -r -p "请输入 Cloudflare Email: " CF_EMAIL
+                read -r -p "请输入 Cloudflare Global API Key: " CF_KEY
+                export CF_Key="$CF_KEY"
+                export CF_Email="$CF_EMAIL"
+            fi
+
+            echoContent skyBlue "使用 Cloudflare API 申请通配符证书..."
+            sudo "$HOME/.acme.sh/acme.sh" --issue -d "*.${DOMAIN}" -d "${DOMAIN}" --dns dns_cf -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
+            if [ $? -ne 0 ]; then
+                echoContent red "申请通配符证书失败，请检查 $ACME_LOG 日志."
+                exit 1
+            fi
+
+            echoContent yellow "安装通配符证书..."
+            sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "*.${DOMAIN}" --ecc \
+                --fullchain-file "${CERT_DIR}/wildcard.${DOMAIN}.pem" \
+                --key-file "${CERT_DIR}/wildcard.${DOMAIN}.key"
+            if [ $? -ne 0 ]; then
+                echoContent red "安装通配符证书失败，请检查 $ACME_LOG 日志."
+                exit 1
+            fi
+
+            chmod 644 "${CERT_DIR}/wildcard.${DOMAIN}.pem"
+            chmod 600 "${CERT_DIR}/wildcard.${DOMAIN}.key"
+            echoContent green "通配符证书申请和安装成功."
+
+            # Clean up TXT records
+            echoContent yellow "清除 TXT 记录..."
+            sudo "$HOME/.acme.sh/acme.sh" --remove -d "*.${DOMAIN}" -d "${DOMAIN}" --dns dns_cf
+            echoContent green "TXT 记录已清除."
+            ;;
+        2)
+            installAcme
+            read -r -p "请输入通配符证书域名 (例如: yourdomain.com): " DOMAIN
+            echoContent yellow "请手动在 DNS 提供商添加 TXT 记录: https://github.com/judawu/nsx/blob/main/docs/dns_txt.md"
+            sudo "$HOME/.acme.sh/acme.sh" --issue -d "*.${DOMAIN}" -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
+            txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
+            if [[ -n "$txtValue" ]]; then
+                echoContent green " ---> 名称: _acme-challenge"
+                echoContent green " ---> 值: ${txtValue}"
+                echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
+                read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
+                if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
+                    txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
+                    if echo "$txtAnswer" | grep -q "^${txtValue}"; then
+                        echoContent green " ---> TXT 记录验证通过"
+                        sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "*.${DOMAIN}" --ecc \
+                            --fullchain-file "${CERT_DIR}/wildcard.${DOMAIN}.pem" \
+                            --key-file "${CERT_DIR}/wildcard.${DOMAIN}.key"
+                        chmod 644 "${CERT_DIR}/wildcard.${DOMAIN}.pem"
+                        chmod 600 "${CERT_DIR}/wildcard.${DOMAIN}.key"
+                        echoContent green "通配符证书安装成功."
+                    else
+                        echoContent red "TXT 记录验证失败，请重试或使用其他方法申请证书."
+                        exit 1
+                    fi
+                fi
+            fi
+            ;;
+        3)
+            echoContent skyBlue "更新通配符证书..."
+            if [[ -z "$DOMAIN" ]]; then
+                read -r -p "请输入要更新的通配符证书域名 (例如: yourdomain.com): " DOMAIN
+            fi
+            if [[ -n "$CF_TOKEN" ]]; then
+                export CF_Token="$CF_TOKEN"
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns dns_cf --ecc
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
+            elif [[ -n "$CF_KEY" && -n "$CF_EMAIL" ]]; then
+                export CF_Key="$CF_KEY"
+                export CF_Email="$CF_EMAIL"
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns dns_cf --ecc
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
+            else
+                echoContent yellow "未找到 Cloudflare API 凭据，使用手动 DNS 更新."
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please --ecc
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please --ecc
+                txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
+                if [[ -n "$txtValue" ]]; then
+                    echoContent green " ---> 名称: _acme-challenge"
+                    echoContent green " ---> 值: ${txtValue}"
+                    echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
+                    read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
+                    if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
+                        txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
+                        if echo "$txtAnswer" | grep -q "^${txtValue}"; then
+                            echoContent green " ---> TXT 记录验证通过"
+                        else
+                            echoContent red "TXT 记录验证失败."
+                            exit 1
+                        fi
+                    fi
+                fi
+            fi
+            sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "*.${DOMAIN}" --ecc \
+                --fullchain-file "${CERT_DIR}/wildcard.${DOMAIN}.pem" \
+                --key-file "${CERT_DIR}/wildcard.${DOMAIN}.key"
+            chmod 644 "${CERT_DIR}/wildcard.${DOMAIN}.pem"
+            chmod 600 "${CERT_DIR}/wildcard.${DOMAIN}.key"
+            echoContent green "通配符证书更新成功."
+            ;;
+        4)
+            installAcme
+            read -r -p "请输入独立证书域名 (例如: sub.yourdomain.com): " DOMAIN
+            echoContent skyBlue "\n独立证书验证方法"
+            echoContent yellow "1. Cloudflare API (DNS 验证)"
+            echoContent yellow "2. 手动 DNS"
+            echoContent yellow "3. HTTP 验证 (需要 Nginx 运行)"
+            read -r -p "请选择验证方法 [1-3]: " validation_method
+
+            case $validation_method in
+                1)
+                    read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " CF_TOKEN
+                    if [[ -n "$CF_TOKEN" ]]; then
+                        export CF_Token="$CF_TOKEN"
+                    else
+                        read -r -p "请输入 Cloudflare Email: " CF_EMAIL
+                        read -r -p "请输入 Cloudflare Global API Key: " CF_KEY
+                        export CF_Key="$CF_KEY"
+                        export CF_Email="$CF_EMAIL"
+                    fi
+
+                    echoContent skyBlue "使用 Cloudflare API 申请独立证书..."
+                    sudo "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --dns dns_cf -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
+                    if [ $? -ne 0 ]; then
+                        echoContent red "申请独立证书失败，请检查 $ACME_LOG 日志."
+                        exit 1
+                    fi
+
+                    echoContent yellow "安装独立证书..."
+                    sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
+                        --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
+                        --key-file "${CERT_DIR}/${DOMAIN}.key"
+                    if [ $? -ne 0 ]; then
+                        echoContent red "安装独立证书失败，请检查 $ACME_LOG 日志."
+                        exit 1
+                    fi
+
+                    chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
+                    chmod 600 "${CERT_DIR}/${DOMAIN}.key"
+                    echoContent green "独立证书申请和安装成功."
+
+                    # Clean up TXT records
+                    echoContent yellow "清除 TXT 记录..."
+                    sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns dns_cf
+                    echoContent green "TXT 记录已清除."
+                    ;;
+                2)
+                    echoContent yellow "请手动在 DNS 提供商添加 TXT 记录: https://github.com/judawu/nsx/blob/main/docs/dns_txt.md"
+                    sudo "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
+                    txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
+                    if [[ -n "$txtValue" ]]; then
+                        echoContent green " ---> 名称: _acme-challenge.${DOMAIN}"
+                        echoContent green " ---> 值: ${txtValue}"
+                        echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
+                        read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
+                        if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
+                            txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
+                            if echo "$txtAnswer" | grep -q "^${txtValue}"; then
+                                echoContent green " ---> TXT 记录验证通过"
+                                sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
+                                    --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
+                                    --key-file "${CERT_DIR}/${DOMAIN}.key"
+                                chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
+                                chmod 600 "${CERT_DIR}/${DOMAIN}.key"
+                                echoContent green "独立证书安装成功."
+                            else
+                                echoContent red "TXT 记录验证失败."
+                                exit 1
+                            fi
+                        fi
+                    fi
+                    ;;
+                3)
+                    # Check if Nginx is running
+                    if ! pgrep nginx > /dev/null && ! docker ps | grep -q nginx; then
+                        echoContent red "Nginx 未运行，HTTP 验证需要 Nginx."
+                        exit 1
+                    fi
+
+                    echoContent skyBlue "通过 HTTP 验证申请独立证书..."
+                    sudo "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --webroot "${WWW_DIR}/wwwroot" -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
+                    if [ $? -ne 0 ]; then
+                        echoContent red "申请独立证书失败，请检查 $ACME_LOG 日志."
+                        exit 1
+                    fi
+
+                    echoContent yellow "安装独立证书..."
+                    sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
+                        --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
+                        --key-file "${CERT_DIR}/${DOMAIN}.key"
+                    if [ $? -ne 0 ]; then
+                        echoContent red "安装独立证书失败，请检查 $ACME_LOG 日志."
+                        exit 1
+                    fi
+
+                    chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
+                    chmod 600 "${CERT_DIR}/${DOMAIN}.key"
+                    echoContent green "独立证书申请和安装成功."
+                    ;;
+                *)
+                    echoContent red "无效的验证方法."
+                    manageCertificates
+                    ;;
+            esac
+            ;;
+        5)
+            echoContent skyBlue "更新独立证书..."
+            if [[ -z "$DOMAIN" ]]; then
+                read -r -p "请输入要更新的独立证书域名 (例如: sub.yourdomain.com): " DOMAIN
+            fi
+            if [[ -n "$CF_TOKEN" ]]; then
+                export CF_Token="$CF_TOKEN"
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
+            elif [[ -n "$CF_KEY" && -n "$CF_EMAIL" ]]; then
+                export CF_Key="$CF_KEY"
+                export CF_Email="$CF_EMAIL"
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
+            else
+                echoContent yellow "未找到 Cloudflare API 凭据，使用手动 DNS 更新."
+                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please --ecc
+                txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
+                if [[ -n "$txtValue" ]]; then
+                    echoContent green " ---> 名称: _acme-challenge"
+                    echoContent green " ---> 值: ${txtValue}"
+                    echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
+                    read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
+                    if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
+                        txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
+                        if echo "$txtAnswer" | grep -q "^${txtValue}"; then
+                            echoContent green " ---> TXT 记录验证通过"
+                        else
+                            echoContent red "TXT 记录验证失败."
+                            exit 1
+                        fi
+                    fi
+                fi
+            fi
+            sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
+                --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
+                --key-file "${CERT_DIR}/${DOMAIN}.key"
+            chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
+            chmod 600 "${CERT_DIR}/${DOMAIN}.key"
+            echoContent green "独立证书更新成功."
+            ;;
+        6)
+            # Check if openssl is installed
+            if ! command -v openssl &> /dev/null; then
+                echoContent yellow "安装 openssl..."
+                ${installType} openssl
+                if [ $? -ne 0 ]; then
+                    echoContent red "安装 openssl 失败，请手动安装."
+                    exit 1
+                fi
+            fi
+
+            read -r -p "请输入自签证书域名 (例如: sub.yourdomain.com): " DOMAIN
+            echoContent skyBlue "为 ${DOMAIN} 生成自签证书..."
+
+            # Create a temporary OpenSSL configuration file for SAN
+            cat > /tmp/openssl-san.cnf << EOF
+[req]
+default_bits = 256
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[dn]
+CN = ${DOMAIN}
+
+[req_ext]
+subjectAltName = DNS:${DOMAIN}
+EOF
+
+            # Generate ECDSA private key and self-signed certificate
+            openssl ecparam -name prime256v1 -genkey -out "${CERT_DIR}/${DOMAIN}.key" 2>> "$ACME_LOG"
+            if [ $? -ne 0 ]; then
+                echoContent red "生成私钥失败，请检查 $ACME_LOG 日志."
+                exit 1
+            fi
+
+            openssl req -x509 -new -key "${CERT_DIR}/${DOMAIN}.key" -days 365 -out "${CERT_DIR}/${DOMAIN}.pem" \
+                -config /tmp/openssl-san.cnf -extensions req_ext 2>> "$ACME_LOG"
+            if [ $? -ne 0 ]; then
+                echoContent red "生成自签证书失败，请检查 $ACME_LOG 日志."
+                exit 1
+            fi
+
+            # Clean up temporary config file
+            rm -f /tmp/openssl-san.cnf
+
+            # Set permissions
+            chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
+            chmod 600 "${CERT_DIR}/${DOMAIN}.key"
+            echoContent green "自签证书生成并安装成功，位于 ${CERT_DIR}/${DOMAIN}.pem"
+            ;;
+        7)
+            return
+            ;;
+        *)
+            echoContent red "无效选项."
+            manageCertificates
+            ;;
+    esac
+}
+xray_config(){
+    echoContent skyBlue "\nxray配置文件修改"
+   
+# 检查 jq 和 xray 是否已安装
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is not installed. Please install jq first."
+    exit 1
+fi
+
+if ! command -v xray &> /dev/null; then
+    echo "Error: xray is not installed. Please install xray first."
+    exit 1
+fi
+
+# JSON 文件路径
+TEMP_FILE="config_temp.json"
+
+# 检查 config.json 是否存在
+if [[ ! -f "$XRAY_CONF" ]]; then
+    echo "Error: $XRAY_CONF does not exist."
+    exit 1
+fi
+
+# 获取用户输入的域名
+read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " DOMAIN
+if [[ -z "$DOMAIN" ]]; then
+    echo "Error: 域名不能为空."
+    exit 1
+fi
+
+# 备份原始文件
+cp "$XRAY_CONF" "${XRAY_CONF}.bak"
+echo "创建备份: ${XRAY_CONF}.bak"
+
+# 生成随机的 shortIds（8 字节和 16 字节的十六进制字符串）
+generate_short_ids() {
+    short_id1=$(openssl rand -hex 4)  # 8 字节
+    short_id2=$(openssl rand -hex 8)  # 16 字节
+    echo "[\"$short_id1\", \"$short_id2\"]"
+}
+
+
+
+# 提取所有 inbounds
+inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF")
+
+# 创建一个临时 JSON 文件，复制原始内容
+cp "$XRAY_CONF" "$TEMP_FILE"
+
+# 遍历每个 inbound
+echo "$inbounds" | while IFS= read -r inbound; do
+    tag=$(echo "$inbound" | jq -r '.tag')
+    protocol=$(echo "$inbound" | jq -r '.protocol')
+    echo "Processing inbound with tag: $tag, protocol: $protocol"
+
+    # 处理 vless 和 vmess 的 id 替换
+    if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
+        clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+        client_index=0
+        echo "$clients" | while IFS= read -r client; do
+            old_id=$(echo "$client" | jq -r '.id')
+            new_id=$(xray uuid)
+            echo "Replacing ID for client $client_index in $tag: $old_id -> $new_id"
+
+            # 更新 id
+            jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
+               '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.id == $old_id)).id = $new_id' \
+               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+            ((client_index++))
+        done
+    fi
+
+    # 处理 trojan 和 shadowsocks 的 password 替换
+    if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
+        clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+        client_index=0
+        echo "$clients" | while IFS= read -r client; do
+            old_password=$(echo "$client" | jq -r '.password')
+            new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
+            echo "Replacing password for client $client_index in $tag: $old_password -> $new_password"
+
+            # 更新 password
+            jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
+               '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.password == $old_password)).password = $new_password' \
+               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+            ((client_index++))
+        done
+    fi
+
+    # 检查 streamSettings.security 是否为 reality
+    security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
+    if [[ "$security" == "reality" ]]; then
+        echo "Detected reality security for $tag, updating keys and settings..."
+
+        # 生成公私密钥对
+        key_pair=$(xray x25519)
+        private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
+        public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
+        new_short_ids=$(generate_short_ids)
+        new_mldsa65_key_pair=$(xray mldsa65)
+        new_mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
+        new_mldsa65_verfify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
+
+        echo "Generated new privateKey: $private_key"
+        echo "Generated new publicKey: $public_key"
+        echo "Generated new shortIds: $new_short_ids"
+        echo "Generated new mldsa65Seed: $new_mldsa65_seed"
+
+        # 更新 privateKey, publicKey, shortIds, mldsa65Seed
+        jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$new_mldsa65_seed" \
+           '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
+            (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids | .mldsa65Seed = $mldsa65_seed | .mldsa65Verify = $mldsa65Verify)' \
+           "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+    fi
+done
+
+# 替换 yourdomain 为用户输入的域名
+jq --arg domain "$DOMAIN" \
+   'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
+   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+
+# 替换原始文件
+mv "$TEMP_FILE" "$XRAY_CONF"
+echo "Updated $XRAY_CONF with new UUIDs, passwords, reality settings, and domain."
+
+# 验证 JSON 文件是否有效
+if jq empty "$XRAY_CONF" &> /dev/null; then
+    echo "JSON file is valid."
+else
+    echo "Error: Updated JSON file is invalid. Restoring backup."
+    mv "${CONFIG_FILE}.bak" "$XRAY_CONF"
+    exit 1
+fi
+
+}
+singbox_config(){
+    echoContent skyBlue "\nsingbox配置文件修改"
+  #!/bin/bash
+
+# 检查 jq 和 sing-box 是否已安装
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is not installed. Please install jq first."
+    exit 1
+fi
+
+if ! command -v sing-box &> /dev/null; then
+    echo "Error: sing-box is not installed. Please install sing-box first."
+    exit 1
+fi
+
+# JSON 文件路径
+CONFIG_FILE="config.json"
+TEMP_FILE="config_temp.json"
+
+# 检查 config.json 是否存在
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Error: $CONFIG_FILE does not exist."
+    exit 1
+fi
+
+# 获取用户输入的域名
+read -p "Please enter the domain to replace 'yourdomain' (e.g., example.com): " DOMAIN
+if [[ -z "$DOMAIN" ]]; then
+    echo "Error: Domain cannot be empty."
+    exit 1
+fi
+
+# 备份原始文件
+cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
+echo "Backup created: ${CONFIG_FILE}.bak"
+
+# 生成随机的 short_id（16 字节的十六进制字符串）
+generate_short_ids() {
+    short_id=$(openssl rand -hex 8)  # 16 字节
+    echo "[\"\", \"$short_id\"]"
+}
+
+# 提取所有 inbounds
+inbounds=$(jq -c '.inbounds[] | select(.users)' "$CONFIG_FILE")
+
+# 创建一个临时 JSON 文件，复制原始内容
+cp "$CONFIG_FILE" "$TEMP_FILE"
+
+# 遍历每个 inbound
+echo "$inbounds" | while IFS= read -r inbound; do
+    tag=$(echo "$inbound" | jq -r '.tag')
+    type=$(echo "$inbound" | jq -r '.type')
+    echo "Processing inbound with tag: $tag, type: $type"
+
+    # 处理 vmess、vless 和 tuic 的 uuid 替换
+    if [[ "$type" == "vmess" || "$type" == "vless" || "$type" == "tuic" ]]; then
+        users=$(echo "$inbound" | jq -c '.users[]')
+        user_index=0
+        echo "$users" | while IFS= read -r user; do
+            old_uuid=$(echo "$user" | jq -r '.uuid')
+            new_uuid=$(sing-box generate uuid)
+            echo "Replacing UUID for user $user_index in $tag: $old_uuid -> $new_uuid"
+
+            # 更新 uuid
+            jq --arg tag "$tag" --arg old_uuid "$old_uuid" --arg new_uuid "$new_uuid" \
+               '(.inbounds[] | select(.tag == $tag) | .users[] | select(.uuid == $old_uuid)).uuid = $new_uuid' \
+               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+            ((user_index++))
+        done
+    fi
+
+    # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
+    if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" ]]; then
+        users=$(echo "$inbound" | jq -c '.users[]')
+        user_index=0
+        echo "$users" | while IFS= read -r user; do
+            old_password=$(echo "$user" | jq -r '.password')
+            # 为 shadowsocks 和 shadowtls 生成 2022-blake3-aes-128-gcm 兼容的 16 字节密码
+            if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
+                new_password=$(openssl rand -base64 16)
+            else
+                new_password=$(sing-box generate uuid)  # trojan 和 hysteria2 使用 UUID 格式密码
+            fi
+            echo "Replacing password for user $user_index in $tag: $old_password -> $new_password"
+
+            # 更新 password
+            jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
+               '(.inbounds[] | select(.tag == $tag) | .users[] | select(.password == $old_password)).password = $new_password' \
+               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+            ((user_index++))
+        done
+
+        # 如果是 shadowsocks 或 shadowtls，更新顶层的 password 字段（如果存在）
+        if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
+            top_password=$(echo "$inbound" | jq -r '.password // empty')
+            if [[ -n "$top_password" ]]; then
+                new_top_password=$(openssl rand -base64 16)
+                echo "Replacing top-level password in $tag: $top_password -> $new_top_password"
+                jq --arg tag "$tag" --arg new_password "$new_top_password" \
+                   '(.inbounds[] | select(.tag == $tag)).password = $new_password' \
+                   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+            fi
+        fi
+    fi
+
+    # 检查 tls.reality.enabled 是否为 true
+    reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
+    if [[ "$reality_enabled" == "true" ]]; then
+        echo "Detected reality TLS for $tag, updating keys and settings..."
+
+        # 生成公私密钥对
+        key_pair=$(sing-box generate reality-keypair)
+        private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
+        public_key=$(echo "$key_pair" | grep "PublicKey" | awk '{print $2}')
+        new_short_ids=$(generate_short_ids)
+
+        echo "Generated new private_key: $private_key"
+        echo "Generated new public_key: $public_key"
+        echo "Generated new short_id: $new_short_ids"
+
+        # 更新 private_key, public_key, short_id
+        jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" \
+           '(.inbounds[] | select(.tag == $tag) | .tls.reality) |=
+            (.private_key = $private_key | .public_key = $public_key | .short_id = $short_ids)' \
+           "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+    fi
+done
+
+# 替换 yourdomain 为用户输入的域名
+jq --arg domain "$DOMAIN" \
+   'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
+   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+
+# 替换原始文件
+mv "$TEMP_FILE" "$CONFIG_FILE"
+echo "Updated $CONFIG_FILE with new UUIDs, passwords, reality settings, and domain."
+
+# 验证 JSON 文件是否有效
+if jq empty "$CONFIG_FILE" &> /dev/null; then
+    echo "JSON file is valid."
+else
+    echo "Error: Updated JSON file is invalid. Restoring backup."
+    mv "${CONFIG_FILE}.bak" "$CONFIG_FILE"
+    exit 1
+fi
+}
+
+# Manage configurations
+manageConfigurations() {
+    echoContent skyBlue "\n配置管理菜单"
+    echoContent yellow "1. 修改 nginx.conf"
+    echoContent yellow "2. 修改 xray config.json"
+    echoContent yellow "3. 修改 sing-box config.json"
+    echoContent yellow "4. 退出"
+    read -r -p "请选择一个选项 [1-4]: " config_option
+
+    case $config_option in
+        1)
+            echoContent green "nginx.conf 采用stream模块分流\n 包括tls,reality,pre,sing等前缀域名进行分流 ."
+            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密): " TLS_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密): " REALITY_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nignx解密): " PRE_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密): " SING_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站): " WWW_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
+            read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
+            read -r -p "请输入 nginx.conf 的新端口 (默认 443): " NEW_PORT
+            sed -i "s/juda\.autos/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/juda\.autos/$REALITY_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/juda\.autos/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/juda\.autos/$SING_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/juda\.autos/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/juda\.autos/$YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/137\.175\.127\.130/$NEW_IP/g" "$NGINX_CONF"
+            sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
+            echoContent green "nginx.conf 更新成功."
+            # Reload Nginx if running
+            if pgrep nginx > /dev/null; then
+                nginx -s reload
+                echoContent green "Nginx 已重载以应用新配置."
+            elif docker ps | grep -q nginx; then
+                docker compose -f "$COMPOSE_FILE" restart
+                echoContent green "Docker Compose 已重启以应用新配置."
+            fi
+            ;;
+        2)
+            xray_config
+            echoContent green "xray config.json 更新成功."
+            # Restart Xray if running
+            if systemctl is-active --quiet xray; then
+                systemctl restart xray
+                echoContent green "Xray 已重启以应用新配置."
+            elif docker ps | grep -q xray; then
+                docker compose -f "$COMPOSE_FILE" restart
+                echoContent green "Docker Compose 已重启以应用新配置."
+            fi
+            ;;
+        3)
+            singbox_config
+            echoContent green "sing-box config.json 更新成功."
+            # Restart Sing-box if running
+            if systemctl is-active --quiet sing-box; then
+                systemctl restart sing-box
+                echoContent green "Sing-box 已重启以应用新配置."
+            elif docker ps | grep -q sing-box; then
+                docker compose -f "$COMPOSE_FILE" restart
+                echoContent green "Docker Compose 已重启以应用新配置."
+            fi
+            ;;
+        4)
+            return
+            ;;
+        *)
+            echoContent red "无效选项."
+            manageConfigurations
+            ;;
+    esac
+}
+# Generate subscriptions
+generateSubscriptions() {
+    echoContent skyBlue "\n生成订阅..."
+    read -r -p "请输入订阅域名 (例如: sing.yourdomain): " SUB_DOMAIN
+    if [[ -z "$SUB_DOMAIN" ]]; then
+        echoContent red "域名不能为空."
+        return 1
+    fi
+
+    # Create subscription directory if not exists
+    if [ ! -d "$SUBSCRIBE_DIR" ]; then
+        mkdir -p "$SUBSCRIBE_DIR"
+        chown nobody:nogroup "$SUBSCRIBE_DIR"
+        chmod 755 "$SUBSCRIBE_DIR"
+    fi
+
+    # Generate Xray subscription
+    if [ -f "$XRAY_CONF" ]; then
+        echoContent yellow "生成 Xray 订阅..."
+        XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
+        > "$XRAY_SUB_FILE"
+
+        # VLESS subscriptions
+        XRAY_VLESS=$(jq -r '.inbounds[] | select(.protocol=="vless") | .tag as $tag | .settings.clients[] | . as $client | .streamSettings // {network:"tcp",security:"none"} | "\($tag)#\(.id)#\(.email)#\(input_filename)#\(.streamSettings.network // "tcp")#\(.streamSettings.security // "none")#\(.streamSettings.realitySettings.shortIds[0] // "")#\(.streamSettings.grpcSettings.serviceName // "")#\(.streamSettings.wsSettings.path // "")#\(.streamSettings.splithttpSettings.path // "")#\(.streamSettings.httpupgradeSettings.path // "")#\(.streamSettings.kcpSettings.seed // "")"' "$XRAY_CONF")
+        while IFS='#' read -r tag uuid email filename network security short_id grpc_path ws_path splithttp_path httpupgrade_path kcp_seed; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .port // (.listen | split(":")[-1])' "$XRAY_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                port="443"
+            fi
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            params=""
+            case "$network" in
+                "grpc") params="type=grpc&serviceName=${grpc_path}" ;;
+                "ws") params="type=ws&path=${ws_path}" ;;
+                "splithttp") params="type=http&path=${splithttp_path}" ;;
+                "httpupgrade") params="type=httpupgrade&path=${httpupgrade_path}" ;;
+                "kcp") params="type=kcp&seed=${kcp_seed}" ;;
+                *) params="type=tcp" ;;
+            esac
+            if [[ "$security" == "reality" ]]; then
+                params="${params}&security=reality&sid=${short_id}"
+            elif [[ "$security" == "tls" ]]; then
+                params="${params}&security=tls"
+            fi
+            SUB_LINK="vless://${uuid}@${SUB_DOMAIN}:${port}?${params}#${email}"
+            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/vless_${email//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Xray VLESS 订阅链接: $SUB_LINK"
+        done <<< "$XRAY_VLESS"
+
+        # VMess subscriptions
+        XRAY_VMESS=$(jq -r '.inbounds[] | select(.protocol=="vmess") | .tag as $tag | .settings.clients[] | . as $client | .streamSettings // {network:"tcp"} | "\($tag)#\(.id)#\(.email)#\(input_filename)#\(.streamSettings.network // "tcp")#\(.streamSettings.wsSettings.path // "")"' "$XRAY_CONF")
+        while IFS='#' read -r tag uuid email filename network ws_path; do
+            port="443"
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            vmess_json=$(jq -n --arg id "$uuid" --arg add "$SUB_DOMAIN" --arg port "$port" --arg ps "$email" --arg path "$ws_path" \
+                '{v:"2",ps:$ps,add:$add,port:$port,id:$id,aid:0,net:($ws_path != "" | if . then "ws" else "tcp" end),type:"none",tls:"tls",path:$path}')
+            SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)"
+            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/vmess_${email//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Xray VMess 订阅链接: $SUB_LINK"
+        done <<< "$XRAY_VMESS"
+
+        # Trojan subscriptions
+        XRAY_TROJAN=$(jq -r '.inbounds[] | select(.protocol=="trojan") | .tag as $tag | .settings.clients[] | "\($tag)#\(.password)#\(.email)#\(input_filename)"' "$XRAY_CONF")
+        while IFS='#' read -r tag password email filename; do
+            port=443
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            SUB_LINK="trojan://${password}@${SUB_DOMAIN}:${port}?security=tls#${email}"
+            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/trojan_${email//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Xray Trojan 订阅链接: $SUB_LINK"
+        done <<< "$XRAY_TROJAN"
+
+        # Shadowsocks subscriptions
+        XRAY_SS=$(jq -r '.inbounds[] | select(.protocol=="shadowsocks") | .tag as $tag | .settings.clients[] | "\($tag)#\(.password)#\(.email)#\(input_filename)#\(.settings.method)"' "$XRAY_CONF")
+        while IFS='#' read -r tag password email filename method; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .port' "$XRAY_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            SUB_LINK="ss://$(echo -n "${method}:${password}" | base64 -w 0)@${SUB_DOMAIN}:${port}#${email}"
+            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/ss_${email//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Xray Shadowsocks 订阅链接: $SUB_LINK"
+        done <<< "$XRAY_SS"
+
+        if [ -s "$XRAY_SUB_FILE" ]; then
+            echo "$(cat "$XRAY_SUB_FILE" | base64 -w 0)" > "$XRAY_SUB_FILE"
+            chown nobody:nogroup "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png"
+            chmod 644 "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png"
+            echoContent green "Xray 订阅已保存至 ${XRAY_SUB_FILE}，二维码已生成."
+        else
+            echoContent red "未生成任何 Xray 订阅链接."
+        fi
+    else
+        echoContent red "Xray 配置文件 ${XRAY_CONF} 不存在."
+    fi
+
+    # Generate Sing-box subscription
+    if [ -f "$SINGBOX_CONF" ]; then
+        echoContent yellow "生成 Sing-box 订阅..."
+        SINGBOX_SUB_FILE="${SUBSCRIBE_DIR}/singbox_sub.txt"
+        > "$SINGBOX_SUB_FILE"
+
+        # VLESS subscriptions
+        SINGBOX_VLESS=$(jq -r '.inbounds[] | select(.type=="vless") | .tag as $tag | .users[] | . as $user | .tls // {enabled:false} | "\($tag)#\(.uuid)#\(.name)#\(input_filename)#\(.tls.enabled)#\(.tls.reality.enabled // false)#\(.tls.reality.short_id[0] // "")#\(.transport.type // "tcp")#\(.transport.service_name // "")#\(.transport.path // "")"' "$SINGBOX_CONF")
+        while IFS='#' read -r tag uuid name filename tls_enabled reality_enabled short_id transport service_name path; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            params=""
+            case "$transport" in
+                "grpc") params="type=grpc&serviceName=${service_name}" ;;
+                "http") params="type=http&path=${path}" ;;
+                *) params="type=tcp" ;;
+            esac
+            if [[ "$reality_enabled" == "true" ]]; then
+                params="${params}&security=reality&sid=${short_id}"
+            elif [[ "$tls_enabled" == "true" ]]; then
+                params="${params}&security=tls"
+            fi
+            SUB_LINK="vless://${uuid}@${SUB_DOMAIN}:${port}?${params}#${name}"
+            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/vless_${name//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Sing-box VLESS 订阅链接: $SUB_LINK"
+        done <<< "$SINGBOX_VLESS"
+
+        # VMess subscriptions
+        SINGBOX_VMESS=$(jq -r '.inbounds[] | select(.type=="vmess") | .tag as $tag | .users[] | "\($tag)#\(.uuid)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
+        while IFS='#' read -r tag uuid name filename; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            vmess_json=$(jq -n --arg id "$uuid" --arg add "$SUB_DOMAIN" --arg port "$port" --arg ps "$name" \
+                '{v:"2",ps:$ps,add:$add,port:$port,id:$id,aid:0,net:"tcp",type:"none",tls:"none"}')
+            SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)"
+            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/vmess_${name//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Sing-box VMess 订阅链接: $SUB_LINK"
+        done <<< "$SINGBOX_VMESS"
+
+        # Trojan subscriptions
+        SINGBOX_TROJAN=$(jq -r '.inbounds[] | select(.type=="trojan") | .tag as $tag | .users[] | "\($tag)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
+        while IFS='#' read -r tag password name filename; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            SUB_LINK="trojan://${password}@${SUB_DOMAIN}:${port}?security=tls#${name}"
+            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/trojan_${name//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Sing-box Trojan 订阅链接: $SUB_LINK"
+        done <<< "$SINGBOX_TROJAN"
+
+        # Shadowsocks subscriptions
+        SINGBOX_SS=$(jq -r '.inbounds[] | select(.type=="shadowsocks") | .tag as $tag | .users[] | "\($tag)#\(.password)#\(.name)#\(input_filename)#\(.method)"' "$SINGBOX_CONF")
+        while IFS='#' read -r tag password name filename method; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            SUB_LINK="ss://$(echo -n "${method}:${password}" | base64 -w 0)@${SUB_DOMAIN}:${port}#${name}"
+            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/ss_${name//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Sing-box Shadowsocks 订阅链接: $SUB_LINK"
+        done <<< "$SINGBOX_SS"
+
+        # Hysteria2 subscriptions
+        SINGBOX_HYSTERIA2=$(jq -r '.inbounds[] | select(.type=="hysteria2") | .tag as $tag | .users[] | "\($tag)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
+        while IFS='#' read -r tag password name filename; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            SUB_LINK="hysteria2://${password}@${SUB_DOMAIN}:${port}?insecure=0#${name}"
+            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/hysteria2_${name//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Sing-box Hysteria2 订阅链接: $SUB_LINK"
+        done <<< "$SINGBOX_HYSTERIA2"
+
+        # TUIC subscriptions
+        SINGBOX_TUIC=$(jq -r '.inbounds[] | select(.type=="tuic") | .tag as $tag | .users[] | "\($tag)#\(.uuid)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
+        while IFS='#' read -r tag uuid password name filename; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            SUB_LINK="tuic://${uuid}:${password}@${SUB_DOMAIN}:${port}?alpn=h3&congestion_control=bbr#${name}"
+            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/tuic_${name//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Sing-box TUIC 订阅链接: $SUB_LINK"
+        done <<< "$SINGBOX_TUIC"
+
+        # Naive subscriptions
+        SINGBOX_NAIVE=$(jq -r '.inbounds[] | select(.type=="naive") | .tag as $tag | .users[] | "\($tag)#\(.username)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
+        while IFS='#' read -r tag username password name filename; do
+            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
+            if [[ "$port" == "null" || -z "$port" ]]; then
+                continue
+            fi
+            SUB_LINK="naive+https://${username}:${password}@${SUB_DOMAIN}:${port}?insecure=0#${name}"
+            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+            qrencode -o "${SUBSCRIBE_DIR}/naive_${name//[@\/]/_}.png" "$SUB_LINK"
+            echoContent green "生成 Sing-box Naive 订阅链接: $SUB_LINK"
+        done <<< "$SINGBOX_NAIVE"
+
+        if [ -s "$SINGBOX_SUB_FILE" ]; then
+            echo "$(cat "$SINGBOX_SUB_FILE" | base64 -w 0)" > "$SINGBOX_SUB_FILE"
+            chown nobody:nogroup "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png" "${SUBSCRIBE_DIR}/hysteria2_*.png" "${SUBSCRIBE_DIR}/tuic_*.png" "${SUBSCRIBE_DIR}/naive_*.png"
+            chmod 644 "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png" "${SUBSCRIBE_DIR}/hysteria2_*.png" "${SUBSCRIBE_DIR}/tuic_*.png" "${SUBSCRIBE_DIR}/naive_*.png"
+            echoContent green "Sing-box 订阅已保存至 ${SINGBOX_SUB_FILE}，二维码已生成."
+        else
+            echoContent red "未生成任何 Sing-box 订阅链接."
+        fi
+    else
+        echoContent red "Sing-box 配置文件 ${SINGBOX_CONF} 不存在."
+    fi
+
+    # Reload Nginx to apply changes
+    if docker ps | grep -q nginx; then
+        docker compose -f "$COMPOSE_FILE" restart nginx
+        echoContent green "Nginx 已重启以应用订阅文件."
+    fi
+
+    echoContent green "订阅生成完成，可通过 http://${SUB_DOMAIN}/subscribe/ 访问."
+}
+# Manage logs
+manageLogs() {
+    echoContent skyBlue "\n日志管理菜单"
+    echoContent yellow "1. 查看 Nginx 访问日志"
+    echoContent yellow "2. 查看 Nginx 错误日志"
+    echoContent yellow "3. 查看 Xray 日志"
+    echoContent yellow "4. 查看 Sing-box 日志"
+    echoContent yellow "5. 查看证书日志"
+    echoContent yellow "6. 清除所有日志"
+    echoContent yellow "7. 退出"
+    read -r -p "请选择一个选项 [1-7]: " log_option
+
+    case $log_option in
+        1) tail -f "${NGINX_LOG_DIR}/access.log" ;;
+        2) tail -f "${NGINX_LOG_DIR}/error.log" ;;
+        3) tail -f "${XRAY_LOG_DIR}/access.log" ;;
+        4) tail -f "${SINGBOX_LOG_DIR}/box.log" ;;
+        5) tail -n 100 "${ACME_LOG}" ;;
+        6)
+            echo > "${NGINX_LOG_DIR}/access.log"
+            echo > "${NGINX_LOG_DIR}/error.log"
+            echo > "${XRAY_LOG_DIR}/access.log"
+            echo > "${XRAY_LOG_DIR}/error.log"
+            echo > "${SINGBOX_LOG_DIR}/box.log"
+            echoContent green "所有日志已清除."
+            ;;
+        7) return ;;
+        *) echoContent red "无效选项." ; manageLogs ;;
+    esac
+}
+
+# Install alias
+aliasInstall() {
+    if [[ -f "$BASE_DIR/install.sh" ]] && [[ -d "$BASE_DIR" ]]; then
+        ln -sf "$BASE_DIR/install.sh" /usr/bin/nsx
+        chmod 700 "$BASE_DIR/install.sh"
+        echoContent green "已创建别名 'nsx'，运行 'nsx' 以执行脚本."
+    fi
+}
+
+
+# Update script
+updateNSX() {
+    echoContent skyBlue "\n进度 5/${TOTAL_PROGRESS} : 更新 NSX 脚本..."
+    # Check if git is installed
+    if ! command -v git &> /dev/null; then
+        echoContent yellow "安装 git..."
+        ${installType} git
+        if [ $? -ne 0 ]; then
+            echoContent red "安装 git 失败，请手动安装."
+            exit 1
+        fi
+    fi
+
+    # Create a temporary directory for cloning
+    TEMP_DIR=$(mktemp -d)
+    if [ $? -ne 0 ]; then
+        echoContent red "创建临时目录失败."
+        exit 1
+    fi
+
+    # Clone the repository
+    git clone --depth 1 https://github.com/judawu/nsx.git "$TEMP_DIR"
+    if [ $? -ne 0 ]; then
+        echoContent red "克隆 Git 仓库失败，请检查网络或仓库地址 https://github.com/judawu/nsx."
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+
+    # Remove old install.sh
+    rm -f "$BASE_DIR/install.sh"
+
+    # Copy install.sh from cloned repository
+    if [ -f "$TEMP_DIR/install.sh" ]; then
+        cp "$TEMP_DIR/install.sh" "$BASE_DIR/install.sh"
+        chmod 700 "$BASE_DIR/install.sh"
+        echoContent green "脚本更新成功."
+    else
+        echoContent red "克隆的仓库中未找到 install.sh 文件."
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+
+    # Clean up temporary directory
+    rm -rf "$TEMP_DIR"
+
+    echoContent yellow "请运行 'nsx' 以执行脚本."
+}
+
+# Docker installation
+dockerInstall() {
+    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : Docker 安装..."
+    installDocker
+    createDirectories
+    installAcme
+
+    # Copy configuration files (assuming files are in the script's directory)
+    cp ./docker/docker-compose.yml "$COMPOSE_FILE"
+    cp ./nginx/nginx.conf "$NGINX_CONF"
+    cp ./xray/config.json "$XRAY_CONF"
+    cp ./sing-box/config.json "$SINGBOX_CONF"
+
+    # Check certificates
+    if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
+        echoContent yellow "未找到证书，运行证书管理..."
+        manageCertificates
+    fi
+
+    # Check Nginx configuration
+    echoContent yellow "检查 Nginx 配置语法..."
+    docker run --rm -v "${NGINX_CONF}:/etc/nginx/nginx.conf:ro" -v "${CERT_DIR}:/etc/nginx/certs:ro" -v "${NGINX_SHM_DIR}:/dev/shm/nsx" nginx:alpine nginx -t
+    if [ $? -ne 0 ]; then
+        echoContent red "错误：Nginx 配置语法检查失败！"
+        exit 1
+    fi
+
+    # Start Docker Compose
+    echoContent yellow "启动 Docker 容器..."
+    docker compose -f "$COMPOSE_FILE" up -d
+    if [ $? -ne 0 ]; then
+        echoContent red "启动 Docker Compose 失败，请检查配置或日志."
+        exit 1
+    fi
+
+    # Set permissions for log files
+    find "$NGINX_LOG_DIR" "$XRAY_LOG_DIR" "$SINGBOX_LOG_DIR" -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+
+    echoContent green "Docker 容器启动成功."
+
+    # Check container status
+    echoContent yellow "检查容器状态..."
+    docker ps -f name=nginx-stream -f name=xray -f name=sing-box
+    aliasInstall
+}
+
+# Local installation
+localInstall() {
+    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 本地安装..."
+    installTools
+    checkCentosSELinux
+
+    # Install Nginx
+    if ! command -v nginx &> /dev/null; then
+        if [[ "$release" == "centos" ]]; then
+            rpm -Uvh http://nginx.org/packages/mainline/centos/8/x86_64/RPMS/nginx-1.21.6-1.el8.ngx.x86_64.rpm
+        else
+            echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | tee /etc/apt/sources.list.d/nginx.list
+            curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key
+            mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
+            ${upgradeType}
+            ${installType} nginx
+        fi
+    fi
+
+    # Install Xray and Sing-box
+    bash <(curl -L https://github.com/XTLS/Xray-core/releases/latest/download/install-release.sh)
+    bash <(curl -fsSL https://sing-box.sagernet.org/install.sh)
+
+    createDirectories
+    installAcme
+
+    # Copy configuration files (assuming files are in the script's directory)
+    cp ./nginx/nginx.conf /etc/nginx/nginx.conf
+    cp ./xray/config.json /usr/local/etc/xray/config.json
+    cp ./sing-box/config.json /usr/local/etc/sing-box/config.json
+
+    # Check certificates
+    if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
+        echoContent yellow "未找到证书，运行证书管理..."
+        manageCertificates
+    fi
+
+    # Start services
+    systemctl enable nginx xray sing-box
+    systemctl start nginx xray sing-box
+    if [ $? -ne 0 ]; then
+        echoContent red "启动服务失败，请检查配置或日志."
+        exit 1
+    fi
+
+    echoContent green "本地安装成功."
+    aliasInstall
+}
+
+# Stop NSX
+stopNSX() {
+    echoContent skyBlue "停止 NSX 容器并清理..."
+    # Check if Docker and docker-compose.yml exist
+    if ! command -v docker &> /dev/null || [ ! -f "$COMPOSE_FILE" ]; then
+        echoContent red "未找到 Docker 或 docker-compose.yml 文件，如果是本地安装，请手动停止服务."
+        exit 1
+    fi
+
+    # Stop and remove containers
+    echoContent yellow "运行 docker compose down..."
+    docker compose -f "$COMPOSE_FILE" down
+    if [ $? -ne 0 ]; then
+        echoContent red "停止 Docker Compose 失败，请检查配置或日志."
+        exit 1
+    fi
+
+    # Clean up /dev/shm/nsx if empty
+    if [ -d "$NGINX_SHM_DIR" ] && [ -z "$(ls -A "$NGINX_SHM_DIR")" ]; then
+        echoContent yellow "目录 $NGINX_SHM_DIR 为空，删除..."
+        rm -rf "$NGINX_SHM_DIR"
+    elif [ -d "$NGINX_SHM_DIR" ]; then
+        echoContent yellow "清理 $NGINX_SHM_DIR 中的文件..."
+        rm -rf "$NGINX_SHM_DIR"/* 2>/dev/null
+    fi
+
+    echoContent green "NSX 容器已停止并清理完成."
+}
+
+# Main menu
+menu() {
+    clear
+    echoContent red "\n=============================================================="
+    echoContent green "NSX 安装管理脚本"
+    echoContent green "作者: JudaWu"
+    echoContent green "版本: v0.0.1"
+    echoContent green "Github: https://github.com/judawu/nsx"
+    echoContent green "描述: 一个集成 Nginx、Sing-box 和 Xray 的代理环境"
+    echoContent red "\n=============================================================="
+    if [[ -f "$COMPOSE_FILE" || -f "/usr/local/nsx/nginx/nginx.conf" ]]; then
+        echoContent yellow "1. 重新安装"
+    else
+        echoContent yellow "1. 安装"
+    fi
+    echoContent yellow "2. 使用 Docker 安装 NSX"
+    echoContent yellow "3. 本地安装 NSX"
+    echoContent yellow "4. 证书管理"
+    echoContent yellow "5. 配置管理"
+    echoContent yellow "6. 日志管理"
+    echoContent yellow "7. 更新脚本"
+    echoContent yellow "8. 停止 Docker"
+    echoContent yellow "9. 生成订阅"
+    echoContent yellow "10. 退出"
+    read -r -p "请选择一个选项 [1-9]: " option
+
+    case $option in
+        1|2) dockerInstall ;;
+        3) localInstall ;;
+        4) manageCertificates ;;
+        5) manageConfigurations ;;
+        6) manageLogs ;;
+        7) updateNSX ;;
+        8) stopNSX ;;
+        9) generateSubscriptions ;;
+        10) exit 0 ;;
+        *) echoContent red "无效选项." ; menu ;;
+    esac
+}
+
+# Start script
+checkSystem
+menu

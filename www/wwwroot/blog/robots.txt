@@ -1,0 +1,13 @@
+User-agent: * Disallow: /admin/ Disallow: /login/ Disallow: /api/ Disallow: /private/ Disallow: /dynamic/ Disallow: /.php$ Disallow: /.js$ Disallow: /.css$ Disallow: /?* Crawl-delay: 10
+
+User-agent: Baiduspider Disallow: /
+
+User-agent: YandexBot Disallow: /
+
+User-agent: MJ12bot Disallow: /
+
+User-agent: Googlebot Allow: / Allow: /about Disallow: /admin/ Disallow: /login/ Disallow: /api/ Disallow: /private/ Disallow: /?Crawl-delay: 5
+
+Sitemap: https://www.juda.autos/sitemap.xml
+
+

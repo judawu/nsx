@@ -1,0 +1,892 @@
+{
+  "log": {
+    "loglevel": "error",
+    "error": "/var/log/xray/error.log",
+    "access": "/var/log/xray/access.log"
+  },
+  "api": {
+    "tag": "api",
+    "services": [
+      "HandlerService",
+      "LoggerService",
+      "StatsService"
+    ]
+  },
+ "dns": {
+    "tag": "dns_inbound",
+    "hosts": {
+      "geosite:category-ads-all": "127.0.0.1", 
+      "dns.google": ["8.8.8.8", "8.8.4.4"]
+    },
+    "servers": [ 
+ 
+      "quic+local://dns.adguard.com",
+      "tcp+local://94.140.14.49:53",
+      "94.140.14.59",  
+      "45.90.28.0",
+      "45.90.30.0",
+      "146.112.61.108", //PI-HOLE
+      "185.220.100.240",
+      "185.220.101.240",
+      "tls://dns.unfiltered.adguard-dns.com",
+      "https://dns.unfiltered.adguard-dns.com/dns-query",
+      "tcp://1.1.1.1:53",
+      "8.8.8.8",
+      "8.8.4.4",
+      {
+      "address": "8.8.8.8",
+      "port": 53,
+      "domains": ["regex:\\.goo.*\\.com$"],
+      "expectedIPs": ["geoip:us"],
+      "skipFallback": false
+     },
+      {
+        "address": "https+local://dns.google/dns-query",
+        "domains": [
+          "geosite:netflix",
+          "geosite:tiktok"],
+        "skipFallback": true,
+        "queryStrategy": "UseIPv4"
+      },
+      {
+        "address": "https://1.1.1.1/dns-query",
+        "domains": ["geosite:openai"],
+        "skipFallback": true,
+        "queryStrategy": "UseIPv6"
+      },
+      "localhost"
+    ],
+    "queryStrategy": "UseIP",
+    "disableCache": false,
+    "disableFallback": false,
+    "disableFallbackIfMatch": false,
+    "useSystemHosts": false
+    
+  },
+  "fakedns": [
+  {
+    "ipPool": "198.18.0.0/15",
+    "poolSize": 65535
+  },
+  {
+    "ipPool": "fc00::/18",
+    "poolSize": 65535
+  }
+],
+  "stats": {}, 
+  "reverse": null,
+  "observatory": null,
+  "burstObservatory": null,
+  "policy": {
+    "levels": {
+      "0": {
+        "handshake": 2, // The handshake time limit when the connection is established, in seconds, the default value is 4, it is recommended to be different from the default value
+        "connIdle": 120, // Connection idle time limit in seconds, the default value is 300, it is recommended to be different from the default value
+        "statsUserUplink": true,
+        "statsUserDownlink": true
+      }
+    },
+    "system": {
+      "statsInboundUplink": true,
+      "statsInboundDownlink": true,
+      "statsOutboundUplink": true,
+      "statsOutboundDownlink": true
+    }
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "domainMatcher": "hybrid",
+    "rules": [
+      {
+        "ruleTag": "api",
+        "inboundTag": [
+          "api"
+        ],
+        "outboundTag": "api"
+      },
+      {
+        "ruleTag": "bt",
+        "protocol": [
+          "bittorrent"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "domainMatcher": "hybrid",
+        "type": "field",
+        "ruleTag": "know-ad",
+        "domain": [
+          "regexp:^.*\\.doubleclick\\.net$",
+          "regexp:^(?:pagead2\\.googlesyndication\\.com|s\\.youtube\\.com)$" ,
+          "domain:notifications-pa.googleapis.com",
+          "domain:people-pa.googleapis.com",
+          "domain:redirector.googlevideo.com",
+          "domain:suggestqueries.google.com",
+          "domain:mip.ymclg.cn",
+          "pur-oil-in-global-health-issue.colbydunlop.com"
+        ],
+       "outboundTag": "block"
+      },
+          //根据账号进行vps分流netfilix中转
+        {
+                "domain": [
+                    "geosite:netflix"
+                ],
+                "user": [
+                    "vps@v1"
+                ],
+                "outboundTag": "vps_v1"
+            },
+            {
+                "domain": [
+                    "geosite:netflix"
+                  ],
+                    "user": [
+                    "vps@v2",
+                    "vps@v3"
+                  ],
+                "outboundTag": "vps_v2"
+            },
+      {
+        "ruleTag": "private-ip",
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "ruleTag": "cn-ip",
+        "ip": [
+          "geoip:cn"
+        ],
+        "outboundTag": "block"
+      },
+
+      {
+        "ruleTag": "ad-domain",
+        "domain": [
+          "geosite:category-ads-all"
+        ],
+        "outboundTag": "block"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "tag": "api",
+      "listen": "127.0.0.1",
+      "port": 32768,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "127.0.0.1"
+      },
+      "sniffing": null
+    },
+
+
+    // 主入口流量
+   
+
+   
+    {
+      "tag": "VLESS-VISION-REALITY",
+      "listen": "/dev/shm/nsx/xray_reality_proxy.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@xtls.reality",
+            "id": "3fcbdbe3-5ba2-4e37-8415-c27ced775cab",
+            "flow": "xtls-rprx-vision",
+         
+            "level": 0
+          }
+        ],
+        "decryption": "none" ,
+        "fallbacks": [
+             {
+             "path": "/vlesssplithttp",
+             "dest": "/dev/shm/nsx/vlesssplithttp.sock",
+             "xver": 0
+            },
+             {
+             "path": "/vlesshttpupgrade",
+             "dest": "/dev/shm/nsx/vlesshttpupgrade.sock",
+             "xver": 0
+            },
+            {
+             "path": "/vlessws",
+             "dest": "/dev/shm/nsx/vlessws.sock",
+             "xver": 0
+            },
+            {
+          
+             "path": "/vmessws",
+             "dest": "/dev/shm/nsx/vmessws.sock",
+             "xver": 0
+            },
+           {
+            "dest": "/dev/shm/nsx/vless_xhttp_reality.sock",
+            "xver": 0
+           }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "target": "/dev/shm/nsx/xray_tls_proxy.sock",//一定要有一个接收流量的sock
+ 
+          "xver": 0,
+          "serverNames": [
+            "youdomain",
+            "www.youdomain",
+            "tls.youdomain",
+            "reality.youdomain",
+            "xtls.youdomain",
+            "sing.youdomain"
+          ],
+          "privateKey": "LfkzLDajizcdQLBj2S6KPzVPo7lshGwPGsj-cry1AG0",   
+           "password": "",// 服务端私钥生成的公钥，对客户端来说就是密码
+          // "minClientVer": "25.7.26", // 选填，客户端 Xray 最低版本，格式为 x.y.z
+          // "maxClientVer": "25.7.26", // 选填，客户端 Xray 最高版本，格式为 x.y.z
+
+          "maxTimeDiff": 0,
+          "shortIds": [
+             "",
+            "50202bc2",
+            "785f5de52704cf43"
+          ],
+           "mldsa65Seed": "XVNxIGfzCtIXIKdxbtb_ntfdENa66nJvaucKyzouRN8", // 选填，执行 ./xray mldsa65 生成，对证书进行抗量子的额外签名
+           "mldsa65Verify": ""// 选填，服务端 mldsa65Seed 生成的公钥，对证书进行抗量子的额外验证
+          //           // 下列两个 limit 为选填，可对未通过验证的回落连接限速，bytesPerSec 默认为 0 即不启用
+          //           // 回落限速是一种特征，不建议启用，如果您是面板/一键脚本开发者，务必让这些参数随机化
+          //           "limitFallbackUpload": {
+          //               "afterBytes": 0, // 传输指定字节后开始限速
+          //               "bytesPerSec": 0, // 基准速率（字节/秒）
+          //               "burstBytesPerSec": 0 // 突发速率（字节/秒），大于 bytesPerSec 时生效
+          //           },
+          //           "limitFallbackDownload": {
+          //               "afterBytes": 0, // 传输指定字节后开始限速
+          //               "bytesPerSec": 0, // 基准速率（字节/秒）
+          //               "burstBytesPerSec": 0 // 突发速率（字节/秒），大于 bytesPerSec 时生效
+          //           }
+        },
+         "rawSettings": {
+          "acceptProxyProtocol": false //不要用prooxy protocol
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "tag": "VLESS-XHTTP-REALITY",
+      "listen": "/dev/shm/nsx/vless_xhttp_reality.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+              //根据账号进行vps分流中转，见rules
+          {
+            "email": "vless@xhttp.reality",
+            "id": "8470a2d6-819a-4295-8ad3-ce5791ac9a7a",
+            "level": 0
+          },
+          {
+                "id": "ffc553b5-8200-4d8c-bf41-4b4b5d630dc2",             
+                "email": "vps@v1",
+                "level": 0
+          },
+          {
+                "id": "719db0d5-fb0f-419b-8982-1f99c6e33576", 
+                "email": "vps@v2",
+                "level": 0
+          },
+          {
+                "id": "9be9a0e8-81d1-4c17-a8c1-861948a7177b", 
+                "email": "vps@v3",
+                "level": 0
+          }
+        ],
+        "decryption": "none",
+          "fallbacks": [
+          {
+            "dest": "/dev/shm/nsx/trojan_xhttp_reality.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "none",
+        "xhttpSettings": {
+          "host": "",
+          "path": "/reality/xhttp",
+          "mode": "auto"//,
+        //   "extra": {
+        //     "headers": {
+        //         // "key": "value"
+        //     },
+        //     "xPaddingBytes": "100-1000",
+        //   //  "noGRPCHeader": false, // stream-up/one, client only
+        //     "noSSEHeader": false, // server only
+        //     "scMaxEachPostBytes": 1000000, // packet-up only
+        //   //  "scMinPostsIntervalMs": 30, // packet-up, client only
+        //     "scMaxBufferedPosts": 30, // packet-up, server only
+        //     "scStreamUpServerSecs": "20-80", // stream-up, server only
+        //     // "xmux": { // h2/h3 mainly, client only
+        //     //     "maxConcurrency": "16-32",
+        //     //     "maxConnections": 0,
+        //     //     "cMaxReuseTimes": 0,
+        //     //     "hMaxRequestTimes": "600-900",
+        //     //     "hMaxReusableSecs": "1800-3000",
+        //     //     "hKeepAlivePeriod": 0
+        //     // },
+        //     // "downloadSettings": { // client only
+        //     //     "address": "", // another domain/IP
+        //     //     "port": 443,
+        //     //     "network": "xhttp",
+        //     //     "security": "tls",
+        //     //     "tlsSettings": {
+        //     //         ...
+        //     //     },
+        //     //     "xhttpSettings": {
+        //     //         "path": "/yourpath", // must be the same
+        //     //         ...
+        //     //     },
+        //     //     "sockopt": {} // will be replaced by upload's "sockopt" the latter's "penetrate" is true
+        //    // }
+      }
+   
+    },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+      //   "domainsExcluded": [
+      //     "courier.push.apple.com", // iOS 推送通知
+      //     "Mijia Cloud", // 米家智能设备
+      //     "dlg.io.mi.com"
+      // ],// 填写一些域名，可能解决iOS 推送通知，米家智能设备，某些游戏（彩虹六号）语音问题。如果需要排查某些问题的原因，可以通过关闭 "sniffing" 或者启用 "routeOnly" 来测试。
+        "metadataOnly": false,//当启用时，将仅使用连接的元数据嗅探目标地址。此时，除 fakedns 以外的 sniffer 将不能激活
+        "routeOnly": false //将嗅探得到的域名仅用于路由，代理目标地址仍为 IP。默认值为 false
+       }//,
+      // "allocate":{
+      //   "strategy": "always", //"always" 表示总是分配所有已指定的端口，port 中指定了多少个端口，Xray 就会监听这些端口。 "random" 表示随机开放端口，每隔 refresh 分钟在 port 范围中随机选取 concurrency 个端口来监听。
+      //   "refresh": 5,//随机端口刷新间隔，单位为分钟。最小值为 2，建议值为 5。这个属性仅当 strategy 设置为 "random" 时有效
+      //   "concurrency": 3 //随机端口数量。最小值为 1，最大值为 port 范围的三分之一。建议值为 3
+      // }
+    },
+
+    
+  //Trojan-XHTTP-REALITY
+  //REALITY+xhhtp  流量首先进入第一层，解除REALITY，再进入第二层解除xhttp，因为不是VLESS,进入trojan处理
+     {
+      "tag": "TROJAN-XHTTP-REALITY",
+      "listen": "/dev/shm/nsx/trojan_xhttp_reality.sock,0666",
+      "protocol": "trojan",
+      "settings": {
+        "clients": [
+          {
+            "email": "trojan@xhttp.reality",
+            "password": "ffc553b5-8200-4d8c-bf41-4b4b5d630dc2",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [ 
+       
+           {  
+            "dest": "/dev/shm/nsx/xray_tls_proxy.sock",
+             "xver": 0
+           }
+        ]
+      },
+     
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+  
+    {
+      "tag": "VLESS-TLS-TCP",
+      "listen": "/dev/shm/nsx/xray_tls_proxy.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@tls",
+            "id": "219db0d5-fb0f-409a-8982-1f99c6e33577",
+            "flow": "xtls-rprx-vision",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+            {
+          
+             "path": "/vlesssplithttp",
+             "dest": "/dev/shm/nsx/vlesssplithttp.sock",
+             "xver": 0
+            },
+             {
+        
+             "path": "/vlesshttpupgrade",
+             "dest": "/dev/shm/nsx/vlesshttpupgrade.sock",
+             "xver": 0
+            },
+            {
+          
+             "path": "/vlessws",
+             "dest": "/dev/shm/nsx/vlessws.sock",
+             "xver": 0
+            },
+            {
+          
+             "path": "/vmessws",
+             "dest": "/dev/shm/nsx/vmessws.sock",
+             "xver": 0
+            },
+        
+          //trojan
+          {
+            "dest": "127.0.0.1:7070",
+            "xver": 0
+          }  
+       
+        ]
+      },
+      "streamSettings": {
+        "network": "raw", //或者用tcp
+        "security": "tls",      
+        "tlsSettings": { 
+          "alpn": [
+            "http/1.1",
+            "h2"
+          ],
+        
+          "certificates": [
+            {    
+               "certificateFile": "/etc/certs/yourdomain.pem",
+               "keyFile":         "/etc/certs/yourdomain.key"
+            }
+          ]
+        },
+        //或者用tcpSettings
+        "rawSettings": {
+          "acceptProxyProtocol": false
+        }
+      
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+  {
+    "tag":"TROJAN-TLS-TCP",
+
+   "listen":"127.0.0.1",
+    "port":7070,
+	  "protocol": "trojan", 
+	  "settings": {
+		"clients": [
+  {
+    "password": "5a3325c6-184e-4482-927b-dacfb2da4bfb",
+     "email": "trojan@TCP.TLS.Vision"
+  }
+],
+		"fallbacks":[
+		   	{	
+          "dest": "/dev/shm/nsx/fallback.sock",
+			    "xver":0
+		  	}
+		]
+	  },
+	  "streamSettings": {
+		"network": "raw",
+		"security": "none",
+    "rawSettings": {
+          "acceptProxyProtocol": false
+        }
+	  }
+	},
+  {
+            "tag": "Vless-splithttp",
+            "listen": "/dev/shm/nsx/vlesssplithttp.sock,0666",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                           "email": "VLESS@splithttp",
+                           "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb",      
+                          "level": 0                     
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "splithttp",
+                "splithttpSettings": {
+                    "path": "/vlesssplithttp"
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+            }
+        },
+     {
+           
+            "tag": "Vless-ws",
+            "listen": "/dev/shm/nsx/vlessws.sock,0666",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb" 
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/vlessws"
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+            }
+        },
+         {
+           
+            "tag": "Vmess-ws",
+            "listen": "/dev/shm/nsx/vmessws.sock,0666",
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb" ,
+                        "level": 0,
+                        "email": "ws@vmess"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/vmessws"
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+            }
+        },
+         {
+                 "tag": "Vless-httpupgrade",
+            "listen": "/dev/shm/nsx/vlesshttpupgrade.sock,0666",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb" // 长度为 1-30 字节的任意字符串，或执行 xray uuid 生成
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "httpupgrade",
+                "httpupgradeSettings": {
+                    "path": "/vlesshttpupgrade"
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+            }
+        },
+       {
+      "tag": "Vless_grpc",
+      "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
+      "protocol": "vless",
+      
+      "settings": {
+        "clients": [
+        {
+          "id": "8e2e5730-ccf8-4ea1-b3e2-b9a512d0f992",
+          "email": "vless@grpc",
+          "level": 0
+        }
+      ],
+        "decryption": "none"          
+      },
+      "streamSettings": {
+            "network": "grpc",
+            "security": "none",        
+            "grpcSettings": {
+              // "authority": "porxy.juda.autos",
+              // 若起始为斜杠时为自定义 path，至少要两个斜杠，例如在服务端填写 "/reality/grpc/g1|g2"，客户端可填写 "/reality/grpc/g1" 或 "/reality/grpc/g1"，客户端填写 "/reality/grpc" 将连接失败
+          
+                "serviceName": "/reality/grpc/h1|h2",
+                "multiMode": true
+            }    
+      },
+      "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ]
+              }
+    },
+
+     {
+      "tag": "udp-VLESS-mKCP",
+      
+     "listen":"0.0.0.0",
+     "port":4443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@xtls.mkcp",
+            "id": "18a421eb-9248-4fed-8035-db540937fba2",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+         "fallbacks": [
+          {
+         
+           "dest": "127.0.0.1:8443" // 回落至 shadowsocks
+         
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "kcp",
+        "security": "tls",
+        "tlsSettings": {
+          "certificates": [
+            {
+              "certificateFile": "/var/xray/certs/proxy.juda.autos.pem",
+              "keyFile": "/var/xray/certs/proxy.juda.autos.key"
+            }
+          ]
+        },
+        "kcpSettings": {
+          "mtu": 1350,
+          "tti": 20,
+          "uplinkCapacity": 12,
+          "downlinkCapacity": 100,
+          "congestion": false,
+          "readBufferSize": 1,
+          "writeBufferSize": 1,
+           "header": {
+           "type": "srtp",
+        //   //        none"：默认值，不进行伪装，发送的数据是没有特征的数据包。
+        //  //          "srtp"：伪装成 SRTP 数据包，会被识别为视频通话数据（如 FaceTime）。
+        //  //        "utp"：伪装成 uTP 数据包，会被识别为 BT 下载数据。
+        //  //       "wechat-video"：伪装成微信视频通话的数据包。
+        //   //      "dtls"：伪装成 DTLS 1.2 数据包。
+        //   //                "wireguard"：伪装成 WireGuard 数据包。（并不是真正的 WireGuard 协议）
+        //   //           "dns"：某些校园网在未登录的情况下允许DNS查询，给KCP添加DNS头，把流量伪装成dns请求，可以绕过某些校园网登录。
+           "domain": "facebook.com"
+         },
+         "seed": "1yqE9B/cU2IiFSFNNRXzOw=="
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+
+
+      {
+      "tag": "udp-shadowsocks",
+      "protocol": "shadowsocks",
+      "listen":"0.0.0.0",
+      "port":8443,  
+      "settings": {
+        "method": "2022-blake3-aes-128-gcm",
+        "level": 0,
+        "password": "QvofbfMIil7768oFAyTpyA==",
+        "clients": [
+          {
+            "password": "7oXO/suBqek8LDR9aYGDXg==",
+            "email": "ss@udp"
+          }
+        ],
+        "network": "tcp,udp"
+      }
+    }
+
+
+   
+     ],
+  "outbounds": [
+
+   
+    {
+      "tag": "direct",
+      "domainStrategy": "UseIP",
+      "protocol": "freedom"
+    },
+   {
+    //  "sendThrough": "0.0.0.0", //用于发送数据的 IP 地址，当主机有多个 IP 地址时有效，默认值为 "0.0.0.0"
+      "protocol": "freedom",
+      "settings": {
+       "redirect": "137.175.127.130:18443" //设计了一个10ms的视频试图欺骗，结果失败
+        
+      },
+      "tag": "ad-block"//,
+      //  "streamSettings": {},//底层传输方式（transport）是当前 Xray 节点和其它节点对接的方式
+      //  "proxySettings": {
+      //   "tag": "another-outbound-tag"
+      // },//出站代理配置。当出站代理生效时，此 outbound 的 streamSettings 将不起作用
+      // "mux": {
+  //      "enabled": true,
+  //   "concurrency": 8,
+  //   "xudpConcurrency": 16,
+  //   "xudpProxyUDP443": "reject"
+  // } //Mux 功能是在一条 TCP 连接上分发多个 TCP 连接的数据,Mux 只需要在客户端启用，服务器端自动适配。Mux 的第二个用途是分发多个 UDP 连接，即 XUDP
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole"
+    },
+
+     {
+            "tag": "vps_v1",
+            "protocol": "shadowsocks",
+            "settings": {
+                "servers": [
+                    {
+                        "address": "107.174.131.113",
+                        "port": 7081,
+                        "method": "2022-blake3-aes-128-gcm",              
+                         "password": "QvofbfMIil7768oFAyTpyA=="
+                      
+                    }
+                ]
+            },
+            "streamSettings": {
+                "sockopt": {
+                    "tcpMptcp": true,
+                    "tcpNoDelay": true
+                }
+            }
+           
+        },
+       {
+            "tag": "vps_v2",
+            "protocol": "shadowsocks",
+            "settings": {
+                "servers": [
+                    {
+                        "address": "198.200.55.129",
+                        "port": 7081,
+                        "method": "2022-blake3-aes-128-gcm",              
+                         "password": "QvofbfMIil7768oFAyTpyA=="
+                      
+                    }
+                ]
+            },
+            "streamSettings": {
+                "sockopt": {
+                    "tcpMptcp": true,
+                    "tcpNoDelay": true
+                }
+            }
+           
+        },
+         {
+            "tag": "vps_v3",
+            "protocol": "shadowsocks",
+            "settings": {
+                "servers": [
+                    {
+                        "address": "104.219.214.2",
+                        "port": 7081,
+                        "method": "2022-blake3-aes-128-gcm",              
+                         "password": "QvofbfMIil7768oFAyTpyA=="
+                      
+                    }
+                ]
+            },
+            "streamSettings": {
+                "sockopt": {
+                    "tcpMptcp": true,
+                    "tcpNoDelay": true
+                }
+            }
+           
+        }, 
+        {
+            "tag": "vps_v5",
+            "protocol": "shadowsocks",
+            "settings": {
+                "servers": [
+                    {
+                        "address": "107.148.54.116",
+                        "port": 7081,
+                        "method": "2022-blake3-aes-128-gcm",              
+                         "password": "QvofbfMIil7768oFAyTpyA=="
+                      
+                    }
+                ]
+            },
+            "streamSettings": {
+                "sockopt": {
+                    "tcpMptcp": true,
+                    "tcpNoDelay": true
+                }
+            }
+           
+        }
+  ]
+}

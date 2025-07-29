@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>解决Docker Hub推送镜像的访问拒绝错误</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        pre, code {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre {
+            margin: 10px 0;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .note {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>解决Docker Hub推送镜像的访问拒绝错误</h1>
+    <p>在使用 Docker 和 GitHub Actions 构建并推送镜像到 Docker Hub 时，可能会遇到 <code>denied: requested access to the resource is denied</code> 错误。本文总结了该错误的常见原因及解决方案，帮助开发者快速修复问题，确保镜像成功推送。</p>
+
+    <h2>问题背景</h2>
+    <p>在 GitHub Actions 工作流中，使用 <code>docker-compose.yml</code> 构建多服务应用的 Docker 镜像（如 <code>api-gateway</code>、<code>identity-service</code> 等），并尝试通过 <code>docker compose push</code> 和 <code>docker push</code> 命令推送至 Docker Hub。然而，推送失败并报错，表明访问被拒绝。错误日志显示镜像被标记为 <code>&lt;service&gt;:latest</code>（如 <code>api-gateway:latest</code>），而不是预期的 <code>${DOCKER_USERNAME}/&lt;service&gt;:latest</code>。</p>
+
+    <h2>错误原因分析</h2>
+    <ol>
+        <li><strong>镜像名称不匹配</strong>：镜像在构建时未包含 Docker Hub 用户名（如 <code>yourusername/api-gateway:latest</code>），导致推送时尝试访问默认命名空间（如 <code>docker.io/library/api-gateway</code>），而用户无权限操作该空间。</li>
+        <li><strong>环境变量未正确设置</strong>：<code>docker-compose.yml</code> 使用 <code>${DOCKER_USERNAME}</code> 定义镜像名称，但 GitHub Actions 中未正确设置该环境变量，导致镜像标记错误。</li>
+        <li><strong>仓库不存在</strong>：Docker Hub 上未创建对应的仓库（如 <code>yourusername/api-gateway</code>），导致推送失败。</li>
+        <li><strong>认证问题</strong>：虽然工作流包含登录步骤，但可能使用了错误的凭据或权限不足的个人访问令牌（PAT）。</li>
+    </ol>
+
+    <h2>解决方案</h2>
+    <h3>1. 更新 docker-compose.yml</h3>
+    <p>确保 <code>docker-compose.yml</code> 中每个服务的 <code>image</code> 字段包含 <code>${DOCKER_USERNAME}/</code> 前缀。例如：</p>
+    <pre><code>services:
+  api-gateway:
+    image: ${DOCKER_USERNAME}/api-gateway:latest
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+  identity-service:
+    image: ${DOCKER_USERNAME}/identity-service:latest
+    build:
+      context: ./identity-service
+      dockerfile: Dockerfile
+</code></pre>
+    <p>同时，移除过时的 <code>version</code> 字段（如 <code>version: "3.8"</code>），以避免警告。</p>
+
+    <h3>2. 设置环境变量</h3>
+    <p>在 GitHub Actions 工作流中，确保 <code>DOCKER_USERNAME</code> 环境变量在构建和推送步骤中可用。修改工作流如下：</p>
+    <pre><code>- name: Build Docker images
+  env:
+    DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  run: |
+    docker compose -f docker-compose.yml build
+    echo "Listing built images:"
+    docker images
+</code></pre>
+
+    <h3>3. 重新标记镜像</h3>
+    <p>如果镜像已构建为 <code>&lt;service&gt;:latest</code>，在推送前重新标记为 <code>${DOCKER_USERNAME}/&lt;service&gt;:latest</code>。在工作流中添加以下步骤：</p>
+    <pre><code>- name: Retag Docker images
+  env:
+    DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  run: |
+    docker tag api-gateway:latest ${DOCKER_USERNAME}/api-gateway:latest
+    docker tag identity-service:latest ${DOCKER_USERNAME}/identity-service:latest
+    # ... 其他服务
+    echo "Listing retagged images:"
+    docker images
+</code></pre>
+
+    <h3>4. 修正推送命令</h3>
+    <p>确保推送命令使用正确的镜像名称，包含 <code>${DOCKER_USERNAME}/</code> 前缀。例如：</p>
+    <pre><code>- name: Push Docker images
+  env:
+    DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  run: |
+    docker compose -f docker-compose.yml push
+    docker push ${DOCKER_USERNAME}/api-gateway:latest
+    docker push ${DOCKER_USERNAME}/identity-service:latest
+    # ... 其他服务
+</code></pre>
+
+    <h3>5. 验证 Docker Hub 仓库</h3>
+    <p>登录 Docker Hub，确认以下仓库存在且有写入权限：</p>
+    <ul>
+        <li><code>${DOCKER_USERNAME}/api-gateway</code></li>
+        <li><code>${DOCKER_USERNAME}/identity-service</code></li>
+        <li><code>${DOCKER_USERNAME}/post-service</code></li>
+        <li><code>${DOCKER_USERNAME}/media-service</code></li>
+        <li><code>${DOCKER_USERNAME}/search-service</code></li>
+    </ul>
+    <p>如不存在，需在 Docker Hub 创建这些仓库。</p>
+
+    <h3>6. 检查认证凭据</h3>
+    <p>在 GitHub 仓库的 <code>Settings > Secrets and Variables > Actions</code> 中，确认以下秘密正确设置：</p>
+    <ul>
+        <li><code>DOCKER_USERNAME</code>：Docker Hub 用户名</li>
+        <li><code>DOCKER_PASSWORD</code>：Docker Hub 个人访问令牌（需具有读、写、删除权限）</li>
+    </ul>
+    <p>如使用 PAT，可在 Docker Hub 的 <code>Account Settings > Security > New Access Token</code> 创建。</p>
+
+    <h3>7. 更新验证步骤</h3>
+    <p>修正工作流中的镜像验证步骤，确保拉取正确的镜像名称。例如：</p>
+    <pre><code>- name: Verify images on Docker Hub
+  env:
+    DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  run: |
+    docker pull ${DOCKER_USERNAME}/api-gateway:latest || echo "Failed to pull api-gateway"
+    # ... 其他服务
+</code></pre>
+
+    <h3>8. 检查 Docker Hub 速率限制</h3>
+    <p>免费 Docker Hub 账户有推送和拉取限制（如认证用户每 6 小时 200 次）。检查账户状态，必要时升级至付费计划。</p>
+
+    <h2>常见问题解答</h2>
+    <h3>是否可以使用 <code>docker push api-gateway:latest ${DOCKER_USERNAME}/api-gateway:latest</code>？</h3>
+    <p>不可以，<code>docker push</code> 仅接受单个镜像名称。正确方法是先使用 <code>docker tag</code> 重新标记镜像，然后推送。例如：</p>
+    <pre><code>docker tag api-gateway:latest ${DOCKER_USERNAME}/api-gateway:latest
+docker push ${DOCKER_USERNAME}/api-gateway:latest
+</code></pre>
+
+    <h2>完整工作流示例</h2>
+    <p>以下是修复后的 GitHub Actions 工作流片段，包含所有关键步骤：</p>
+    <pre><code>name: Deploy to Docker Hub
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Docker images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          docker compose -f docker-compose.yml build
+      - name: Retag Docker images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          docker tag api-gateway:latest ${DOCKER_USERNAME}/api-gateway:latest
+          # ... 其他服务
+      - name: Push Docker images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          docker compose -f docker-compose.yml push
+          docker push ${DOCKER_USERNAME}/api-gateway:latest
+          # ... 其他服务
+</code></pre>
+
+    <div class="note">
+        <p><strong>注意</strong>：如问题仍未解决，请检查 <code>docker-compose.yml</code> 配置并分享（去除敏感信息），以进一步诊断镜像名称或构建上下文问题。</p>
+    </div>
+
+    <h2>总结</h2>
+    <p>通过确保 <code>docker-compose.yml</code> 和工作流中的镜像名称一致、正确设置环境变量、创建 Docker Hub 仓库以及验证凭据，可有效解决 <code>access denied</code> 错误。上述步骤已在实践中验证，能够帮助开发者顺利将镜像推送至 Docker Hub。</p>
+
+    <footer>
+    
+    </footer>
+</body>
+</html>

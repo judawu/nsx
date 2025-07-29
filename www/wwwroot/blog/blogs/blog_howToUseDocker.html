@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker 使用指南：从安装到容器管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-relaxed">
+    <div class="container mx-auto max-w-4xl p-6 bg-white shadow-md rounded-lg mt-8">
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">Docker 使用指南：从安装到容器管理</h1>
+     
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">引言</h2>
+            <p class="text-gray-700">
+                Docker 是一个强大的容器化平台，广泛用于开发、测试和部署应用。本文整理了在 Windows 和 WSL（Windows Subsystem for Linux）环境中安装 Docker、常用命令、常见问题解决方法，以及容器状态查看和重启等操作的详细指南。特别针对 RabbitMQ 容器的管理，提供了实用示例。
+            </p>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">一、在 Windows/WSL 安装 Docker</h2>
+            <h3 class="text-xl font-medium text-gray-700 mb-2">1. 使用 Docker Desktop</h3>
+            <p class="text-gray-700">
+                Docker Desktop 是 Windows 上最便捷的 Docker 安装方式，支持 WSL 2 集成。
+            </p>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li>系统要求：Windows 10/11（64位，Build 19044+），启用虚拟化，4GB+ RAM。</li>
+                <li>下载并安装 <a href="https://www.docker.com/products/docker-desktop/" class="text-blue-500 hover:underline">Docker Desktop</a>。</li>
+                <li>启用 WSL 2：
+                    <pre class="bg-gray-800 text-white p-4 rounded"><code>wsl --install
+wsl --set-default-version 2</code></pre>
+                </li>
+                <li>在 Docker Desktop 设置中启用 WSL 2 后端并选择 WSL 发行版（如 Ubuntu）。</li>
+                <li>验证安装：
+                    <pre class="bg-gray-800 text-white p-4 rounded"><code>docker --version
+docker run hello-world</code></pre>
+                </li>
+            </ul>
+
+            <h3 class="text-xl font-medium text-gray-700 mb-2 mt-4">2. 在 WSL 2 安装 Docker</h3>
+            <p class="text-gray-700">
+                如果希望在 WSL（如 Ubuntu）中直接运行 Docker，可按以下步骤操作：
+            </p>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li>启用 WSL 2 并安装 Ubuntu：<code>wsl --install</code></li>
+                <li>更新 Ubuntu 软件包：<code>sudo apt update && sudo apt upgrade -y</code></li>
+                <li>安装 Docker：
+                    <pre class="bg-gray-800 text-white p-4 rounded"><code>sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io</code></pre>
+                </li>
+                <li>启动 Docker 服务：<code>sudo service docker start</code></li>
+                <li>将用户添加到 docker 组：<code>sudo usermod -aG docker $USER</code></li>
+            </ul>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">二、解决安装中的常见问题</h2>
+            <h3 class="text-xl font-medium text-gray-700 mb-2">1. 软件包升级被延迟（Phasing）</h3>
+            <p class="text-gray-700">
+                Ubuntu 的分阶段更新可能导致 <code>apt</code> 等软件包延迟升级，影响 Docker 安装。解决方法：
+            </p>
+            <pre class="bg-gray-800 text-white p-4 rounded"><code>sudo apt install apt apt-utils libapt-pkg6.0t64 libinput-bin libinput10
+sudo apt update
+sudo apt upgrade -y</code></pre>
+
+            <h3 class="text-xl font-medium text-gray-700 mb-2 mt-4">2. 权限问题（docker.sock）</h3>
+            <p class="text-gray-700">
+                如果遇到 <code>permission denied</code> 错误，需确保用户有权访问 Docker 守护进程：
+            </p>
+            <pre class="bg-gray-800 text-white p-4 rounded"><code>sudo usermod -aG docker $USER
+newgrp docker</code></pre>
+            <p class="text-gray-700">或临时使用 <code>sudo</code> 运行命令。</p>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">三、Docker 常用命令</h2>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li>查看运行中的容器：<code>docker ps</code></li>
+                <li>运行容器：<code>docker run --name my-container -d -p 8080:80 nginx</code></li>
+                <li>停止容器：<code>docker stop my-container</code></li>
+                <li>重启容器：<code>docker restart my-container</code></li>
+                <li>查看日志：<code>docker logs my-container</code></li>
+                <li>进入容器：<code>docker exec -it my-container bash</code></li>
+                <li>查看镜像：<code>docker images</code></li>
+                <li>拉取镜像：<code>docker pull rabbitmq:4-management</code></li>
+                <li>构建镜像：<code>docker build -t my-app .</code></li>
+                <li>清理资源：<code>docker system prune</code></li>
+            </ul>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">四、管理 RabbitMQ 容器</h2>
+            <h3 class="text-xl font-medium text-gray-700 mb-2">1. 查看容器状态</h3>
+            <p class="text-gray-700">
+                假设运行了一个 RabbitMQ 容器，输出如下：
+            </p>
+            <pre class="bg-gray-800 text-white p-4 rounded"><code>CONTAINER ID   IMAGE                  COMMAND                  CREATED        STATUS        PORTS                                                                 NAMES
+97a57ff4e149   rabbitmq:4-management  "docker-entrypoint.s…"   7 minutes ago  Up 3 seconds  4369/tcp, 5671/tcp, 0.0.0.0:5672->5672/tcp, [::]:5672->5672/tcp, ...  rabbitmq</code></pre>
+            <p class="text-gray-700">
+                <strong>解析</strong>：
+                <ul class="list-disc pl-6">
+                    <li><strong>CONTAINER ID</strong>：97a57ff4e149，容器唯一标识。</li>
+                    <li><strong>IMAGE</strong>：rabbitmq:4-management，带管理插件的 RabbitMQ 4 版本。</li>
+                    <li><strong>STATUS</strong>：Up 3 seconds，运行 3 秒（可能刚重启）。</li>
+                    <li><strong>PORTS</strong>：5672（AMQP）、15672（管理 UI）映射到主机，可通过 <code>localhost:15672</code> 访问 UI（默认用户：guest/guest）。</li>
+                    <li><strong>NAMES</strong>：rabbitmq，容器名称。</li>
+                </ul>
+            </p>
+
+            <h3 class="text-xl font-medium text-gray-700 mb-2 mt-4">2. 查看日志</h3>
+            <p class="text-gray-700">
+                检查容器日志以确认 RabbitMQ 正常运行：
+            </p>
+            <pre class="bg-gray-800 text-white p-4 rounded"><code>docker logs rabbitmq</code></pre>
+            <p class="text-gray-700">寻找 <code>Server startup complete</code> 表示启动成功。</p>
+
+            <h3 class="text-xl font-medium text-gray-700 mb-2 mt-4">3. 重启容器</h3>
+            <p class="text-gray-700">
+                重启容器使用：
+            </p>
+            <pre class="bg-gray-800 text-white p-4 rounded"><code>docker restart rabbitmq</code></pre>
+            <p class="text-gray-700">验证重启后状态：<code>docker ps</code></p>
+
+            <h3 class="text-xl font-medium text-gray-700 mb-2 mt-4">4. 容器名称变化问题</h3>
+            <p class="text-gray-700">
+                如果重启后容器名称变了，可能是误用了 <code>docker run</code> 创建了新容器。解决方法：
+            </p>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li>检查所有容器：<code>docker ps -a</code></li>
+                <li>重启原容器：<code>docker restart original-name</code></li>
+                <li>重命名新容器：<code>docker rename new-name rabbitmq</code></li>
+                <li>运行新容器时指定名称：<code>docker run --name rabbitmq -d -p 5672:5672 -p 15672:15672 rabbitmq:4-management</code></li>
+            </ul>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">五、注意事项</h2>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li><strong>权限</strong>：确保用户在 docker 组，否则需用 <code>sudo</code>。</li>
+                <li><strong>WSL</strong>：检查 Docker 服务状态：<code>sudo service docker status</code>。</li>
+                <li><strong>数据持久化</strong>：为 RabbitMQ 使用卷：<code>-v rabbitmq_data:/var/lib/rabbitmq</code>。</li>
+                <li><strong>Docker Desktop</strong>：启用 WSL 集成以简化管理。</li>
+            </ul>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">总结</h2>
+            <p class="text-gray-700">
+                本文介绍了在 Windows/WSL 环境中安装和使用 Docker 的完整流程，从基础命令到高级容器管理，涵盖了 RabbitMQ 容器的操作和故障排除。希望能帮助你快速上手 Docker，高效管理容器化应用！
+            </p>
+        </section>
+
+        <footer class="text-center text-gray-600 mt-8">
+     
+        </footer>
+    </div>
+</body>
+</html>

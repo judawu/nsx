@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sing-box 配置 ShadowTLS + Shadowsocks 及与 AnyTLS 的比较</title>
+    <style>
+        body {
+            font-family: 'Arial', 'PingFang SC', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre, code {
+            background-color: #e8e8e8;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre {
+            margin: 10px 0;
+        }
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        p, li {
+            color: #555;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sing-box 配置 ShadowTLS + Shadowsocks 及与 AnyTLS 的比较</h1>
+    <div class="section">
+        <h2>什么是 ShadowTLS？</h2>
+        <p><strong>ShadowTLS</strong> 是一种高级流量伪装协议，通过模拟合法 HTTPS 网站的 TLS 握手（如 <code>apple.com</code>）来隐藏代理流量，有效规避网络审查。在 <a href="https://github.com/SagerNet/sing-box">Sing-box</a> 中，ShadowTLS 通常与 Shadowsocks 或 VLESS 等协议结合，适合高审查环境下的隐蔽代理需求。</p>
+        <p>本文将介绍如何在 Sing-box 中配置 ShadowTLS（版本 3）+ Shadowsocks，使用 UDP 端口（8888），伪装为访问 <code>apple.com</code> 的 TLS 流量，结合 Shadowsocks 的 <code>2022-blake3-aes-128-gcm</code> 加密方法，并在文末与 AnyTLS 进行比较。</p>
+    </div>
+
+    <div class="section">
+        <h2>服务器端配置</h2>
+        <p>以下是服务器端的 Sing-box 配置文件，监听 UDP 端口 8888，伪装为 <code>apple.com</code> 的 TLS 流量。</p>
+        <pre><code>{
+  "log": {
+    "level": "warn",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns",
+        "address": "tls://8.8.8.8"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "type": "shadowtls",
+      "listen": "::",
+      "listen_port": 8888,
+      "version": 3,
+      "users": [
+        {
+          "name": "user1",
+          "password": "your_shadowtls_password"
+        }
+      ],
+      "handshake": {
+        "server": "apple.com",
+        "server_port": 443
+      },
+      "strict_mode": true,
+      "detour": "shadowsocks-in"
+    },
+    {
+      "type": "shadowsocks",
+      "tag": "shadowsocks-in",
+      "listen": "127.0.0.1",
+      "listen_port": 10801,
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "your_shadowsocks_password"
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    },
+    {
+      "type": "dns",
+      "tag": "dns-out"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "final": "direct"
+  }
+}</code></pre>
+        <h3>配置要点</h3>
+        <ul>
+            <li><strong>ShadowTLS</strong>：使用版本 3，伪装为 <code>apple.com:443</code> 的 TLS 握手，启用 <code>strict_mode</code> 确保安全性。密码需自定义（建议用 <code>openssl rand -base64 24</code> 生成）。</li>
+            <li><strong>Shadowsocks</strong>：内部协议监听 <code>127.0.0.1:10801</code>，使用 <code>2022-blake3-aes-128-gcm</code> 加密，密码需自定义（建议用 <code>openssl rand -base64 16</code> 生成）。</li>
+            <li><strong>UDP</strong>：ShadowTLS 监听 UDP 端口 8888，适配高丢包场景（如 VLESS+mKCP）。</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>客户端配置</h2>
+        <p>以下是客户端的 Sing-box 配置文件，用于连接服务器并启用 ShadowTLS 伪装。</p>
+        <pre><code>{
+  "log": {
+    "level": "warn",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns-remote",
+        "address": "tls://8.8.8.8",
+        "detour": "shadowsocks-out"
+      },
+      {
+        "tag": "local",
+        "address": "8.8.8.8"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "interface_name": "tun0",
+      "inet4_address": "172.19.0.1/30",
+      "mtu": 1500,
+      "auto_route": true,
+      "strict_route": true,
+      "sniff": true
+    },
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "127.0.0.1",
+      "listen_port": 1080,
+      "sniff": true
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "shadowsocks",
+      "tag": "shadowsocks-out",
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "your_shadowsocks_password",
+      "detour": "shadowtls-out",
+      "udp_over_tcp": {
+        "enabled": true,
+        "version": 2
+      }
+    },
+    {
+      "type": "shadowtls",
+      "tag": "shadowtls-out",
+      "server": "your_server_ip",
+      "server_port": 8888,
+      "version": 3,
+      "password": "your_shadowtls_password",
+      "tls": {
+        "enabled": true,
+        "server_name": "apple.com",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "firefox"
+        }
+      }
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "dns",
+      "tag": "dns-out"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "protocol": "dns",
+        "outbound": "dns-out"
+      }
+    ],
+    "auto_detect_interface": true,
+    "final": "shadowsocks-out"
+  }
+}</code></pre>
+        <h3>配置要点</h3>
+        <ul>
+            <li><strong>ShadowTLS</strong>：版本 3，连接服务器 IP 和端口 8888，伪装为 <code>apple.com</code>，启用 <code>utls.fingerprint: "firefox"</code> 模拟浏览器指纹。</li>
+            <li><strong>Shadowsocks</strong>：加密方法和密码需与服务器一致，通过 <code>detour</code> 使用 ShadowTLS 传输。</li>
+            <li><strong>UDP</strong>：通过 <code>udp_over_tcp</code> 支持 UDP 流量，适配 VLESS+mKCP 场景。</li>
+            <li><strong>Inbounds</strong>：提供 TUN（全局代理）和 SOCKS/HTTP 代理（端口 1080）。</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>配置步骤</h2>
+        <ol>
+            <li><strong>生成密码</strong>：
+                <ul>
+                    <li>ShadowTLS 密码：<pre><code>openssl rand -base64 24</code></pre></li>
+                    <li>Shadowsocks 密码：<pre><code>openssl rand -base64 16</code></pre></li>
+                    <li>将生成的密码填入服务器和客户端配置的 <code>password</code> 字段。</li>
+                </ul>
+            </li>
+            <li><strong>安装 Sing-box</strong>：
+                <ul>
+                    <li>下载最新版：
+                        <pre><code>wget https://github.com/SagerNet/sing-box/releases/download/v1.10.0/sing-box-1.10.0-linux-amd64.tar.gz
+tar -xf sing-box-1.10.0-linux-amd64.tar.gz
+mv sing-box-1.10.0-linux-amd64/sing-box /usr/local/bin/</code></pre>
+                    </li>
+                    <li>客户端根据平台（Windows、macOS、Android、iOS）下载对应版本。</li>
+                </ul>
+            </li>
+            <li><strong>保存配置文件</strong>：
+                <ul>
+                    <li>服务器：保存为 <code>/etc/sing-box/config.json</code>。</li>
+                    <li>客户端：保存为 <code>~/.sing-box/config.json</code> 或导入 GUI 客户端（如 Nekoray、SagerNet）。</li>
+                </ul>
+            </li>
+            <li><strong>启动 Sing-box</strong>：
+                <ul>
+                    <li>服务器：<pre><code>sing-box run -c /etc/sing-box/config.json</code></pre></li>
+                    <li>客户端：<pre><code>sing-box run -c ~/.sing-box/config.json</code></pre> 或使用 GUI 客户端加载。</li>
+                </ul>
+            </li>
+            <li><strong>防火墙设置</strong>：
+                <ul>
+                    <li>允许 UDP 8888 端口：<pre><code>ufw allow 8888/udp</code></pre></li>
+                </ul>
+            </li>
+            <li><strong>测试连接</strong>：
+                <ul>
+                    <li>使用客户端连接，测试访问受限网站。若失败，设置 <code>"level": "debug"</code> 查看日志。</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>注意事项</h2>
+        <ul>
+            <li><strong>ShadowTLS 版本</strong>：使用版本 3，支持严格模式（<code>strict_mode</code>）和更好的伪装效果。</li>
+            <li><strong>伪装域名</strong>：选择支持 TLS 1.3 且未被封锁的域名（如 <code>apple.com</code>）。若被封，替换为 <code>cloudflare.com</code> 等。</li>
+            <li><strong>UDP 支持</strong>：通过 <code>udp_over_tcp</code>（版本 2）支持 UDP 流量，适配 VLESS+mKCP 场景。</li>
+            <li><strong>常见问题</strong>：
+                <ul>
+                    <li><strong>连接失败</strong>：检查 ShadowTLS 和 Shadowsocks 密码、端口、域名是否一致，确认防火墙允许 <code>8888/udp</code>。</li>
+                    <li><strong>DNS 问题</strong>：确保 DNS 配置正确（如 <code>tls://8.8.8.8</code>），或添加 DNS 路由规则。</li>
+                    <li><strong>Shadowsocks 错误</strong>：若提示 <code>salt not unique</code> 或 <code>message authentication failed</code>，确认加密方法和密码匹配。</li>
+   
+        <li><strong>问题</strong>：使用 <code>google.com</code> 作为 SNI 被 GFW 阻断（常见于主动探测或 SNI 过滤）。</li>
+        <li><strong>解决</strong>：切换 SNI 为 <code>cloudflare.com</code>，因其被 GFW 封锁的可能性较低。</li>
+        <li><strong>问题</strong>：GFW 探测 ShadowTLS 的非标准 TLS 流量，导致连接重置。</li>
+        <li><strong>解决</strong>：
+            <ul>
+                <li>结合 Nginx 伪装流量为 <code>cloudflare.com</code> 的合法 HTTPS。</li>
+                <li>使用 Cloudflare ECH，隐藏真实 SNI（如 <code><YOUR_DOMAIN></code>）。</li>
+                <li>配置频率限制，防止 GFW 主动探测。</li>
+            </ul>
+        </li>
+        <li><strong>备用方案</strong>：若 <code>cloudflare.com</code> 被封，尝试其他 SNI（如 <code>dns.google</code>）或切换到 Hysteria2/TUIC（QUIC 协议）。</li>
+    </ul>
+            </li>
+            <li><strong>与 Nginx 结合</strong>：可用 Nginx Stream 转发 UDP 流量，配置示例：
+                <pre><code>stream {
+    upstream singbox_backend {
+        server 127.0.0.1:8888;
+    }
+    server {
+        listen 8888 udp ssl;
+        proxy_pass singbox_backend;
+        ssl_certificate /path/to/certificate.crt;
+        ssl_certificate_key /path/to/private.key;
+        ssl_protocols TLSv1.2 TLSv1.3;
+    }
+}</code></pre>
+            </li>
+            <li><strong>客户端选择</strong>：推荐使用 Nekoray 或 SagerNet（Android/iOS），支持 ShadowTLS 和链式代理。</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>ShadowTLS 与 AnyTLS 的比较</h2>
+        <p>ShadowTLS 和 AnyTLS 都是用于流量伪装的技术，但实现方式和适用场景有所不同。以下是两者的对比及 AnyTLS 的配置示例。</p>
+
+        <h3>比较表格</h3>
+        <table>
+            <tr>
+                <th>特性</th>
+                <th>ShadowTLS</th>
+                <th>AnyTLS</th>
+            </tr>
+            <tr>
+                <td><strong>伪装方式</strong></td>
+                <td>独立的 TLS 握手层，模拟合法 HTTPS 网站（如 <code>apple.com</code>）的握手，内部协议（如 Shadowsocks）独立运行。</td>
+                <td>直接在协议（如 Shadowsocks）上启用 TLS，伪装为 HTTPS 流量，配置更简单。</td>
+            </tr>
+            <tr>
+                <td><strong>证书需求</strong></td>
+                <td>无需服务器端证书，依赖伪装域名的 TLS 握手。</td>
+                <td>需要服务器端 TLS 证书和私钥（如 Let's Encrypt 或自签名）。</td>
+            </tr>
+            <tr>
+                <td><strong>隐蔽性</strong></td>
+                <td>更高，复杂握手伪装更难被检测，适合高审查环境。</td>
+                <td>稍低，TLS 流量更标准，适合一般伪装需求。</td>
+            </tr>
+            <tr>
+                <td><strong>配置复杂性</strong></td>
+                <td>需配置 ShadowTLS 和内部协议（如 Shadowsocks），稍复杂。</td>
+                <td>直接在协议上启用 TLS，配置更简单。</td>
+            </tr>
+            <tr>
+                <td><strong>适用场景</strong></td>
+                <td>高审查环境，需强伪装（如规避深度包检测）。</td>
+                <td>中等审查环境，需快速部署和简单配置。</td>
+            </tr>
+        </table>
+
+        <h3>AnyTLS 配置示例</h3>
+        <p>以下是 AnyTLS + Shadowsocks 的服务器端配置示例，监听 UDP 端口 8888，伪装为 <code>apple.com</code> 的 TLS 流量。</p>
+        <pre><code>{
+  "log": {
+    "level": "warn",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "dns",
+        "address": "tls://8.8.8.8"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "type": "shadowsocks",
+      "tag": "ss-in",
+      "listen": "::",
+      "listen_port": 8888,
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "your_shadowsocks_password",
+      "network": "udp",
+      "tls": {
+        "enabled": true,
+        "server_name": "apple.com",
+        "certificate_path": "/path/to/certificate.crt",
+        "key_path": "/path/to/private.key"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    },
+    {
+      "type": "dns",
+      "tag": "dns-out"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "final": "direct"
+  }
+}</code></pre>
+        <p><strong>AnyTLS 配置要点</strong>：</p>
+        <ul>
+            <li>直接在 Shadowsocks 上启用 TLS，无需单独的 ShadowTLS 层。</li>
+            <li>需要服务器端证书和私钥，生成命令：
+                <pre><code>openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /path/to/private.key \
+  -out /path/to/certificate.crt \
+  -subj "/CN=apple.com"</code></pre>
+            </li>
+            <li>客户端需配置相同的 <code>tls.server_name</code> 和 <code>utls.fingerprint</code>。</li>
+        </ul>
+        <p>AnyTLS 适合快速部署和中等审查环境，但隐蔽性略低于 ShadowTLS。若需更高隐蔽性，推荐使用 ShadowTLS。</p>
+    </div>
+
+    <div class="section">
+        <h2>总结</h2>
+        <p>ShadowTLS 结合 Sing-box 和 Shadowsocks 提供了一种强大的流量伪装方案，通过模拟 <code>apple.com</code> 的 TLS 握手有效隐藏代理流量，适合高审查环境。相比 AnyTLS，ShadowTLS 的握手伪装更复杂，隐蔽性更强，但配置稍复杂。本文的配置示例和步骤可帮助你快速搭建代理服务，AnyTLS 作为替代方案适用于简单场景。</p>
+        <p>如需更多配置（如多用户、VLESS 结合、mKCP 集成）或调试帮助，请参考 <a href="https://sing-box.sagernet.org">Sing-box 官方文档</a> 或相关社区资源。</p>
+    </div>
+</body>
+</html>

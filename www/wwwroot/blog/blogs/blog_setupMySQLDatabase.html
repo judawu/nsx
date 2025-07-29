@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在 Docker 中创建 MySQL 数据库并配置远程访问</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: Consolas, monospace;
+        }
+        .note {
+            background: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>在 Docker 中创建 MySQL 数据库并配置远程访问</h1>
+    <p>本文介绍如何使用 Docker 部署 MySQL 数据库，创建数据库，配置远程访问，禁用 IPv6，以及通过端口访问 MySQL。我们将使用一个 Bash 脚本（<code>mysql.sh</code>）自动化这些步骤，并解决常见的连接错误（如 <code>ERROR 2002</code> 和 <code>ERROR 2003</code>）。</p>
+
+    <h2>先决条件</h2>
+    <ul>
+        <li>已安装 Docker（运行 <code>docker --version</code> 验证）。</li>
+        <li>VPS 或服务器，具备 root 权限。</li>
+        <li>云服务器（如 AWS、阿里云）需配置安全组以允许 3306 端口入站流量。</li>
+        <li>了解基本的 Bash 和 MySQL 命令。</li>
+    </ul>
+
+    <h2>步骤一：编写自动化脚本</h2>
+    <p>我们将使用以下 Bash 脚本（<code>mysql.sh</code>）来部署 MySQL 容器，创建数据库 <code>xboard</code>，配置远程用户 <code>vpsadmin</code>，并禁用 IPv6 访问。</p>
+    <pre><code>#!/bin/bash
+
+CONTAINER_NAME="mysql"
+MYSQL_ROOT_PASSWORD="MYPASSWORD"
+REMOTE_USER="vpsadmin"
+REMOTE_PASSWORD="MYPASSWORD"
+DATABASE_NAME="xboard"
+MYSQL_PORT="3306"
+
+if ! command -v docker &> /dev/null; then
+    echo "Error: Docker is not installed. Please install Docker first."
+    exit 1
+fi
+
+if ! docker image inspect mysql:latest &> /dev/null; then
+    echo "Pulling MySQL latest image..."
+    docker pull mysql:latest
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to pull MySQL image."
+        exit 1
+    fi
+fi
+
+if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+    echo "Container ${CONTAINER_NAME} exists, removing it..."
+    docker stop "${CONTAINER_NAME}" &> /dev/null
+    docker rm "${CONTAINER_NAME}" &> /dev/null
+fi
+
+echo "Creating my.cnf for bind-address and socket..."
+echo -e "[mysqld]\nbind-address = 0.0.0.0\nsocket = /var/run/mysqld/mysqld.sock" > my.cnf
+
+echo "Starting MySQL container ${CONTAINER_NAME}..."
+docker run --name "${CONTAINER_NAME}" \
+    -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+    -v $(pwd)/my.cnf:/etc/mysql/my.cnf \
+    -p 0.0.0.0:${MYSQL_PORT}:${MYSQL_PORT} \
+    --sysctl net.ipv6.conf.all.disable_ipv6=1 \
+    -d mysql:latest
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to start MySQL container. Check Docker logs:"
+    docker logs "${CONTAINER_NAME}"
+    exit 1
+fi
+
+echo "Waiting for MySQL to start (120 seconds)..."
+sleep 120
+
+if ! docker ps --filter "name=${CONTAINER_NAME}" --filter "status=running" -q &> /dev/null; then
+    echo "Error: MySQL container failed to start. Check Docker logs:"
+    docker logs "${CONTAINER_NAME}"
+    exit 1
+fi
+
+echo "Verifying MySQL connection..."
+for i in {1..5}; do
+    docker exec "${CONTAINER_NAME}" mysqladmin --protocol=tcp -h 127.0.0.1 -u root -p"${MYSQL_ROOT_PASSWORD}" -P "${MYSQL_PORT}" ping &> /dev/null
+    if [ $? -eq 0 ]; then
+        echo "MySQL server is up."
+        break
+    else
+        echo "Attempt $i: MySQL server not ready. Retrying in 10 seconds..."
+        sleep 10
+    fi
+done
+
+if ! docker exec "${CONTAINER_NAME}" mysqladmin --protocol=tcp -h 127.0.0.1 -u root -p"${MYSQL_ROOT_PASSWORD}" -P "${MYSQL_PORT}" ping &> /dev/null; then
+    echo "Error: MySQL server is not responding. Check Docker logs:"
+    docker logs "${CONTAINER_NAME}"
+    exit 1
+fi
+
+echo "Creating database ${DATABASE_NAME} and configuring remote access..."
+docker exec -i "${CONTAINER_NAME}" mysql --protocol=tcp -h 127.0.0.1 -u root -p"${MYSQL_ROOT_PASSWORD}" -P "${MYSQL_PORT}" <<EOF
+CREATE DATABASE IF NOT EXISTS ${DATABASE_NAME};
+CREATE USER IF NOT EXISTS '${REMOTE_USER}'@'%' IDENTIFIED BY '${REMOTE_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DATABASE_NAME}.* TO '${REMOTE_USER}'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+SELECT User, Host FROM mysql.user WHERE User = '${REMOTE_USER}' OR User = 'root';
+SHOW DATABASES;
+EOF
+
+if [ $? -eq 0 ]; then
+    echo "MySQL database and user configured successfully."
+else
+    echo "Error: MySQL configuration failed. Check error messages above and Docker logs:"
+    docker logs "${CONTAINER_NAME}"
+    exit 1
+fi
+
+if command -v ufw &> /dev/null; then
+    echo "Configuring firewall to allow port ${MYSQL_PORT}..."
+    if sudo ufw status | grep -q "inactive"; then
+        echo "Warning: ufw is inactive. You may need to enable it or configure another firewall."
+    else
+        sudo ufw allow "${MYSQL_PORT}"
+        echo "Firewall rule added for port ${MYSQL_PORT}."
+    fi
+else
+    echo "Warning: ufw not detected. You may need to manually configure the firewall to allow port ${MYSQL_PORT}."
+fi
+
+HOST_IP=$(hostname -I | awk '{print $1}')
+if [ -z "${HOST_IP}" ]; then
+    HOST_IP="your_server_ip"
+fi
+
+echo "-----------------------------------------"
+echo "MySQL Configuration Complete!"
+echo "Container: ${CONTAINER_NAME}"
+echo "Database: ${DATABASE_NAME}"
+echo "Remote User: ${REMOTE_USER}"
+echo "Remote Password: ${REMOTE_PASSWORD}"
+echo "Connection Command: mysql -h ${HOST_IP} -u ${REMOTE_USER} -p${REMOTE_PASSWORD} -P ${MYSQL_PORT}"
+echo "-----------------------------------------"
+echo "Note: If using a cloud server, ensure port ${MYSQL_PORT} is allowed in your security group."
+echo "Recommendation: Restrict allowed IPs for security or use an SSH tunnel."
+</code></pre>
+
+    <h2>步骤二：运行脚本</h2>
+    <p>保存脚本为 <code>mysql.sh</code>，并赋予执行权限：</p>
+    <pre><code>chmod +x mysql.sh
+./mysql.sh
+</code></pre>
+    <p>脚本将：
+    <ul>
+        <li>检查并拉取 MySQL 镜像。</li>
+        <li>启动 MySQL 容器，映射端口 3306，禁用 IPv6。</li>
+        <li>创建数据库 <code>xboard</code> 和远程用户 <code>vpsadmin</code>。</li>
+        <li>配置防火墙（如果使用 <code>ufw</code>）。</li>
+        <li>输出远程连接命令，例如：<br>
+            <code>mysql -h your_server_ip -u vpsadmin -pEdgar4987187 -P 3306</code>
+        </li>
+    </ul></p>
+
+    <h2>步骤三：通过端口访问 MySQL</h2>
+    <p>确保 MySQL 通过 TCP 端口 3306 提供服务，并支持远程访问。</p>
+    <h3>1. 本地测试</h3>
+    <p>在主机上测试 TCP 连接：</p>
+    <pre><code>mysql -h 127.0.0.1 -u vpsadmin -pMYPASSWORD -P 3306
+</code></pre>
+    <p>如果失败，检查 MySQL 是否运行：</p>
+    <pre><code>docker exec -it mysql ps aux | grep mysqld
+</code></pre>
+    <p>验证端口监听：</p>
+    <pre><code>docker exec -it mysql netstat -tuln | grep 3306
+</code></pre>
+    <p>预期输出：<code>tcp 0 0 0.0.0.0:3306 0.0.0.0:* LISTEN</code></p>
+
+    <h3>2. 远程访问</h3>
+    <p>从远程机器连接，替换 <code>your_server_ip</code> 为 VPS 公网 IP：</p>
+    <pre><code>mysql -h your_server_ip -u vpsadmin -pEdgar4987187 -P 3306
+</code></pre>
+    <p>如果失败，检查云服务器安全组是否允许 3306 端口入站流量。测试连接性：</p>
+    <pre><code>telnet your_server_ip 3306
+</code></pre>
+
+    <h3>3. 使用 SSH 隧道（更安全）</h3>
+    <p>通过 SSH 隧道访问 MySQL：</p>
+    <pre><code>ssh -L 3306:localhost:3306 root@your_server_ip
+</code></pre>
+    <p>然后在本地连接：<code>mysql -h 127.0.0.1 -u vpsadmin -pEdgar4987187 -P 3306</code></p>
+
+    <h2>步骤四：禁用 IPv6 访问</h2>
+    <p>脚本已通过 <code>--sysctl net.ipv6.conf.all.disable_ipv6=1</code> 禁用容器内 IPv6。验证无 IPv6 绑定：</p>
+    <pre><code>docker port mysql
+</code></pre>
+    <p>预期输出：<code>3306/tcp -> 0.0.0.0:3306</code>（无 <code>[::]:3306</code>）。</p>
+    <p>如需全局禁用 IPv6，编辑 <code>/etc/docker/daemon.json</code>：</p>
+    <pre><code>{
+    "ipv6": false,
+    "ip6tables": false
+}
+</code></pre>
+    <p>重启 Docker：<code>sudo systemctl restart docker</code></p>
+
+    <h2>常见问题及解决方法</h2>
+    <h3>1. ERROR 2002: Can't connect to local MySQL server through socket</h3>
+    <p>原因：MySQL 客户端尝试通过 Unix 套接字连接，但服务器未运行或套接字路径错误。</p>
+    <p>解决方法：
+    <ul>
+        <li>检查 MySQL 是否运行：<code>docker exec -it mysql ps aux | grep mysqld</code></li>
+        <li>验证套接字路径：<code>docker exec -it mysql find / -name mysqld.sock 2>/dev/null</code></li>
+        <li>强制 TCP 连接：<code>mysql --protocol=tcp -h 127.0.0.1 -u root -pEdgar4987187 -P 3306</code></li>
+    </ul></p>
+
+    <h3>2. ERROR 2003: Can't connect to MySQL server on '127.0.0.1:3306'</h3>
+    <p>原因：MySQL 未监听 3306 端口或容器未正确启动。</p>
+    <p>解决方法：
+    <ul>
+        <li>检查日志：<code>docker logs mysql</code></li>
+        <li>验证端口：<code>docker exec -it mysql netstat -tuln | grep 3306</code></li>
+        <li>确保 <code>my.cnf</code> 包含：<code>bind-address = 0.0.0.0</code></li>
+    </ul></p>
+
+    <h3>3. 资源不足</h3>
+    <p>检查 VPS 资源：<code>free -m</code> 和 <code>df -h</code>。如内存不足，添加 swap：</p>
+    <pre><code>sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
+</code></pre>
+
+    <h2>安全建议</h2>
+    <div class="note">
+        <p><strong>密码安全</strong>：脚本中硬编码的密码（<code>MYPASSWORD</code>）不安全。建议使用 <code>.my.cnf</code> 文件存储凭据：
+        <pre><code>echo -e "[client]\nuser=root\npassword=MYPASSWORD" > mysql.conf
+docker run ... -v $(pwd)/mysql.conf:/root/.my.cnf ...
+</code></pre>
+        </p>
+        <p><strong>限制 IP</strong>：将用户权限限定为特定 IP：<code>CREATE USER 'vpsadmin'@'your_client_ip' IDENTIFIED BY 'MYPASSWORD';</code></p>
+        <p><strong>SSL 加密</strong>：配置 MySQL SSL 以加密远程连接。</p>
+    </div>
+
+    <h2>总结</h2>
+    <p>通过以上步骤，你可以成功在 Docker 中部署 MySQL 数据库，配置远程访问，禁用 IPv6，并通过端口 3306 访问数据库。如果遇到问题，请收集以下信息以便进一步排查：
+    <ul>
+        <li><code>docker logs mysql</code> 输出。</li>
+        <li><code>docker exec -it mysql ps aux | grep mysqld</code> 输出。</li>
+        <li><code>docker exec -it mysql netstat -tuln | grep 3306</code> 输出。</li>
+        <li>VPS 资源：<code>free -m</code> 和 <code>df -h</code>。</li>
+    </ul></p>
+
+</body>
+</html>
