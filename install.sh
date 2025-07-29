@@ -77,7 +77,7 @@ checkCentosSELinux() {
 # Install tools
 installTools() {
     echoContent skyBlue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
-    ${installType} curl wget sudo lsof unzip socat jq ping6 dig qrencode -y
+    ${installType} curl wget sudo lsof unzip ufw socat jq ping6 dig qrencode -y
     if [[ "$release" != "centos" ]]; then
         ${upgradeType}
     fi
