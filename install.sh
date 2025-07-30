@@ -1091,9 +1091,9 @@ updateNSX() {
     fi
 
     read -r -p "是否用 GitHub 仓库替换当前配置文件？(y/n): " keep_config
-    if [[ "$keep_config" == "y" ]]; then
+    if [[ "$keep_config" == "n" ]]; then
         echoContent green "保留现有配置文件，不进行更新."
-    else
+    elif [[ "$keep_config" == "y" ]]; then
         echoContent yellow "更新配置文件..."
         # Backup existing configuration files if they exist
         for file in "$COMPOSE_FILE" "$NGINX_CONF" "$XRAY_CONF" "$SINGBOX_CONF"; do
@@ -1160,6 +1160,8 @@ updateNSX() {
         }
 
         echoContent green "配置文件更新成功."
+    else
+        echoContent green "保留现有配置文件，不进行更新."
     fi
 
     # Call aliasInstall (assuming it's defined elsewhere)
