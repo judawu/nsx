@@ -50,11 +50,11 @@ checkSystem() {
     elif grep -q -i "ubuntu" /etc/os-release; then
         release="ubuntu"
         installType='apt -y install'
-        upgradeType='apt -y upgrade'
+        upgradeType='apt -y upgrade & apt update'
     elif grep -q -i "debian" /etc/os-release; then
         release="debian"
         installType='apt -y install'
-        upgradeType='apt -y upgrade'
+        upgradeType='apt -y upgrade & apt update'
     else
         echoContent red "不支持的操作系统，脚本仅支持 CentOS、Rocky Linux、Ubuntu 或 Debian."
         exit 1
