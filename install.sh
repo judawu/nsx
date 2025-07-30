@@ -83,7 +83,7 @@ installTools() {
     if [[ "$release" != "centos" ]]; then
         echoContent Green "\n执行系统更新..."
         ${upgradeType}
-        ${installType} update
+
     fi
 }
 
