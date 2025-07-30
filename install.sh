@@ -1330,7 +1330,7 @@ uninstallNSX(){
    # Uninstall Xray
     if command -v xray &>/dev/null; then
         read -r -p "确认卸载xray:（y/n)" uninstallXray
-        if [[-n $uninstallXray && $uninstallXray =='y' ]]; then
+        if [[ -n $uninstallXray && $uninstallXray =='y' ]]; then
             echoContent yellow "停止并卸载 Xray..."
             systemctl stop xray 2>/dev/null
             systemctl disable xray 2>/dev/null
@@ -1359,7 +1359,7 @@ uninstallNSX(){
     # Uninstall Sing-box
     if command -v sing-box &>/dev/null; then
         read -r -p "确认卸载sing-box:（y/n)" uninstallSingbox
-        if [[-n $uninstallSingbox && $uninstallSingbox =='y' ]]; then
+        if [[ -n $uninstallSingbox && $uninstallSingbox =='y' ]]; then
             echoContent yellow "停止并卸载 Sing-box..."
             systemctl stop sing-box 2>/dev/null
             systemctl disable sing-box 2>/dev/null
@@ -1388,7 +1388,7 @@ uninstallNSX(){
     # Uninstall Nginx
     if command -v nginx &>/dev/null; then
         read -r -p "确认卸载nginx:（y/n)" uninstallNginx
-        if [[-n $uninstallNginx && $uninstallNginx =='y' ]]; then
+        if [[ -n $uninstallNginx && $uninstallNginx =='y' ]]; then
             echoContent yellow "停止并卸载 Nginx..."
             systemctl stop nginx 2>/dev/null
             systemctl disable nginx 2>/dev/null
@@ -1417,7 +1417,7 @@ uninstallNSX(){
     # Uninstall Docker
     if command -v docker &>/dev/null; then
         read -r -p "确认卸载docker:（y/n)" uninstallDocker
-        if [[-n $uninstallDocker && $uninstallDocker =='y' ]]; then
+        if [[ -n $uninstallDocker && $uninstallDocker =='y' ]]; then
             echoContent yellow "停止并卸载 Docker..."
             systemctl stop docker 2>/dev/null
             systemctl disable docker 2>/dev/null
