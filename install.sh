@@ -1063,12 +1063,12 @@ updateNSX() {
         echoContent red "创建临时目录失败."
         exit 1
     fi
-
+    # Ensure temporary directory is cleaned up on exit
+    trap 'rm -rf "$TEMP_DIR"' EXIT
     # Clone the repository
-    git clone --depth 1 https://github.com/judawu/nsx.git "$TEMP_DIR"
-    if [ $? -ne 0 ]; then
+    # Clone the repository
+    if ! git clone https://github.com/judawu/nsx.git "$TEMP_DIR"; then
         echoContent red "克隆 Git 仓库失败，请检查网络或仓库地址 https://github.com/judawu/nsx."
-        rm -rf "$TEMP_DIR"
         exit 1
     fi
 
@@ -1086,8 +1086,87 @@ updateNSX() {
         exit 1
     fi
 
-    # Clean up temporary directory
-    rm -rf "$TEMP_DIR"
+    read -r -p "是否用 GitHub 仓库替换当前配置文件？(y/n): " keep_config
+    if [[ "$keep_config" == "y" ]]; then
+        echoContent green "保留现有配置文件，不进行更新."
+    else
+        echoContent yellow "更新配置文件..."
+        # Backup existing configuration files if they exist
+        for file in "$COMPOSE_FILE" "$NGINX_CONF" "$XRAY_CONF" "$SINGBOX_CONF"; do
+            if [[ -f "$file" ]]; then
+                mv "$file" "$file.bak" || {
+                    echoContent red "无法备份 $file."
+                    exit 1
+                }
+            fi
+        done
+
+        # Ensure source configuration files exist in the repository
+        for src in "$TEMP_DIR/docker/docker-compose.yml" "$TEMP_DIR/nginx/nginx.conf" \
+                   "$TEMP_DIR/xray/config.json" "$TEMP_DIR/sing-box/config.json"; do
+            if [[ ! -f "$src" ]]; then
+                echoContent red "仓库中缺少配置文件: $src."
+                exit 1
+            fi
+        done
+
+        # Ensure destination directories exist
+        for dest in "$COMPOSE_FILE" "$NGINX_CONF" "$XRAY_CONF" "$SINGBOX_CONF"; do
+            mkdir -p "$(dirname "$dest")" || {
+                echoContent red "无法创建目录 $(dirname "$dest")."
+                exit 1
+            }
+        done
+
+
+   # Copy configuration files
+        if ! cp "$TEMP_DIR/docker/docker-compose.yml" "$COMPOSE_FILE"; then
+            echoContent red "无法复制 docker-compose.yml 到 $COMPOSE_FILE."
+            exit 1
+        fi
+        if ! cp "$TEMP_DIR/nginx/nginx.conf" "$NGINX_CONF"; then
+            echoContent red "无法复制 nginx.conf 到 $NGINX_CONF."
+            exit 1
+        fi
+        if ! cp "$TEMP_DIR/xray/config.json" "$XRAY_CONF"; then
+            echoContent red "无法复制 xray/config.json 到 $XRAY_CONF."
+            exit 1
+        fi
+        if ! cp "$TEMP_DIR/sing-box/config.json" "$SINGBOX_CONF"; then
+            echoContent red "无法复制 sing-box/config.json 到 $SINGBOX_CONF."
+            exit 1
+        fi
+
+        # Set permissions
+        chmod 644 "$COMPOSE_FILE" || {
+            echoContent red "无法设置 $COMPOSE_FILE 权限."
+            exit 1
+        }
+        chmod 644 "$NGINX_CONF" || {
+            echoContent red "无法设置 $NGINX_CONF 权限."
+            exit 1
+        }
+        chmod 644 "$XRAY_CONF" || {
+            echoContent red "无法设置 $XRAY_CONF 权限."
+            exit 1
+        }
+        chmod 644 "$SINGBOX_CONF" || {
+            echoContent red "无法设置 $SINGBOX_CONF 权限."
+            exit 1
+        }
+
+        echoContent green "配置文件更新成功."
+    fi
+
+    # Call aliasInstall (assuming it's defined elsewhere)
+    if type aliasInstall >/dev/null 2>&1; then
+        aliasInstall || {
+            echoContent red "执行 aliasInstall 失败."
+            exit 1
+        }
+    else
+        echoContent yellow "警告: aliasInstall 函数未定义，跳过."
+    fi
 
 
 }
@@ -1101,10 +1180,17 @@ dockerInstall() {
     installAcme
 
     # Copy configuration files (assuming files are in the script's directory)
-    cp ./docker/docker-compose.yml "$COMPOSE_FILE"
-    cp ./nginx/nginx.conf "$NGINX_CONF"
-    cp ./xray/config.json "$XRAY_CONF"
-    cp ./sing-box/config.json "$SINGBOX_CONF"
+    if [[ $pwd != $BASE_DIR ]]; then 
+        cp ./docker/docker-compose.yml "$COMPOSE_FILE"
+        cp ./nginx/nginx.conf "$NGINX_CONF"
+        cp ./xray/config.json "$XRAY_CONF"
+        cp ./sing-box/config.json "$SINGBOX_CONF"
+        chmod 644 "$COMPOSE_FILE"
+        chmod 644 "$NGINX_CONF"
+        chmod 644 "$SINGBOX_CONF"
+        chmod 644 "$XRAY_CONF"
+        
+    fi
 
     # Check certificates
     if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
@@ -1168,8 +1254,11 @@ localInstall() {
 
     # Copy configuration files (assuming files are in the script's directory)
     cp ./nginx/nginx.conf /etc/nginx/nginx.conf
+    chmod 644 /etc/nginx/nginx.conf
     cp ./xray/config.json /usr/local/etc/xray/config.json
+    chmod 644 /usr/local/etc/xray/config.json
     cp ./sing-box/config.json /usr/local/etc/sing-box/config.json
+    chmod 644 /usr/local/etc/sing-box/config.json
 
     # Check certificates
     if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
