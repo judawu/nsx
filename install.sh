@@ -45,17 +45,19 @@ checkSystem() {
     echoContent skyBlue "检查系统..."
     if [[ -n $(find /etc -name "redhat-release") ]] || grep -q -i "centos" /etc/os-release || grep -q -i "rocky" /etc/os-release; then
         release="centos"
-        installType='yum -y install'
-        upgradeType='yum -y update'
+        installCmd='yum -y install'
+        upgradeCmd='yum -y update'
     elif grep -q -i "ubuntu" /etc/os-release; then
         release="ubuntu"
-        installType='apt -y install'
-        upgradeType='apt -y upgrade & apt update'
+        installCmd='apt -y install'
+        upgradeCmd='apt -y upgrade'
+        updateCmde='apt update'
         
     elif grep -q -i "debian" /etc/os-release; then
         release="debian"
-        installType='apt -y install'
-        upgradeType='apt -y upgrade & apt update'
+        installCmd='apt -y install'
+        upgradeCmd='apt -y upgrade'
+        updateCmd='apt update'
     else
         echoContent red "不支持的操作系统，脚本仅支持 CentOS、Rocky Linux、Ubuntu 或 Debian."
         exit 1
@@ -79,11 +81,12 @@ checkCentosSELinux() {
 installTools() {
     echoContent skyBlue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
     echoContent Green "\n安装以下依赖curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode.."
-    ${installType} curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode -y
+    ${installCmd} curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode -y
   
     if [[ "$release" != "centos" ]]; then
         echoContent Green "\n执行系统更新..."
-        ${upgradeType}
+        ${upgradeCmd}
+        ${updateCmd}
 
     fi
 }
@@ -108,8 +111,8 @@ installDocker() {
     if ! docker compose version &> /dev/null; then
         echoContent yellow "安装 Docker Compose 插件..."
         if [[ "$release" == "ubuntu" || "$release" == "debian" ]]; then
-            ${upgradeType}
-            ${installType} docker-compose-plugin
+            ${upgradeCmd}
+            ${installCmd} docker-compose-plugin
             if [ $? -ne 0 ]; then
                 echoContent red "通过 apt 安装 Docker Compose 插件失败."
                 exit 1
@@ -349,7 +352,7 @@ manageCertificates() {
             echoContent skyBlue "安装自签证书..."
             if ! command -v openssl &>/dev/null; then
                 echoContent yellow "安装 openssl..."
-                ${installType:-apt install -y} openssl
+                ${installCmd:-apt install -y} openssl
                 if [[ $? -ne 0 ]]; then
                     echoContent red "安装 openssl 失败，请手动安装"
                     exit 1
@@ -1051,7 +1054,7 @@ updateNSX() {
     # Check if git is installed
     if ! command -v git &> /dev/null; then
         echoContent yellow "安装 git..."
-        ${installType} git
+        ${installCmd} git
         if [ $? -ne 0 ]; then
             echoContent red "安装 git 失败，请手动安装."
             exit 1
@@ -1243,8 +1246,8 @@ localInstall() {
             echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | tee /etc/apt/sources.list.d/nginx.list
             curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key
             mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
-            ${upgradeType}
-            ${installType} nginx
+            ${upgradeCmd}
+            ${installCmd} nginx
         fi
     fi
 
@@ -1290,7 +1293,11 @@ stopNSX() {
         echoContent red "未找到 Docker 或 docker-compose.yml 文件，如果是本地安装，请手动停止服务."
         exit 1
     fi
-
+    # Check if Docker service is running
+    if ! systemctl is-active --quiet docker; then
+        echoContent red "Docker 服务未运行"
+        exit 1
+    fi
     # Stop and remove containers
     echoContent yellow "运行 docker compose down..."
     docker compose -f "$COMPOSE_FILE" down
@@ -1302,22 +1309,162 @@ stopNSX() {
     # Clean up /dev/shm/nsx if empty
     if [ -d "$NGINX_SHM_DIR" ] && [ -z "$(ls -A "$NGINX_SHM_DIR")" ]; then
         echoContent yellow "目录 $NGINX_SHM_DIR 为空，删除..."
-        rm -rf "$NGINX_SHM_DIR"
+        if ! rm -rf "$NGINX_SHM_DIR"; then
+                echoContent red "无法删除 $NGINX_SHM_DIR，请检查权限."
+                exit 1
+         fi
     elif [ -d "$NGINX_SHM_DIR" ]; then
         echoContent yellow "清理 $NGINX_SHM_DIR 中的文件..."
-        rm -rf "$NGINX_SHM_DIR"/* 2>/dev/null
+        if ! rm -rf "$NGINX_SHM_DIR"/*; then
+                echoContent red "无法清理 $NGINX_SHM_DIR 中的文件，请检查权限."
+                exit 1
+        fi
     fi
 
     echoContent green "NSX 容器已停止并清理完成."
 }
+uninstallNSX(){
 
+   # Uninstall Xray
+    if command -v xray &>/dev/null; then
+        read -r -p "确认卸载xray:（y/n)" uninstallXray
+        if [[-n $uninstallXray && $uninstallXray =='y' ]]; then
+            echoContent yellow "停止并卸载 Xray..."
+            systemctl stop xray 2>/dev/null
+            systemctl disable xray 2>/dev/null
+            if [[ -f "/etc/systemd/system/xray.service" ]]; then
+                rm -f /etc/systemd/system/xray.service || {
+                    echoContent red "无法删除 xray.service，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/usr/local/bin/xray" ]]; then
+                rm -rf /usr/local/bin/xray/* || {
+                    echoContent red "无法清理 /usr/local/bin/xray，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/usr/local/etc/xray" ]]; then
+                rm -rf /usr/local/etc/xray/* || {
+                    echoContent red "无法清理 /usr/local/etc/xray，请检查权限."
+                    exit 1
+                }
+            fi
+            echoContent green " ---> Xray 卸载完成."
+         fi
+    fi
+
+    # Uninstall Sing-box
+    if command -v sing-box &>/dev/null; then
+        read -r -p "确认卸载sing-box:（y/n)" uninstallSingbox
+        if [[-n $uninstallSingbox && $uninstallSingbox =='y' ]]; then
+            echoContent yellow "停止并卸载 Sing-box..."
+            systemctl stop sing-box 2>/dev/null
+            systemctl disable sing-box 2>/dev/null
+            if [[ -f "/etc/systemd/system/sing-box.service" ]]; then
+                rm -f /etc/systemd/system/sing-box.service || {
+                    echoContent red "无法删除 sing-box.service，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/usr/local/bin/sing-box" ]]; then
+                rm -rf /usr/local/bin/sing-box/* || {
+                    echoContent red "无法清理 /usr/local/bin/sing-box，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/usr/local/etc/sing-box" ]]; then
+                rm -rf /usr/local/etc/sing-box/* || {
+                    echoContent red "无法清理 /usr/local/etc/sing-box，请检查权限."
+                    exit 1
+                }
+            fi
+            echoContent green " ---> Sing-box 卸载完成."
+        fi
+    fi
+
+    # Uninstall Nginx
+    if command -v nginx &>/dev/null; then
+        read -r -p "确认卸载nginx:（y/n)" uninstallNginx
+        if [[-n $uninstallNginx && $uninstallNginx =='y' ]]; then
+            echoContent yellow "停止并卸载 Nginx..."
+            systemctl stop nginx 2>/dev/null
+            systemctl disable nginx 2>/dev/null
+            if [[ -f "/etc/systemd/system/nginx.service" ]]; then
+                rm -f /etc/systemd/system/nginx.service || {
+                    echoContent red "无法删除 nginx.service，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/usr/local/nginx" ]]; then
+                rm -rf /usr/local/nginx/* || {
+                    echoContent red "无法清理 /usr/local/nginx，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/etc/nginx" ]]; then
+                rm -rf /etc/nginx/* || {
+                    echoContent red "无法清理 /etc/nginx，请检查权限."
+                    exit 1
+                }
+            fi
+            echoContent green " ---> Nginx 卸载完成."
+        fi
+    fi
+
+    # Uninstall Docker
+    if command -v docker &>/dev/null; then
+        read -r -p "确认卸载docker:（y/n)" uninstallDocker
+        if [[-n $uninstallDocker && $uninstallDocker =='y' ]]; then
+            echoContent yellow "停止并卸载 Docker..."
+            systemctl stop docker 2>/dev/null
+            systemctl disable docker 2>/dev/null
+            if [[ -f "/etc/systemd/system/docker.service" ]]; then
+                rm -f /etc/systemd/system/docker.service || {
+                    echoContent red "无法删除 docker.service，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/usr/local/docker" ]]; then
+                rm -rf /usr/local/docker/* || {
+                    echoContent red "无法清理 /usr/local/docker，请检查权限."
+                    exit 1
+                }
+            fi
+            if [[ -d "/etc/docker" ]]; then
+                rm -rf /etc/docker/* || {
+                    echoContent red "无法清理 /etc/docker，请检查权限."
+                    exit 1
+                }
+            fi
+            # Clean up Docker data (images, containers, volumes)
+            if docker system prune -a -f --volumes; then
+                echoContent green "Docker 数据清理完成."
+            else
+                echoContent yellow "警告: Docker 数据清理失败，部分数据可能仍存在."
+            fi
+            echoContent green " ---> Docker 卸载完成."
+        fi
+    fi
+    
+    echoContent green " --->"
+
+    # Reload systemd daemon
+    systemctl daemon-reload 2>/dev/null || {
+        echoContent red "无法重新加载 systemd 配置，请检查."
+        exit 1
+    }
+
+    echoContent green "卸载完成.再检查一下，然后可以手动删除/usr/local/nsx下面的所有文件"
+
+}
 # Main menu
 menu() {
     clear
     echoContent red "\n=============================================================="
     echoContent green "NSX 安装管理脚本"
     echoContent green "作者: JudaWu"
-    echoContent green "版本: v0.0.1"
+    echoContent green "版本: v0.0.2"
     echoContent green "Github: https://github.com/judawu/nsx"
     echoContent green "描述: 一个集成 Nginx、Sing-box 和 Xray 的代理环境"
     echoContent red "\n=============================================================="
@@ -1334,6 +1481,7 @@ menu() {
     echoContent yellow "7. 更新脚本"
     echoContent yellow "8. 停止 Docker"
     echoContent yellow "9. 生成订阅"
+    echoContent yellow "10. 卸载nsx"
     echoContent yellow "10. 退出"
     read -r -p "请选择一个选项 [1-9]: " option
 
@@ -1346,7 +1494,8 @@ menu() {
         7) updateNSX ;;
         8) stopNSX ;;
         9) generateSubscriptions ;;
-        10) exit 0 ;;
+        10)uninstallNSX ;;
+        11) exit 0 ;;
         *) echoContent red "无效选项." ; menu ;;
     esac
 }
