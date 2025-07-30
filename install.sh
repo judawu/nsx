@@ -189,22 +189,30 @@ manageCertificates() {
             [[ "$cert_option" == "2" ]] && action="--renew"
             echoContent skyBlue "${action##--}证书..."
             read -r -p "确认 SSL 类型为 letsencrypt 还是 zerossl (y=letsencrypt, n=zerossl): " selectSSLType
-            if [[ -n "$selectSSLType" && "$selectSSLType" == "y" ]]; then
-                sslType="letsencrypt"
-            else
+            if [[ -n "$selectSSLType" && "$selectSSLType" == "n" ]]; then
                 sslType="zerossl"
+              
+            else
+                sslType="letsencrypt"
+               
             fi
+            echoContent skyBlue " SSL 类型为 $sslType."
             read -r -p "请输入证书域名 (例如: yourdomain.com 或 *.yourdomain.com，多个域名用逗号隔开): " DOMAIN
             if [[ -z "$DOMAIN" || ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
                 echoContent red "无效域名，请输入有效域名"
                 return 1
             fi
+            echoContent skyBlue " 证书域名为 $DOMAIN."
             read -r -p "请输入DNS提供商: 0.Cloudflare, 1.阿里云, 2.手动DNS, 3.独立: " DNS_VENDOR
+
             if [[ "$cert_option" == "1" ]]; then
                 # Clear previous credentials for this domain
+                
                 grep -v "^${DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
             fi
+            echoContent skyBlue " DNS提供商选择 $DNS_VENDOR."
             if [[ "$DNS_VENDOR" == "0" ]]; then
+             
                 if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE") ]]; then
                     # Load saved Cloudflare credentials for renewal
                     IFS=':' read -r _ _ cf_type cf_value1 cf_value2 < <(grep "^${DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE")
@@ -218,7 +226,7 @@ manageCertificates() {
                 else
                     read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " cfAPIToken
                     if [[ -n "$cfAPIToken" ]]; then
-                        echoContent green " ---> 保存 Cloudflare API Token"
+                        echoContent green " ---> 保存 Cloudflare API Token $cfAPIToken"
                         echo "${DOMAIN}:Cloudflare:token:${cfAPIToken}" >> "$CREDENTIALS_FILE"
                     else
                         read -r -p "请输入 Cloudflare Email: " cfAPIEmail
@@ -227,7 +235,7 @@ manageCertificates() {
                             echoContent red " ---> 输入为空，请重试"
                             return 1
                         fi
-                        echoContent green " ---> 保存 Cloudflare Email 和 Global API Key"
+                        echoContent green " ---> 保存 Cloudflare Email $cfAPIEmail 和 Global API Key $cfAPIKey"
                         echo "${DOMAIN}:Cloudflare:key:${cfAPIEmail}:${cfAPIKey}" >> "$CREDENTIALS_FILE"
                     fi
                 fi
