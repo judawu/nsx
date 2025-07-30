@@ -77,9 +77,13 @@ checkCentosSELinux() {
 # Install tools
 installTools() {
     echoContent skyBlue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
-    ${installType} curl wget sudo lsof unzip ufw socat jq ping6 dig qrencode -y
+    echoContent Green "\n安装以下依赖curl wget git sudo lsof unzip ufw socat jq ping6 dig qrencode.."
+    ${installType} curl wget git sudo lsof unzip ufw socat jq ping6 dig qrencode -y
+  
     if [[ "$release" != "centos" ]]; then
+        echoContent Green "\n执行系统更新..."
         ${upgradeType}
+        ${installType} update
     fi
 }
 
@@ -1090,6 +1094,7 @@ updateNSX() {
 
 # Docker installation
 dockerInstall() {
+    installTools
     echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : Docker 安装..."
     installDocker
     createDirectories
@@ -1136,6 +1141,7 @@ dockerInstall() {
 
 # Local installation
 localInstall() {
+   
     echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 本地安装..."
     installTools
     checkCentosSELinux
@@ -1239,7 +1245,7 @@ menu() {
     read -r -p "请选择一个选项 [1-9]: " option
 
     case $option in
-        1|2) dockerInstall ;;
+        1|2)dockerInstall ;;
         3) localInstall ;;
         4) manageCertificates ;;
         5) manageConfigurations ;;
