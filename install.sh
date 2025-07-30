@@ -169,284 +169,186 @@ installAcme() {
 
 # Manage certificates
 manageCertificates() {
+    # Define defaults
+    ACME_LOG="${ACME_LOG:-/var/log/acme.log}"
+    CERT_DIR="${CERT_DIR:-/etc/ssl/private}"
+    CREDENTIALS_FILE="${HOME}/.acme.sh/credentials.conf"
+    mkdir -p "$CERT_DIR" || { echoContent red "无法创建 $CERT_DIR"; exit 1; }
+    touch "$CREDENTIALS_FILE" && chmod 600 "$CREDENTIALS_FILE" || { echoContent red "无法创建 $CREDENTIALS_FILE"; exit 1; }
+
     echoContent skyBlue "\n证书管理菜单"
-    echoContent yellow "1. 安装 acme.sh 并申请通配符证书 (Cloudflare API)"
-    echoContent yellow "2. 安装 acme.sh 并申请通配符证书 (手动 DNS)"
-    echoContent yellow "3. 更新通配符证书"
-    echoContent yellow "4. 安装 acme.sh 并申请独立证书"
-    echoContent yellow "5. 更新独立证书"
-    echoContent yellow "6. 安装自签证书"
-    echoContent yellow "7. 退出"
-    read -r -p "请选择一个选项 [1-7]: " cert_option
+    echoContent yellow "1. 申请证书"
+    echoContent yellow "2. 更新证书"
+    echoContent yellow "3. 安装自签证书"
+    echoContent yellow "4. 退出"
+    read -r -p "请选择一个选项 [1-4]: " cert_option
 
     case $cert_option in
-        1)
-            installAcme
-            read -r -p "请输入通配符证书域名 (例如: yourdomain.com): " DOMAIN
-            read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " CF_Token
-            if [[ -n "$CF_Token" ]]; then
-                export CF_Token
+        1|2)
+            local action="--issue"
+            [[ "$cert_option" == "2" ]] && action="--renew"
+            echoContent skyBlue "${action##--}证书..."
+            read -r -p "确认 SSL 类型为 letsencrypt 还是 zerossl (y=letsencrypt, n=zerossl): " selectSSLType
+            if [[ -n "$selectSSLType" && "$selectSSLType" == "y" ]]; then
+                sslType="letsencrypt"
             else
-                read -r -p "请输入 Cloudflare Email: " CF_Email
-                read -r -p "请输入 Cloudflare Global API Key: " CF_Key
-                export CF_Key
-                export CF_Email
+                sslType="zerossl"
             fi
-
-            echoContent skyBlue "使用 Cloudflare API 申请通配符证书..."
-            sudo "$HOME/.acme.sh/acme.sh" --issue -d "*.${DOMAIN}" -d "${DOMAIN}" --dns dns_cf -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
-            if [ $? -ne 0 ]; then
-                echoContent red "申请通配符证书失败，请检查 $ACME_LOG 日志."
-                exit 1
+            read -r -p "请输入证书域名 (例如: yourdomain.com 或 *.yourdomain.com，多个域名用逗号隔开): " DOMAIN
+            if [[ -z "$DOMAIN" || ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                echoContent red "无效域名，请输入有效域名"
+                return 1
             fi
-
-            echoContent yellow "安装通配符证书..."
-            sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "*.${DOMAIN}" --ecc \
-                --fullchain-file "${CERT_DIR}/wildcard.${DOMAIN}.pem" \
-                --key-file "${CERT_DIR}/wildcard.${DOMAIN}.key"
-            if [ $? -ne 0 ]; then
-                echoContent red "安装通配符证书失败，请检查 $ACME_LOG 日志."
-                exit 1
+            read -r -p "请输入DNS提供商: 0.Cloudflare, 1.阿里云, 2.手动DNS, 3.独立: " DNS_VENDOR
+            if [[ "$cert_option" == "1" ]]; then
+                # Clear previous credentials for this domain
+                grep -v "^${DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
             fi
-
-            chmod 644 "${CERT_DIR}/wildcard.${DOMAIN}.pem"
-            chmod 600 "${CERT_DIR}/wildcard.${DOMAIN}.key"
-            echoContent green "通配符证书申请和安装成功."
-
-            # Clean up TXT records
-            echoContent yellow "清除 TXT 记录..."
-            sudo "$HOME/.acme.sh/acme.sh" --remove -d "*.${DOMAIN}" -d "${DOMAIN}" --dns dns_cf
-            echoContent green "TXT 记录已清除."
-            ;;
-        2)
-            installAcme
-            read -r -p "请输入通配符证书域名 (例如: yourdomain.com): " DOMAIN
-            echoContent yellow "请手动在 DNS 提供商添加 TXT 记录: https://github.com/judawu/nsx/blob/main/docs/dns_txt.md"
-            sudo "$HOME/.acme.sh/acme.sh" --issue -d "*.${DOMAIN}" -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
-            txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
-            if [[ -n "$txtValue" ]]; then
-                echoContent green " ---> 名称: _acme-challenge"
-                echoContent green " ---> 值: ${txtValue}"
-                echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
-                read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
-                if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
-                    txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
-                    if echo "$txtAnswer" | grep -q "^${txtValue}"; then
-                        echoContent green " ---> TXT 记录验证通过"
-                        sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "*.${DOMAIN}" --ecc \
-                            --fullchain-file "${CERT_DIR}/wildcard.${DOMAIN}.pem" \
-                            --key-file "${CERT_DIR}/wildcard.${DOMAIN}.key"
-                        chmod 644 "${CERT_DIR}/wildcard.${DOMAIN}.pem"
-                        chmod 600 "${CERT_DIR}/wildcard.${DOMAIN}.key"
-                        echoContent green "通配符证书安装成功."
+            if [[ "$DNS_VENDOR" == "0" ]]; then
+                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE") ]]; then
+                    # Load saved Cloudflare credentials for renewal
+                    IFS=':' read -r _ _ cf_type cf_value1 cf_value2 < <(grep "^${DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE")
+                    if [[ "$cf_type" == "token" ]]; then
+                        cfAPIToken="$cf_value1"
                     else
-                        echoContent red "TXT 记录验证失败，请重试或使用其他方法申请证书."
-                        exit 1
+                        cfAPIEmail="$cf_value1"
+                        cfAPIKey="$cf_value2"
+                    fi
+                    echoContent green " ---> 使用保存的 Cloudflare 凭据进行续订"
+                else
+                    read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " cfAPIToken
+                    if [[ -n "$cfAPIToken" ]]; then
+                        echoContent green " ---> 保存 Cloudflare API Token"
+                        echo "${DOMAIN}:Cloudflare:token:${cfAPIToken}" >> "$CREDENTIALS_FILE"
+                    else
+                        read -r -p "请输入 Cloudflare Email: " cfAPIEmail
+                        read -r -p "请输入 Cloudflare Global API Key: " cfAPIKey
+                        if [[ -z "${cfAPIEmail}" || -z "${cfAPIKey}" ]]; then
+                            echoContent red " ---> 输入为空，请重试"
+                            return 1
+                        fi
+                        echoContent green " ---> 保存 Cloudflare Email 和 Global API Key"
+                        echo "${DOMAIN}:Cloudflare:key:${cfAPIEmail}:${cfAPIKey}" >> "$CREDENTIALS_FILE"
                     fi
                 fi
-            fi
-            ;;
-        3)
-            echoContent skyBlue "更新通配符证书..."
-            if [[ -z "$DOMAIN" ]]; then
-                read -r -p "请输入要更新的通配符证书域名 (例如: yourdomain.com): " DOMAIN
-            fi
-            if [[ -n "$CF_Token" ]]; then
-                export CF_Token
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns dns_cf --ecc
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
-            elif [[ -n "$CF_Key" && -n "$CF_Email" ]]; then
-                export CF_Key
-                export CF_Email
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns dns_cf --ecc
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
-            else
-                echoContent yellow "未找到 Cloudflare API 凭据，使用手动 DNS 更新."
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please --ecc
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please --ecc
-                txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
+                echoContent green " ---> Cloudflare DNS API ${action##--}证书中"
+                if [[ -n "$cfAPIToken" ]]; then
+                    if ! sudo CF_Token="${cfAPIToken}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_cf -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
+                        echoContent red "命令失败，请检查 $ACME_LOG 日志"
+                        exit 1
+                    fi
+                    unset CF_Token
+                else
+                    if ! sudo CF_Email="${cfAPIEmail}" CF_Key="${cfAPIKey}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_cf -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
+                        echoContent red "命令失败，请检查 $ACME_LOG 日志"
+                        exit 1
+                    fi
+                    unset CF_Email CF_Key
+                fi
+                echoContent yellow "清除 TXT 记录..."
+                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns dns_cf 2>&1 | tee -a "$ACME_LOG"; then
+                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
+                else
+                    echoContent green "TXT 记录已清除"
+                fi
+            elif [[ "$DNS_VENDOR" == "1" ]]; then
+                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${DOMAIN}:Alibaba:" "$CREDENTIALS_FILE") ]]; then
+                    # Load saved Alibaba credentials for renewal
+                    IFS=':' read -r _ _ aliKey aliSecret < <(grep "^${DOMAIN}:Alibaba:" "$CREDENTIALS_FILE")
+                    echoContent green " ---> 使用保存的阿里云凭据进行续订"
+                else
+                    read -r -p "请输入阿里云 Key: " aliKey
+                    read -r -p "请输入阿里云 Secret: " aliSecret
+                    if [[ -z "${aliKey}" || -z "${aliSecret}" ]]; then
+                        echoContent red " ---> 输入为空，请重试"
+                        return 1
+                    fi
+                    echoContent green " ---> 保存阿里云 Key 和 Secret"
+                    echo "${DOMAIN}:Alibaba:${aliKey}:${aliSecret}" >> "$CREDENTIALS_FILE"
+                fi
+                echoContent green " ---> 阿里云 DNS API ${action##--}证书中"
+                if ! sudo Ali_Key="${aliKey}" Ali_Secret="${aliSecret}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_ali -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
+                    echoContent red "命令失败，请检查 $ACME_LOG 日志"
+                    exit 1
+                fi
+                unset Ali_Key Ali_Secret
+                echoContent yellow "清除 TXT 记录..."
+                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns dns_ali 2>&1 | tee -a "$ACME_LOG"; then
+                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
+                else
+                    echoContent green "TXT 记录已清除"
+                fi
+            elif [[ "$DNS_VENDOR" == "2" ]]; then
+                echoContent yellow "手动 DNS 模式，请添加 TXT 记录: https://github.com/judawu/nsx/blob/main/docs/dns_txt.md"
+                if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
+                    echoContent red "命令失败，请检查 $ACME_LOG 日志"
+                    exit 1
+                fi
+                txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}' | head -1)
                 if [[ -n "$txtValue" ]]; then
                     echoContent green " ---> 名称: _acme-challenge"
                     echoContent green " ---> 值: ${txtValue}"
-                    echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
+                    echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟"
                     read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
                     if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
-                        txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
+                        txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}' | head -1)
                         if echo "$txtAnswer" | grep -q "^${txtValue}"; then
                             echoContent green " ---> TXT 记录验证通过"
-                        else
-                            echoContent red "TXT 记录验证失败."
-                            exit 1
-                        fi
-                    fi
-                fi
-            fi
-            sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "*.${DOMAIN}" --ecc \
-                --fullchain-file "${CERT_DIR}/wildcard.${DOMAIN}.pem" \
-                --key-file "${CERT_DIR}/wildcard.${DOMAIN}.key"
-            chmod 644 "${CERT_DIR}/wildcard.${DOMAIN}.pem"
-            chmod 600 "${CERT_DIR}/wildcard.${DOMAIN}.key"
-            echoContent green "通配符证书更新成功."
-            ;;
-        4)
-            installAcme
-            read -r -p "请输入独立证书域名 (例如: sub.yourdomain.com): " DOMAIN
-            echoContent skyBlue "\n独立证书验证方法"
-            echoContent yellow "1. Cloudflare API (DNS 验证)"
-            echoContent yellow "2. 手动 DNS"
-            echoContent yellow "3. HTTP 验证 (需要 Nginx 运行)"
-            read -r -p "请选择验证方法 [1-3]: " validation_method
-
-            case $validation_method in
-                1)
-                    read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " CF_Token
-                    if [[ -n "$CF_Token" ]]; then
-                        export CF_Token
-                    else
-                        read -r -p "请输入 Cloudflare Email: " CF_Email
-                        read -r -p "请输入 Cloudflare Global API Key: " CF_Key
-                        export CF_Key
-                        export CF_Email
-                    fi
-
-                    echoContent skyBlue "使用 Cloudflare API 申请独立证书..."
-                    sudo  "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --dns dns_cf -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
-                    if [ $? -ne 0 ]; then
-                        echoContent red "申请独立证书失败，请检查 $ACME_LOG 日志."
-                        exit 1
-                    fi
-
-                    echoContent yellow "安装独立证书..."
-                    sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
-                        --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
-                        --key-file "${CERT_DIR}/${DOMAIN}.key"
-                    if [ $? -ne 0 ]; then
-                        echoContent red "安装独立证书失败，请检查 $ACME_LOG 日志."
-                        exit 1
-                    fi
-
-                    chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
-                    chmod 600 "${CERT_DIR}/${DOMAIN}.key"
-                    echoContent green "独立证书申请和安装成功."
-
-                    # Clean up TXT records
-                    echoContent yellow "清除 TXT 记录..."
-                    sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns dns_cf
-                    echoContent green "TXT 记录已清除."
-                    ;;
-                2)
-                    echoContent yellow "请手动在 DNS 提供商添加 TXT 记录: https://github.com/judawu/nsx/blob/main/docs/dns_txt.md"
-                    sudo "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
-                    txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
-                    if [[ -n "$txtValue" ]]; then
-                        echoContent green " ---> 名称: _acme-challenge.${DOMAIN}"
-                        echoContent green " ---> 值: ${txtValue}"
-                        echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
-                        read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
-                        if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
-                            txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
-                            if echo "$txtAnswer" | grep -q "^${txtValue}"; then
-                                echoContent green " ---> TXT 记录验证通过"
-                                sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
-                                    --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
-                                    --key-file "${CERT_DIR}/${DOMAIN}.key"
-                                chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
-                                chmod 600 "${CERT_DIR}/${DOMAIN}.key"
-                                echoContent green "独立证书安装成功."
-                            else
-                                echoContent red "TXT 记录验证失败."
+                            if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
+                                echoContent red "续订失败，请检查 $ACME_LOG 日志"
                                 exit 1
                             fi
-                        fi
-                    fi
-                    ;;
-                3)
-                    # Check if Nginx is running
-                    if ! pgrep nginx > /dev/null && ! docker ps | grep -q nginx; then
-                        echoContent red "Nginx 未运行，HTTP 验证需要 Nginx."
-                        exit 1
-                    fi
-
-                    echoContent skyBlue "通过 HTTP 验证申请独立证书..."
-                    sudo "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --webroot "${WWW_DIR}/wwwroot" -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
-                    if [ $? -ne 0 ]; then
-                        echoContent red "申请独立证书失败，请检查 $ACME_LOG 日志."
-                        exit 1
-                    fi
-
-                    echoContent yellow "安装独立证书..."
-                    sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
-                        --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
-                        --key-file "${CERT_DIR}/${DOMAIN}.key"
-                    if [ $? -ne 0 ]; then
-                        echoContent red "安装独立证书失败，请检查 $ACME_LOG 日志."
-                        exit 1
-                    fi
-
-                    chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
-                    chmod 600 "${CERT_DIR}/${DOMAIN}.key"
-                    echoContent green "独立证书申请和安装成功."
-                    ;;
-                *)
-                    echoContent red "无效的验证方法."
-                    manageCertificates
-                    ;;
-            esac
-            ;;
-        5)
-            echoContent skyBlue "更新独立证书..."
-            if [[ -z "$DOMAIN" ]]; then
-                read -r -p "请输入要更新的独立证书域名 (例如: sub.yourdomain.com): " DOMAIN
-            fi
-            if [[ -n "$CF_Token" ]]; then
-                export CF_Token
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
-            elif [[ -n "$CF_Key" && -n "$CF_Email" ]]; then
-                export CF_Key
-                export CF_Email
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
-            else
-                echoContent yellow "未找到 Cloudflare API 凭据，使用手动 DNS 更新."
-                sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please --ecc
-                txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}')
-                if [[ -n "$txtValue" ]]; then
-                    echoContent green " ---> 名称: _acme-challenge"
-                    echoContent green " ---> 值: ${txtValue}"
-                    echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟."
-                    read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
-                    if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
-                        txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}')
-                        if echo "$txtAnswer" | grep -q "^${txtValue}"; then
-                            echoContent green " ---> TXT 记录验证通过"
                         else
-                            echoContent red "TXT 记录验证失败."
+                            echoContent red "TXT 记录验证失败"
                             exit 1
                         fi
                     fi
                 fi
+                echoContent yellow "清除 TXT 记录..."
+                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns 2>&1 | tee -a "$ACME_LOG"; then
+                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
+                else
+                    echoContent green "TXT 记录已清除"
+                fi
+            elif [[ "$DNS_VENDOR" == "3" ]]; then
+                echoContent green " ---> 独立模式 ${action##--}证书中"
+                if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --standalone -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
+                    echoContent red "命令失败，请检查 $ACME_LOG 日志"
+                    exit 1
+                fi
+            else
+                echoContent red "无效 DNS 提供商"
+                return 1
             fi
-            sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
+
+            echoContent yellow "安装证书..."
+            if ! sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
                 --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
-                --key-file "${CERT_DIR}/${DOMAIN}.key"
+                --key-file "${CERT_DIR}/${DOMAIN}.key" 2>&1 | tee -a "$ACME_LOG"; then
+                echoContent red "证书安装失败，请检查 $ACME_LOG 日志"
+                exit 1
+            fi
             chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
             chmod 600 "${CERT_DIR}/${DOMAIN}.key"
-            echoContent green "独立证书更新成功."
+            echoContent green "证书${action##--}并安装成功"
             ;;
-        6)
-            # Check if openssl is installed
-            if ! command -v openssl &> /dev/null; then
+        3)
+            echoContent skyBlue "安装自签证书..."
+            if ! command -v openssl &>/dev/null; then
                 echoContent yellow "安装 openssl..."
-                ${installType} openssl
-                if [ $? -ne 0 ]; then
-                    echoContent red "安装 openssl 失败，请手动安装."
+                ${installType:-apt install -y} openssl
+                if [[ $? -ne 0 ]]; then
+                    echoContent red "安装 openssl 失败，请手动安装"
                     exit 1
                 fi
             fi
-
             read -r -p "请输入自签证书域名 (例如: sub.yourdomain.com): " DOMAIN
+            if [[ -z "$DOMAIN" || ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                echoContent red "无效域名，请输入有效域名"
+                return 1
+            fi
             echoContent skyBlue "为 ${DOMAIN} 生成自签证书..."
-
-            # Create a temporary OpenSSL configuration file for SAN
+            touch /tmp/openssl-san.cnf || { echoContent red "无法写入 /tmp"; exit 1; }
             cat > /tmp/openssl-san.cnf << EOF
 [req]
 default_bits = 256
@@ -461,37 +363,45 @@ CN = ${DOMAIN}
 [req_ext]
 subjectAltName = DNS:${DOMAIN}
 EOF
-
-            # Generate ECDSA private key and self-signed certificate
-            openssl ecparam -name prime256v1 -genkey -out "${CERT_DIR}/${DOMAIN}.key" 2>> "$ACME_LOG"
-            if [ $? -ne 0 ]; then
-                echoContent red "生成私钥失败，请检查 $ACME_LOG 日志."
+            if ! openssl ecparam -name secp256r1 -genkey -out "${CERT_DIR}/${DOMAIN}.key" 2>>"$ACME_LOG"; then
+                echoContent red "生成私钥失败，请检查 $ACME_LOG 日志"
                 exit 1
             fi
-
-            openssl req -x509 -new -key "${CERT_DIR}/${DOMAIN}.key" -days 365 -out "${CERT_DIR}/${DOMAIN}.pem" \
-                -config /tmp/openssl-san.cnf -extensions req_ext 2>> "$ACME_LOG"
-            if [ $? -ne 0 ]; then
-                echoContent red "生成自签证书失败，请检查 $ACME_LOG 日志."
+            if ! openssl req -x509 -new -key "${CERT_DIR}/${DOMAIN}.key" -days 365 -out "${CERT_DIR}/${DOMAIN}.pem" \
+                -config /tmp/openssl-san.cnf -extensions req_ext 2>>"$ACME_LOG"; then
+                echoContent red "生成自签证书失败，请检查 $ACME_LOG 日志"
                 exit 1
             fi
-
-            # Clean up temporary config file
             rm -f /tmp/openssl-san.cnf
-
-            # Set permissions
             chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
             chmod 600 "${CERT_DIR}/${DOMAIN}.key"
             echoContent green "自签证书生成并安装成功，位于 ${CERT_DIR}/${DOMAIN}.pem"
             ;;
-        7)
+        4)
             return
             ;;
         *)
-            echoContent red "无效选项."
-            manageCertificates
+            echoContent red "无效选项，请重试"
+            return 1
             ;;
     esac
+
+    # Schedule renewal for Cloudflare or Alibaba DNS if credentials were saved
+    if [[ "$cert_option" == "1" && ("$DNS_VENDOR" == "0" || "$DNS_VENDOR" == "1") ]]; then
+        echoContent yellow "设置每3个月自动续订证书..."
+        local cron_cmd
+        if [[ "$DNS_VENDOR" == "0" ]]; then
+            if [[ -n "$cfAPIToken" ]]; then
+                cron_cmd="CF_Token=\"\$(grep '^${DOMAIN}:Cloudflare:token:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" \"$HOME/.acme.sh/acme.sh\" --renew -d \"${DOMAIN}\" --dns dns_cf -k ec-256 --server ${sslType} --install-cert -d \"${DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${DOMAIN}.pem\" --key-file \"${CERT_DIR}/${DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
+            else
+                cron_cmd="CF_Email=\"\$(grep '^${DOMAIN}:Cloudflare:key:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" CF_Key=\"\$(grep '^${DOMAIN}:Cloudflare:key:' \"${CREDENTIALS_FILE}\" | cut -d':' -f5)\" \"$HOME/.acme.sh/acme.sh\" --renew -d \"${DOMAIN}\" --dns dns_cf -k ec-256 --server ${sslType} --install-cert -d \"${DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${DOMAIN}.pem\" --key-file \"${CERT_DIR}/${DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
+            fi
+        elif [[ "$DNS_VENDOR" == "1" ]]; then
+            cron_cmd="Ali_Key=\"\$(grep '^${DOMAIN}:Alibaba:' \"${CREDENTIALS_FILE}\" | cut -d':' -f3)\" Ali_Secret=\"\$(grep '^${DOMAIN}:Alibaba:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" \"$HOME/.acme.sh/acme.sh\" --renew -d \"${DOMAIN}\" --dns dns_ali -k ec-256 --server ${sslType} --install-cert -d \"${DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${DOMAIN}.pem\" --key-file \"${CERT_DIR}/${DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
+        fi
+        (crontab -l 2>/dev/null | grep -v "${DOMAIN}.*acme.sh --renew"; echo "0 3 1 */3 * $cron_cmd") | crontab -
+        echoContent green "已为 ${DOMAIN} 设置每3个月自动续订"
+    fi
 }
 xray_config(){
     echoContent skyBlue "\nxray配置文件修改"
@@ -1167,7 +1077,7 @@ updateNSX() {
     # Clean up temporary directory
     rm -rf "$TEMP_DIR"
 
-    echoContent yellow "请运行 'nsx' 以执行脚本."
+
 }
 
 # Docker installation
