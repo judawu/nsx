@@ -1325,12 +1325,22 @@ stopNSX() {
 
     echoContent green "NSX 容器已停止并清理完成."
 }
-uninstallNSX(){
 
-   # Uninstall Xray
+uninstallNSX() {
+    # Define defaults
+ 
+
+    echoContent skyBlue "卸载 NSX 服务..."
+
+    # Stop NSX containers
+    if command -v docker &>/dev/null && [[ -f "$COMPOSE_FILE" ]]; then
+        stopNSX
+    fi
+
+    # Uninstall Xray
     if command -v xray &>/dev/null; then
-        read -r -p "确认卸载xray:（y/n)" uninstallXray
-        if [[ -n $uninstallXray && $uninstallXray =='y' ]]; then
+        read -r -p "确认卸载 Xray？(y/n): " uninstallXray
+        if [[ "$uninstallXray" == "y" ]]; then
             echoContent yellow "停止并卸载 Xray..."
             systemctl stop xray 2>/dev/null
             systemctl disable xray 2>/dev/null
@@ -1345,21 +1355,28 @@ uninstallNSX(){
                     echoContent red "无法清理 /usr/local/bin/xray，请检查权限."
                     exit 1
                 }
+                rmdir /usr/local/bin/xray 2>/dev/null || true
             fi
             if [[ -d "/usr/local/etc/xray" ]]; then
                 rm -rf /usr/local/etc/xray/* || {
                     echoContent red "无法清理 /usr/local/etc/xray，请检查权限."
                     exit 1
                 }
+                rmdir /usr/local/etc/xray 2>/dev/null || true
             fi
-            echoContent green " ---> Xray 卸载完成."
-         fi
+            if ! command -v xray &>/dev/null; then
+                echoContent green " ---> Xray 卸载完成."
+            else
+                echoContent red "Xray 卸载失败，xray 命令仍存在."
+                exit 1
+            fi
+        fi
     fi
 
     # Uninstall Sing-box
     if command -v sing-box &>/dev/null; then
-        read -r -p "确认卸载sing-box:（y/n)" uninstallSingbox
-        if [[ -n $uninstallSingbox && $uninstallSingbox =='y' ]]; then
+        read -r -p "确认卸载 Sing-box？(y/n): " uninstallSingbox
+        if [[ "$uninstallSingbox" == "y" ]]; then
             echoContent yellow "停止并卸载 Sing-box..."
             systemctl stop sing-box 2>/dev/null
             systemctl disable sing-box 2>/dev/null
@@ -1374,21 +1391,28 @@ uninstallNSX(){
                     echoContent red "无法清理 /usr/local/bin/sing-box，请检查权限."
                     exit 1
                 }
+                rmdir /usr/local/bin/sing-box 2>/dev/null || true
             fi
             if [[ -d "/usr/local/etc/sing-box" ]]; then
                 rm -rf /usr/local/etc/sing-box/* || {
                     echoContent red "无法清理 /usr/local/etc/sing-box，请检查权限."
                     exit 1
                 }
+                rmdir /usr/local/etc/sing-box 2>/dev/null || true
             fi
-            echoContent green " ---> Sing-box 卸载完成."
+            if ! command -v sing-box &>/dev/null; then
+                echoContent green " ---> Sing-box 卸载完成."
+            else
+                echoContent red "Sing-box 卸载失败，sing-box 命令仍存在."
+                exit 1
+            fi
         fi
     fi
 
     # Uninstall Nginx
     if command -v nginx &>/dev/null; then
-        read -r -p "确认卸载nginx:（y/n)" uninstallNginx
-        if [[ -n $uninstallNginx && $uninstallNginx =='y' ]]; then
+        read -r -p "确认卸载 Nginx？(y/n): " uninstallNginx
+        if [[ "$uninstallNginx" == "y" ]]; then
             echoContent yellow "停止并卸载 Nginx..."
             systemctl stop nginx 2>/dev/null
             systemctl disable nginx 2>/dev/null
@@ -1403,21 +1427,28 @@ uninstallNSX(){
                     echoContent red "无法清理 /usr/local/nginx，请检查权限."
                     exit 1
                 }
+                rmdir /usr/local/nginx 2>/dev/null || true
             fi
             if [[ -d "/etc/nginx" ]]; then
                 rm -rf /etc/nginx/* || {
                     echoContent red "无法清理 /etc/nginx，请检查权限."
                     exit 1
                 }
+                rmdir /etc/nginx 2>/dev/null || true
             fi
-            echoContent green " ---> Nginx 卸载完成."
+            if ! command -v nginx &>/dev/null; then
+                echoContent green " ---> Nginx 卸载完成."
+            else
+                echoContent red "Nginx 卸载失败，nginx 命令仍存在."
+                exit 1
+            fi
         fi
     fi
 
     # Uninstall Docker
     if command -v docker &>/dev/null; then
-        read -r -p "确认卸载docker:（y/n)" uninstallDocker
-        if [[ -n $uninstallDocker && $uninstallDocker =='y' ]]; then
+        read -r -p "确认卸载 Docker？(y/n): " uninstallDocker
+        if [[ "$uninstallDocker" == "y" ]]; then
             echoContent yellow "停止并卸载 Docker..."
             systemctl stop docker 2>/dev/null
             systemctl disable docker 2>/dev/null
@@ -1432,12 +1463,14 @@ uninstallNSX(){
                     echoContent red "无法清理 /usr/local/docker，请检查权限."
                     exit 1
                 }
+                rmdir /usr/local/docker 2>/dev/null || true
             fi
             if [[ -d "/etc/docker" ]]; then
                 rm -rf /etc/docker/* || {
                     echoContent red "无法清理 /etc/docker，请检查权限."
                     exit 1
                 }
+                rmdir /etc/docker 2>/dev/null || true
             fi
             # Clean up Docker data (images, containers, volumes)
             if docker system prune -a -f --volumes; then
@@ -1445,20 +1478,42 @@ uninstallNSX(){
             else
                 echoContent yellow "警告: Docker 数据清理失败，部分数据可能仍存在."
             fi
-            echoContent green " ---> Docker 卸载完成."
+            if ! command -v docker &>/dev/null; then
+                echoContent green " ---> Docker 卸载完成."
+            else
+                echoContent red "Docker 卸载失败，docker 命令仍存在."
+                exit 1
+            fi
         fi
     fi
-    
-    echoContent green " --->"
+
+    # Clean up NSX configuration and certificate files
+    read -r -p "是否删除 NSX 配置文件和证书？(y/n): " removeConfigs
+    if [[ "$removeConfigs" == "y" ]]; then
+        echoContent yellow "清理 NSX 配置文件和证书..."
+        for file in "$COMPOSE_FILE" "$NGINX_CONF" "$XRAY_CONF" "$SINGBOX_CONF" "$CERT_DIR"/* "$CREDENTIALS_FILE"; do
+            if [[ -f "$file" || -d "$file" ]]; then
+                rm -rf "$file" || {
+                    echoContent red "无法删除 $file，请检查权限."
+                    exit 1
+                }
+            fi
+        done
+        if [[ -d "/usr/local/nsx" ]]; then
+            rmdir /usr/local/nsx 2>/dev/null || true
+        fi
+        echoContent green "NSX 配置文件和证书清理完成."
+    else
+        echoContent yellow "保留 NSX 配置文件和证书."
+    fi
 
     # Reload systemd daemon
-    systemctl daemon-reload 2>/dev/null || {
+    if ! systemctl daemon-reload; then
         echoContent red "无法重新加载 systemd 配置，请检查."
         exit 1
-    }
+    fi
 
-    echoContent green "卸载完成.再检查一下，然后可以手动删除/usr/local/nsx下面的所有文件"
-
+    echoContent green "NSX 卸载完成."
 }
 # Main menu
 menu() {
