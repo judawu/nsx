@@ -1222,6 +1222,8 @@ dockerInstall() {
     # Check container status
     echoContent yellow "检查容器状态..."
     docker ps -f name=nginx-stream -f name=xray -f name=sing-box
+
+    echoContent green "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
 }
 
@@ -1275,6 +1277,7 @@ localInstall() {
     fi
 
     echoContent green "本地安装成功."
+    echoContent green "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
 }
 
