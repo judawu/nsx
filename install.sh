@@ -49,12 +49,13 @@ checkSystem() {
         upgradeType='yum -y update'
     elif grep -q -i "ubuntu" /etc/os-release; then
         release="ubuntu"
-        installType='apt update & apt -y install'
-        upgradeType='apt -y upgrade'
+        installType='apt -y install'
+        upgradeType='apt -y upgrade & apt update'
+        
     elif grep -q -i "debian" /etc/os-release; then
         release="debian"
-        installType='apt update & apt -y install'
-        upgradeType='apt -y upgrade'
+        installType='apt -y install'
+        upgradeType='apt -y upgrade & apt update'
     else
         echoContent red "不支持的操作系统，脚本仅支持 CentOS、Rocky Linux、Ubuntu 或 Debian."
         exit 1
