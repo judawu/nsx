@@ -185,12 +185,12 @@ manageCertificates() {
             read -r -p "请输入通配符证书域名 (例如: yourdomain.com): " DOMAIN
             read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " CF_Token
             if [[ -n "$CF_Token" ]]; then
-                export CF_Token="$CF_Token"
+                export CF_Token
             else
                 read -r -p "请输入 Cloudflare Email: " CF_Email
                 read -r -p "请输入 Cloudflare Global API Key: " CF_Key
-                export CF_Key="$CF_Key"
-                export CF_Email="$CF_Email"
+                export CF_Key
+                export CF_Email
             fi
 
             echoContent skyBlue "使用 Cloudflare API 申请通配符证书..."
@@ -252,12 +252,12 @@ manageCertificates() {
                 read -r -p "请输入要更新的通配符证书域名 (例如: yourdomain.com): " DOMAIN
             fi
             if [[ -n "$CF_Token" ]]; then
-                export CF_Token="$CF_Token"
+                export CF_Token
                 sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns dns_cf --ecc
                 sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
             elif [[ -n "$CF_Key" && -n "$CF_Email" ]]; then
-                export CF_Key="$CF_Key"
-                export CF_Email="$CF_Email"
+                export CF_Key
+                export CF_Email
                 sudo "$HOME/.acme.sh/acme.sh" --renew -d "*.${DOMAIN}" --dns dns_cf --ecc
                 sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
             else
@@ -301,16 +301,16 @@ manageCertificates() {
                 1)
                     read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " CF_Token
                     if [[ -n "$CF_Token" ]]; then
-                        export CF_Token="$CF_Token"
+                        export CF_Token
                     else
                         read -r -p "请输入 Cloudflare Email: " CF_Email
                         read -r -p "请输入 Cloudflare Global API Key: " CF_Key
-                        export CF_Key="$CF_Key"
-                        export CF_Email="$CF_Email"
+                        export CF_Key
+                        export CF_Email
                     fi
 
                     echoContent skyBlue "使用 Cloudflare API 申请独立证书..."
-                    sudo "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --dns dns_cf -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
+                    sudo  "$HOME/.acme.sh/acme.sh" --issue -d "${DOMAIN}" --dns dns_cf -k ec-256 --server letsencrypt 2>&1 | tee -a "$ACME_LOG"
                     if [ $? -ne 0 ]; then
                         echoContent red "申请独立证书失败，请检查 $ACME_LOG 日志."
                         exit 1
@@ -399,11 +399,11 @@ manageCertificates() {
                 read -r -p "请输入要更新的独立证书域名 (例如: sub.yourdomain.com): " DOMAIN
             fi
             if [[ -n "$CF_Token" ]]; then
-                export CF_Token="$CF_Token"
+                export CF_Token
                 sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
             elif [[ -n "$CF_Key" && -n "$CF_Email" ]]; then
-                export CF_Key="$CF_Key"
-                export CF_Email="$CF_Email"
+                export CF_Key
+                export CF_Email
                 sudo "$HOME/.acme.sh/acme.sh" --renew -d "${DOMAIN}" --dns dns_cf --ecc
             else
                 echoContent yellow "未找到 Cloudflare API 凭据，使用手动 DNS 更新."
