@@ -77,8 +77,8 @@ checkCentosSELinux() {
 # Install tools
 installTools() {
     echoContent skyBlue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
-    echoContent Green "\n安装以下依赖curl wget git sudo lsof unzip ufw socat jq ping6 dig qrencode.."
-    ${installType} curl wget git sudo lsof unzip ufw socat jq ping6 dig qrencode -y
+    echoContent Green "\n安装以下依赖curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode.."
+    ${installType} curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode -y
   
     if [[ "$release" != "centos" ]]; then
         echoContent Green "\n执行系统更新..."
