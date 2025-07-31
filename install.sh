@@ -1508,7 +1508,7 @@ uninstallNSX() {
             echoContent yellow "停止并卸载 Nginx..."
           
             if [[ -f "/etc/systemd/system/nginx.service" ]]; then
-                 systemctl stop nginx 2>/dev/null
+                systemctl stop nginx 2>/dev/null
                 systemctl disable nginx 2>/dev/null
                 rm -f /etc/systemd/system/nginx.service || {
                     echoContent red "无法删除 nginx.service，请检查权限."
@@ -1516,11 +1516,11 @@ uninstallNSX() {
                 }
             fi
             if [[ -d "/usr/sbin/nginx" ]]; then
-                rm -rf /usr/sbin/nginx/* || {
+                rm -rf /usr/sbin/nginx || {
                     echoContent red "无法清理 /usr/sbin/nginx，请检查权限."
                     exit 1
                 }
-                rmdir /usr/sbin/nginx 2>/dev/null || true
+             
             fi
             if [[ -d "/etc/nginx" ]]; then
                 rm -rf /etc/nginx/* || {
