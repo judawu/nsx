@@ -1259,7 +1259,111 @@ dockerInstall() {
     echoContent green "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
 }
+createSystemdServices() {
+    echoContent skyBlue "\n配置 systemd 服务..."
 
+    # Nginx 服务文件
+    if [[ "${release}" == "debian" || "${release}" == "ubuntu" ]]; then
+        echoContent green "创建 Nginx systemd 服务..."
+        cat <<EOF >/etc/systemd/system/nginx.service
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/nginx
+ExecReload=/usr/sbin/nginx -s reload
+ExecStop=/usr/sbin/nginx -s quit
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    elif [[ "${release}" == "centos" ]]; then
+        echoContent green "创建 Nginx systemd 服务..."
+        cat <<EOF >/etc/systemd/system/nginx.service
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/nginx
+ExecReload=/usr/sbin/nginx -s reload
+ExecStop=/usr/sbin/nginx -s quit
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+
+    # Xray 服务文件
+    echoContent green "创建 Xray systemd 服务..."
+    cat <<EOF >/etc/systemd/system/xray.service
+[Unit]
+Description=Xray Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/nsx/xray/xray -c /usr/local/nsx/xray/config.json
+ExecStop=/bin/kill -s QUIT \$MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Sing-box 服务文件
+    echoContent green "创建 Sing-box systemd 服务..."
+    cat <<EOF >/etc/systemd/system/sing-box.service
+[Unit]
+Description=Sing-box Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/nsx/sing-box/sing-box -c /usr/local/nsx/sing-box/config.json
+ExecStop=/bin/kill -s QUIT \$MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # 重新加载 systemd 配置
+    echoContent green "重新加载 systemd 配置..."
+    systemctl daemon-reload
+
+    # 设置文件权限
+    chmod 644 /etc/systemd/system/nginx.service
+    chmod 644 /etc/systemd/system/xray.service
+    chmod 644 /etc/systemd/system/sing-box.service
+}
+
+# 修改后的服务启动部分
+startServices() {
+    echoContent skyBlue "\n启动服务..."
+
+    # 启用并启动服务
+    systemctl enable nginx xray sing-box
+    systemctl start nginx xray sing-box
+
+    # 检查服务状态
+    if systemctl is-active --quiet nginx && systemctl is-active --quiet xray && systemctl is-active --quiet sing-box; then
+        echoContent green "所有服务（Nginx, Xray, Sing-box）启动成功！"
+    else
+        echoContent red "部分或全部服务启动失败，请检查日志："
+        echoContent red "Nginx: journalctl -u nginx.service"
+        echoContent red "Xray: journalctl -u xray.service"
+        echoContent red "Sing-box: journalctl -u sing-box.service"
+        exit 1
+    fi
+}
 # Local installation
 localInstall() {
    
@@ -1375,17 +1479,13 @@ EOF
 
 
 
-
+    echoContent green "本地安装成功，启动服务."
     # Start services
-    systemctl enable nginx xray sing-box
-    systemctl start nginx xray sing-box
-   
-    if [ $? -ne 0 ]; then
-        echoContent red "启动服务失败，请检查配置或日志."
-        exit 1
-    fi
+    createSystemdServices
+    startServices
+    
 
-    echoContent green "本地安装成功."
+    
     echoContent green "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
 }
