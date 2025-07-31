@@ -47,17 +47,20 @@ checkSystem() {
         release="centos"
         installCmd='yum -y install'
         upgradeCmd='yum -y update'
+        uninstallCmd='yum -y remove'
     elif grep -q -i "ubuntu" /etc/os-release; then
         release="ubuntu"
         installCmd='apt -y install'
         upgradeCmd='apt -y upgrade'
         updateCmde='apt update'
+        uninstallCmd='apt -y remove'
         
     elif grep -q -i "debian" /etc/os-release; then
         release="debian"
         installCmd='apt -y install'
         upgradeCmd='apt -y upgrade'
         updateCmd='apt update'
+        uninstallCmd='apt -y remove'
     else
         echoContent red "不支持的操作系统，脚本仅支持 CentOS、Rocky Linux、Ubuntu 或 Debian."
         exit 1
@@ -291,12 +294,7 @@ manageCertificates() {
                     fi
                     unset CF_Email CF_Key
                 fi
-                echoContent yellow "清除 TXT 记录..."
-                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns dns_cf 2>&1 | tee -a "$ACME_LOG"; then
-                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
-                else
-                    echoContent green "TXT 记录已清除"
-                fi
+             
             elif [[ "$DNS_VENDOR" == "1" ]]; then
                 if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${DOMAIN}:Alibaba:" "$CREDENTIALS_FILE") ]]; then
                     # Load saved Alibaba credentials for renewal
@@ -318,12 +316,7 @@ manageCertificates() {
                     exit 1
                 fi
                 unset Ali_Key Ali_Secret
-                echoContent yellow "清除 TXT 记录..."
-                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns dns_ali 2>&1 | tee -a "$ACME_LOG"; then
-                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
-                else
-                    echoContent green "TXT 记录已清除"
-                fi
+             
             elif [[ "$DNS_VENDOR" == "2" ]]; then
                 echoContent yellow "手动 DNS 模式，请添加 TXT 记录: https://github.com/judawu/nsx/blob/main/docs/dns_txt.md"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
@@ -350,12 +343,7 @@ manageCertificates() {
                         fi
                     fi
                 fi
-                echoContent yellow "清除 TXT 记录..."
-                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns 2>&1 | tee -a "$ACME_LOG"; then
-                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
-                else
-                    echoContent green "TXT 记录已清除"
-                fi
+              
             elif [[ "$DNS_VENDOR" == "3" ]]; then
                 echoContent green " ---> 独立模式 ${action##--}证书中"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --standalone -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
@@ -366,7 +354,9 @@ manageCertificates() {
                 echoContent red "无效 DNS 提供商"
                 return 1
             fi
+            
 
+        
             echoContent yellow "安装证书..."
             if ! sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
                 --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
@@ -431,7 +421,15 @@ EOF
             return 1
             ;;
     esac
-
+    if [[ "$cert_option" == "1" || "$cert_option" == "2" ]]; then
+                # ... 证书申请/续订逻辑 ...
+                echoContent yellow "清除 TXT 记录..."
+                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns 2>&1 | tee -a "$ACME_LOG"; then
+                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
+                else
+                    echoContent green "TXT 记录已清除"
+                fi
+     fi
     # Schedule renewal for Cloudflare or Alibaba DNS if credentials were saved
     if [[ "$cert_option" == "1" && ("$DNS_VENDOR" == "0" || "$DNS_VENDOR" == "1") ]]; then
         echoContent yellow "设置每3个月自动续订证书..."
@@ -549,13 +547,13 @@ echo "$inbounds" | while IFS= read -r inbound; do
         public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
         new_short_ids=$(generate_short_ids)
         new_mldsa65_key_pair=$(xray mldsa65)
-        new_mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
-        new_mldsa65_verfify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
+        mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
+        mldsa65_verfify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
 
         echo "Generated new privateKey: $private_key"
         echo "Generated new publicKey: $public_key"
         echo "Generated new shortIds: $new_short_ids"
-        echo "Generated new mldsa65Seed: $new_mldsa65_seed"
+        echo "Generated new mldsa65Seed: $new_mldsa65_key_pair"
 
         # 更新 privateKey, publicKey, shortIds, mldsa65Seed
         jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$new_mldsa65_seed" \
@@ -599,8 +597,7 @@ if ! command -v sing-box &> /dev/null; then
     exit 1
 fi
 
-# JSON 文件路径
-CONFIG_FILE="config.json"
+
 TEMP_FILE="config_temp.json"
 
 # 检查 config.json 是否存在
@@ -1282,18 +1279,20 @@ localInstall() {
     # Install Nginx
     echoContent skyBlue "\n 安装nginx..."
     if [[ "${release}" == "debian" ]]; then
+        echoContent green "\n 安装nginx依赖..."
         sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
         echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
-        echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
+        echoContent green "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
         curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
         # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
         sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
         sudo apt update >/dev/null 2>&1
 
     elif [[ "${release}" == "ubuntu" ]]; then
+        echoContent green "\n 安装nginx依赖..."
         sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
         echo "deb http://nginx.org/packages/mainline/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
-        echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
+        echoContent green "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
         curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
         # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
         sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
@@ -1323,7 +1322,7 @@ EOF
         rm "${nginxConfigPath}default.conf"
     fi
 
-
+    echoContent skyBlue "\n nginx安装完成..."
 
 
     # Install Xray and Sing-box
@@ -1344,9 +1343,10 @@ EOF
         unzip -o "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip" -d /usr/local/nsx/xray >/dev/null
         rm -rf "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip"
         chmod 655 /usr/local/nsx/xray/xray
+        echoContent skyBlue "安装xray成功..."
     fi
    
-
+    
     echoContent skyBlue "安装singbox..."
    
 
@@ -1366,7 +1366,7 @@ EOF
     else
 
         tar zxvf "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz" -C "/usr/local/nsx/sing-box/" >/dev/null 2>&1
-        mv "/usr/local/nsx/sing-box-${version/v/}${singBoxCoreCPUVendor}/sing-box" /usr/local/nsx/sing-box
+        mv "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}/sing-box" /usr/local/nsx/sing-box
         rm -rf /usr/local/nsx/sing-box/sing-box-*
         chmod 655 /usr/local/nsx/sing-box/sing-box
         echoContent red "singbox安装成功"
@@ -1515,20 +1515,11 @@ uninstallNSX() {
                     exit 1
                 }
             fi
-            if [[ -d "/usr/sbin/nginx" ]]; then
-                rm -rf /usr/sbin/nginx || {
-                    echoContent red "无法清理 /usr/sbin/nginx，请检查权限."
-                    exit 1
-                }
-             
-            fi
-            if [[ -d "/etc/nginx" ]]; then
-                rm -rf /etc/nginx/* || {
-                    echoContent red "无法清理 /etc/nginx，请检查权限."
-                    exit 1
-                }
-                rmdir /etc/nginx 2>/dev/null || true
-            fi
+            # 卸载 Nginx 软件包
+             $uninstallCmd --purge nginx nginx-common nginx-full -y
+    
+                # 删除残留的配置文件和日志
+            rm -rf /etc/nginx /var/log/nginx /var/cache/nginx
             if ! command -v nginx &>/dev/null; then
                 echoContent green " ---> Nginx 卸载完成."
             else
