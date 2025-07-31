@@ -62,9 +62,39 @@ checkSystem() {
         echoContent red "不支持的操作系统，脚本仅支持 CentOS、Rocky Linux、Ubuntu 或 Debian."
         exit 1
     fi
+    
+    if [[ -n $(which uname) ]]; then
+        if [[ "$(uname)" == "Linux" ]]; then
+            case "$(uname -m)" in
+            'amd64' | 'x86_64')
+                xrayCoreCPUVendor="Xray-linux-64"
+                v2rayCoreCPUVendor="v2ray-linux-64"
+                warpRegCoreCPUVendor="main-linux-amd64"
+                singBoxCoreCPUVendor="-linux-amd64"
+                ;;
+            'armv8' | 'aarch64')
+                cpuVendor="arm"
+                xrayCoreCPUVendor="Xray-linux-arm64-v8a"
+                v2rayCoreCPUVendor="v2ray-linux-arm64-v8a"
+                warpRegCoreCPUVendor="main-linux-arm64"
+                singBoxCoreCPUVendor="-linux-arm64"
+                ;;
+            *)
+                echo "  不支持此CPU架构--->"
+                exit 1
+                ;;
+            esac
+        fi
+    else
+        echoContent red "  无法识别此CPU架构，默认amd64、x86_64--->"
+        xrayCoreCPUVendor="Xray-linux-64"
+        v2rayCoreCPUVendor="v2ray-linux-64"
+    fi
+
 
     LOCAL_IP=$(ip addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v "127.0.0.1" | head -n 1)
     echoContent green "系统: $release"
+    echoContent green "系统cpu: $(uname -m)"
     echoContent green "本地 IP: $LOCAL_IP"
 }
 
@@ -1241,35 +1271,104 @@ localInstall() {
     checkCentosSELinux
 
     # Install Nginx
-     echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装nginx..."
-    if ! command -v nginx &> /dev/null; then
-        if [[ "$release" == "centos" ]]; then
-            rpm -Uvh http://nginx.org/packages/mainline/centos/8/x86_64/RPMS/nginx-1.21.6-1.el8.ngx.x86_64.rpm
-        else
-            echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | tee /etc/apt/sources.list.d/nginx.list
-            curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key
-            mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
-            ${upgradeCmd}
-            ${installCmd} nginx
-        fi
+     echoContent skyBlue "\n 安装nginx..."
+    f [[ "${release}" == "debian" ]]; then
+        sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
+        echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
+        echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
+        curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
+        # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
+        sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
+        sudo apt update >/dev/null 2>&1
+
+    elif [[ "${release}" == "ubuntu" ]]; then
+        sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
+        echo "deb http://nginx.org/packages/mainline/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
+        echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
+        curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
+        # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
+        sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
+        sudo apt update >/dev/null 2>&1
+
+    elif [[ "${release}" == "centos" ]]; then
+        ${installType} yum-utils >/dev/null 2>&1
+        cat <<EOF >/etc/yum.repos.d/nginx.repo
+[nginx-stable]
+name=nginx stable repo
+baseurl=http://nginx.org/packages/centos/\$releasever/\$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+
+[nginx-mainline]
+name=nginx mainline repo
+baseurl=http://nginx.org/packages/mainline/centos/\$releasever/\$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=https://nginx.org/keys/nginx_signing.key
+module_hotfixes=true
+EOF
+        sudo yum-config-manager --enable nginx-mainline >/dev/null 2>&1
+    elif [[ "${release}" == "alpine" ]]; then
+        rm "${nginxConfigPath}default.conf"
     fi
+    ${installType} nginx >/dev/null 2>&1
+    bootStartup nginx
+}
+
 
     # Install Xray and Sing-box
-    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装xray..."
-    bash <(curl -L https://github.com/XTLS/Xray-core/releases/latest/download/install-release.sh)
-    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装singbox..."
-    bash <(curl -fsSL https://sing-box.sagernet.org/install.sh)
+    echoContent skyBlue "\n 安装xray..."
+   
+    version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==${prereleaseStatus})|.tag_name" | head -1)
+    echoContent green " ---> Xray-core版本:${version}"
+    if [[ "${release}" == "alpine" ]]; then
+        wget -c -q -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
+    else
+        wget -c -q  -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
+    fi
+
+    if [[ ! -f "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip" ]]; then
+        read -r -p "核心下载失败，请重新尝试安装" 
+        exit 1
+    else
+        unzip -o "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip" -d /usr/local/nsx/xray >/dev/null
+        rm -rf "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip"
+        chmod 655 /usr/local/nsx/xray/xray
+    fi
+   
+
+    echoContent skyBlue "安装singbox..."
+   
+
+    version=$(curl -s "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=20" | jq -r ".[]|select (.prerelease==${prereleaseStatus})|.tag_name" | head -1)
+
+    echoContent green " sing-box版本:${version}"
+
+    if [[ "${release}" == "alpine" ]]; then
+        wget -c -q -P /usr/local/nsx/sing-box/ "https://github.com/SagerNet/sing-box/releases/download/${version}/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz"
+    else
+        wget -c -q -P /usr/local/nsx/sing-box/ "https://github.com/SagerNet/sing-box/releases/download/${version}/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz"
+    fi
+
+    if [[ ! -f "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz" ]]; then
+        echoContent red "核心下载失败，请重新尝试安装" 
+        exit 1
+    else
+
+        tar zxvf "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz" -C "/usr/local/nsx/sing-box/" >/dev/null 2>&1
+        mv "/usr/local/nsx/sing-box-${version/v/}${singBoxCoreCPUVendor}/sing-box" /usr/local/nsx/sing-box
+        rm -rf /usr/local/nsx/sing-box/sing-box-*
+        chmod 655 /usr/local/nsx/sing-box/sing-box
+        echoContent red "singbox安装成功"
+    fi
+    
+
+}
 
     createDirectories
     installAcme
-
-    # Copy configuration files (assuming files are in the script's directory)
-    cp ./nginx/nginx.conf /etc/nginx/nginx.conf
-    chmod 644 /etc/nginx/nginx.conf
-    cp ./xray/config.json /usr/local/etc/xray/config.json
-    chmod 644 /usr/local/etc/xray/config.json
-    cp ./sing-box/config.json /usr/local/etc/sing-box/config.json
-    chmod 644 /usr/local/etc/sing-box/config.json
 
     # Check certificates
     if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
@@ -1345,27 +1444,21 @@ uninstallNSX() {
         read -r -p "确认卸载 Xray？(y/n): " uninstallXray
         if [[ "$uninstallXray" == "y" ]]; then
             echoContent yellow "停止并卸载 Xray..."
-            systemctl stop xray 2>/dev/null
-            systemctl disable xray 2>/dev/null
+            
             if [[ -f "/etc/systemd/system/xray.service" ]]; then
+                systemctl stop xray 2>/dev/null
+                systemctl disable xray 2>/dev/null
                 rm -f /etc/systemd/system/xray.service || {
                     echoContent red "无法删除 xray.service，请检查权限."
                     exit 1
                 }
             fi
-            if [[ -d "/usr/local/bin/xray" ]]; then
+            if [[ -d "/usr/local/nsx/xray" ]]; then
                 rm -rf /usr/local/bin/xray/* || {
                     echoContent red "无法清理 /usr/local/bin/xray，请检查权限."
                     exit 1
                 }
-                rmdir /usr/local/bin/xray 2>/dev/null || true
-            fi
-            if [[ -d "/usr/local/etc/xray" ]]; then
-                rm -rf /usr/local/etc/xray/* || {
-                    echoContent red "无法清理 /usr/local/etc/xray，请检查权限."
-                    exit 1
-                }
-                rmdir /usr/local/etc/xray 2>/dev/null || true
+              
             fi
             if ! command -v xray &>/dev/null; then
                 echoContent green " ---> Xray 卸载完成."
@@ -1381,28 +1474,23 @@ uninstallNSX() {
         read -r -p "确认卸载 Sing-box？(y/n): " uninstallSingbox
         if [[ "$uninstallSingbox" == "y" ]]; then
             echoContent yellow "停止并卸载 Sing-box..."
-            systemctl stop sing-box 2>/dev/null
-            systemctl disable sing-box 2>/dev/null
+           
             if [[ -f "/etc/systemd/system/sing-box.service" ]]; then
+                systemctl stop sing-box 2>/dev/null
+                systemctl disable sing-box 2>/dev/null
                 rm -f /etc/systemd/system/sing-box.service || {
                     echoContent red "无法删除 sing-box.service，请检查权限."
                     exit 1
                 }
             fi
-            if [[ -d "/usr/local/bin/sing-box" ]]; then
-                rm -rf /usr/local/bin/sing-box/* || {
-                    echoContent red "无法清理 /usr/local/bin/sing-box，请检查权限."
+            if [[ -d "/usr/local/nsx/sing-box" ]]; then
+                rm -rf /usr/local/nsx/sing-box/* || {
+                    echoContent red "无法清理 /usr/local/nsx/sing-box，请检查权限."
                     exit 1
                 }
-                rmdir /usr/local/bin/sing-box 2>/dev/null || true
+                rmdir /usr/local/nsx/sing-box 2>/dev/null || true
             fi
-            if [[ -d "/usr/local/etc/sing-box" ]]; then
-                rm -rf /usr/local/etc/sing-box/* || {
-                    echoContent red "无法清理 /usr/local/etc/sing-box，请检查权限."
-                    exit 1
-                }
-                rmdir /usr/local/etc/sing-box 2>/dev/null || true
-            fi
+        
             if ! command -v sing-box &>/dev/null; then
                 echoContent green " ---> Sing-box 卸载完成."
             else
@@ -1417,20 +1505,21 @@ uninstallNSX() {
         read -r -p "确认卸载 Nginx？(y/n): " uninstallNginx
         if [[ "$uninstallNginx" == "y" ]]; then
             echoContent yellow "停止并卸载 Nginx..."
-            systemctl stop nginx 2>/dev/null
-            systemctl disable nginx 2>/dev/null
+          
             if [[ -f "/etc/systemd/system/nginx.service" ]]; then
+                 systemctl stop nginx 2>/dev/null
+                systemctl disable nginx 2>/dev/null
                 rm -f /etc/systemd/system/nginx.service || {
                     echoContent red "无法删除 nginx.service，请检查权限."
                     exit 1
                 }
             fi
-            if [[ -d "/usr/local/nginx" ]]; then
-                rm -rf /usr/local/nginx/* || {
-                    echoContent red "无法清理 /usr/local/nginx，请检查权限."
+            if [[ -d "/usr/sbin/nginx" ]]; then
+                rm -rf /usr/sbin/nginx/* || {
+                    echoContent red "无法清理 /usr/sbin/nginx，请检查权限."
                     exit 1
                 }
-                rmdir /usr/local/nginx 2>/dev/null || true
+                rmdir /usr/sbin/nginx 2>/dev/null || true
             fi
             if [[ -d "/etc/nginx" ]]; then
                 rm -rf /etc/nginx/* || {
@@ -1453,9 +1542,10 @@ uninstallNSX() {
         read -r -p "确认清理 Docker 容器？(y/n): " uninstallDocker
         if [[ "$uninstallDocker" == "y" ]]; then
             echoContent yellow "停止并卸载 Docker..."
-            systemctl stop docker 2>/dev/null
-            systemctl disable docker 2>/dev/null
+           
             if [[ -f "/etc/systemd/system/docker.service" ]]; then
+                systemctl stop docker 2>/dev/null
+                systemctl disable docker 2>/dev/null
                 rm -f /etc/systemd/system/docker.service || {
                     echoContent red "无法删除 docker.service，请检查权限."
                     exit 1
