@@ -1386,7 +1386,6 @@ localInstall() {
         echoContent green "\n 安装nginx依赖..."
         sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
         echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
-        echoContent green "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
         curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
         # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
         sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
@@ -1541,7 +1540,7 @@ uninstallNSX() {
     fi
 
     # Uninstall Xray
-    if command -v xray &>/dev/null; then
+   
         read -r -p "确认卸载 Xray？(y/n): " uninstallXray
         if [[ "$uninstallXray" == "y" ]]; then
             echoContent yellow "停止并卸载 Xray..."
@@ -1568,10 +1567,10 @@ uninstallNSX() {
                 exit 1
             fi
         fi
-    fi
+    
 
     # Uninstall Sing-box
-    if command -v sing-box &>/dev/null; then
+  
         read -r -p "确认卸载 Sing-box？(y/n): " uninstallSingbox
         if [[ "$uninstallSingbox" == "y" ]]; then
             echoContent yellow "停止并卸载 Sing-box..."
@@ -1599,10 +1598,10 @@ uninstallNSX() {
                 exit 1
             fi
         fi
-    fi
+   
 
     # Uninstall Nginx
-    if command -v nginx &>/dev/null; then
+   
         read -r -p "确认卸载 Nginx？(y/n): " uninstallNginx
         if [[ "$uninstallNginx" == "y" ]]; then
             echoContent yellow "停止并卸载 Nginx..."
@@ -1627,7 +1626,7 @@ uninstallNSX() {
                 exit 1
             fi
         fi
-    fi
+    
 
     # Uninstall Docker
     if command -v docker &>/dev/null; then
