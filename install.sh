@@ -239,7 +239,7 @@ manageCertificates() {
             fi
             echoContent skyBlue " SSL 类型为 $sslType."
             read -r -p "请输入证书域名 (例如: yourdomain.com 或 *.yourdomain.com，多个域名用逗号隔开): " DOMAIN
-            if [[ -z "$DOMAIN" || ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            if [[ -z "$DOMAIN" ]]; then
                 echoContent red "无效域名，请输入有效域名"
                 return 1
             fi
@@ -748,12 +748,12 @@ manageConfigurations() {
             read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
             read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
             read -r -p "请输入 nginx.conf 的新端口 (默认 443): " NEW_PORT
-            sed -i "s/juda\.autos/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/juda\.autos/$REALITY_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/juda\.autos/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/juda\.autos/$SING_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/juda\.autos/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/juda\.autos/$YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/tls\.yourdoamin/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/yourdomain/$YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/137\.175\.127\.130/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
             echoContent green "nginx.conf 更新成功."
