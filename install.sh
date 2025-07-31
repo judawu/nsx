@@ -1241,6 +1241,7 @@ localInstall() {
     checkCentosSELinux
 
     # Install Nginx
+     echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装nginx..."
     if ! command -v nginx &> /dev/null; then
         if [[ "$release" == "centos" ]]; then
             rpm -Uvh http://nginx.org/packages/mainline/centos/8/x86_64/RPMS/nginx-1.21.6-1.el8.ngx.x86_64.rpm
@@ -1254,7 +1255,9 @@ localInstall() {
     fi
 
     # Install Xray and Sing-box
+    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装xray..."
     bash <(curl -L https://github.com/XTLS/Xray-core/releases/latest/download/install-release.sh)
+    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装singbox..."
     bash <(curl -fsSL https://sing-box.sagernet.org/install.sh)
 
     createDirectories
@@ -1447,7 +1450,7 @@ uninstallNSX() {
 
     # Uninstall Docker
     if command -v docker &>/dev/null; then
-        read -r -p "确认卸载 Docker？(y/n): " uninstallDocker
+        read -r -p "确认清理 Docker 容器？(y/n): " uninstallDocker
         if [[ "$uninstallDocker" == "y" ]]; then
             echoContent yellow "停止并卸载 Docker..."
             systemctl stop docker 2>/dev/null
@@ -1458,20 +1461,7 @@ uninstallNSX() {
                     exit 1
                 }
             fi
-            if [[ -d "/usr/local/docker" ]]; then
-                rm -rf /usr/local/docker/* || {
-                    echoContent red "无法清理 /usr/local/docker，请检查权限."
-                    exit 1
-                }
-                rmdir /usr/local/docker 2>/dev/null || true
-            fi
-            if [[ -d "/etc/docker" ]]; then
-                rm -rf /etc/docker/* || {
-                    echoContent red "无法清理 /etc/docker，请检查权限."
-                    exit 1
-                }
-                rmdir /etc/docker 2>/dev/null || true
-            fi
+          
             # Clean up Docker data (images, containers, volumes)
             if docker system prune -a -f --volumes; then
                 echoContent green "Docker 数据清理完成."
@@ -1481,7 +1471,7 @@ uninstallNSX() {
             if ! command -v docker &>/dev/null; then
                 echoContent green " ---> Docker 卸载完成."
             else
-                echoContent red "Docker 卸载失败，docker 命令仍存在."
+                echoContent yellow "Docker 数据清理完成，docker 命令仍存在系统中，如果需要卸载，请手动卸载."
                 exit 1
             fi
         fi
