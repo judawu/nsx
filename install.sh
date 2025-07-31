@@ -1321,7 +1321,7 @@ EOF
     # Install Xray and Sing-box
     echoContent skyBlue "\n 安装xray..."
    
-    version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==${prereleaseStatus})|.tag_name" | head -1)
+    version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
     echoContent green " ---> Xray-core版本:${version}"
     if [[ "${release}" == "alpine" ]]; then
         wget -c -q -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
@@ -1342,7 +1342,7 @@ EOF
     echoContent skyBlue "安装singbox..."
    
 
-    version=$(curl -s "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=20" | jq -r ".[]|select (.prerelease==${prereleaseStatus})|.tag_name" | head -1)
+    version=$(curl -s "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=20" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
 
     echoContent green " sing-box版本:${version}"
 
