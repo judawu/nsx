@@ -1269,9 +1269,18 @@ localInstall() {
     echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 本地安装..."
     installTools
     checkCentosSELinux
+    
+    createDirectories
+    installAcme
+
+    # Check certificates
+    if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
+        echoContent yellow "未找到证书，运行证书管理..."
+        manageCertificates
+    fi
 
     # Install Nginx
-     echoContent skyBlue "\n 安装nginx..."
+    echoContent skyBlue "\n 安装nginx..."
     if [[ "${release}" == "debian" ]]; then
         sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
         echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
@@ -1313,9 +1322,8 @@ EOF
     elif [[ "${release}" == "alpine" ]]; then
         rm "${nginxConfigPath}default.conf"
     fi
-    ${installType} nginx >/dev/null 2>&1
-    bootStartup nginx
-}
+
+
 
 
     # Install Xray and Sing-box
@@ -1365,20 +1373,13 @@ EOF
     fi
     
 
-}
 
-    createDirectories
-    installAcme
 
-    # Check certificates
-    if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
-        echoContent yellow "未找到证书，运行证书管理..."
-        manageCertificates
-    fi
 
     # Start services
     systemctl enable nginx xray sing-box
     systemctl start nginx xray sing-box
+   
     if [ $? -ne 0 ]; then
         echoContent red "启动服务失败，请检查配置或日志."
         exit 1
