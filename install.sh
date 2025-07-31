@@ -1272,7 +1272,7 @@ localInstall() {
 
     # Install Nginx
      echoContent skyBlue "\n 安装nginx..."
-    f [[ "${release}" == "debian" ]]; then
+    if [[ "${release}" == "debian" ]]; then
         sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
         echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
         echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
