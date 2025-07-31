@@ -1213,7 +1213,7 @@ dockerInstall() {
     installAcme
 
     # Copy configuration files (assuming files are in the script's directory)
-    if [[ $pwd != $BASE_DIR ]]; then 
+    if [[ $(pwd) != $BASE_DIR ]]; then 
         cp ./docker/docker-compose.yml "$COMPOSE_FILE"
         cp ./nginx/nginx.conf "$NGINX_CONF"
         cp ./xray/config.json "$XRAY_CONF"
@@ -1395,7 +1395,6 @@ localInstall() {
         echoContent green "\n 安装nginx依赖..."
         sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
         echo "deb http://nginx.org/packages/mainline/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
-        echoContent green "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx >/dev/null 2>&1
         curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
         # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
         sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
@@ -1432,7 +1431,7 @@ EOF
     echoContent skyBlue "\n 安装xray..."
    
     version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
-    echoContent green " ---> Xray-core版本:${version}"
+    echoContent green " Xray-core版本:${version}"
     if [[ "${release}" == "alpine" ]]; then
         wget -c -q -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
     else
@@ -1472,20 +1471,20 @@ EOF
         mv "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}/sing-box" /usr/local/nsx/sing-box
         rm -rf /usr/local/nsx/sing-box/sing-box-*
         chmod 655 /usr/local/nsx/sing-box/sing-box
-        echoContent red "singbox安装成功"
+        echoContent green "singbox安装成功"
     fi
     
 
 
 
-    echoContent green "本地安装成功，启动服务."
+    echoContent skyblue "本地安装成功，启动服务."
     # Start services
     createSystemdServices
     startServices
     
 
     
-    echoContent green "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
+    echoContent yellpw "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
 }
 
@@ -1561,7 +1560,7 @@ uninstallNSX() {
               
             fi
             if ! command -v xray &>/dev/null; then
-                echoContent green " ---> Xray 卸载完成."
+                echoContent green "Xray 卸载完成."
             else
                 echoContent red "Xray 卸载失败，xray 命令仍存在."
                 exit 1
@@ -1592,7 +1591,7 @@ uninstallNSX() {
             fi
         
             if ! command -v sing-box &>/dev/null; then
-                echoContent green " ---> Sing-box 卸载完成."
+                echoContent green " Sing-box 卸载完成."
             else
                 echoContent red "Sing-box 卸载失败，sing-box 命令仍存在."
                 exit 1
@@ -1620,7 +1619,7 @@ uninstallNSX() {
                 # 删除残留的配置文件和日志
             rm -rf /etc/nginx /var/log/nginx /var/cache/nginx
             if ! command -v nginx &>/dev/null; then
-                echoContent green " ---> Nginx 卸载完成."
+                echoContent green " Nginx 卸载完成."
             else
                 echoContent red "Nginx 卸载失败，nginx 命令仍存在."
                 exit 1
@@ -1650,7 +1649,7 @@ uninstallNSX() {
                 echoContent yellow "警告: Docker 数据清理失败，部分数据可能仍存在."
             fi
             if ! command -v docker &>/dev/null; then
-                echoContent green " ---> Docker 卸载完成."
+                echoContent green "  Docker 卸载完成."
             else
                 echoContent yellow "Docker 数据清理完成，docker 命令仍存在系统中，如果需要卸载，请手动卸载."
                 exit 1
@@ -1696,11 +1695,8 @@ menu() {
     echoContent green "Github: https://github.com/judawu/nsx"
     echoContent green "描述: 一个集成 Nginx、Sing-box 和 Xray 的代理环境"
     echoContent red "\n=============================================================="
-    if [[ -f "$COMPOSE_FILE" || -f "/usr/local/nsx/nginx/nginx.conf" ]]; then
-        echoContent yellow "1. 重新安装"
-    else
-        echoContent yellow "1. 安装"
-    fi
+   
+    echoContent yellow "1. 阅读说明"   
     echoContent yellow "2. 使用 Docker 安装 NSX"
     echoContent yellow "3. 本地安装 NSX"
     echoContent yellow "4. 证书管理"
@@ -1714,7 +1710,10 @@ menu() {
     read -r -p "请选择一个选项 [1-9]: " option
 
     case $option in
-        1|2)dockerInstall ;;
+        1)
+        echoContent green "选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改"
+        exit 1;;
+        2)dockerInstall ;;
         3) localInstall ;;
         4) manageCertificates ;;
         5) manageConfigurations ;;
