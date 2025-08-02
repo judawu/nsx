@@ -231,6 +231,10 @@ manageCertificates() {
             read -r -p "确认 SSL 类型为 letsencrypt 还是 zerossl (y=letsencrypt, n=zerossl): " selectSSLType
             if [[ -n "$selectSSLType" && "$selectSSLType" == "n" ]]; then
                 sslType="zerossl"
+                read -r -p "请输入你的邮箱注册zerossl(要和你的DNS邮箱一致)回车默认已注册zerossl: " regZeroSSLEmail
+                if [[ -n "regZeroSSLEmail"]]; then
+                 sudo "$HOME/.acme.sh/acme.sh" --register-account -m "$regZeroSSLEmail" --server zerossl
+                fi
             else
                 sslType="letsencrypt"
             fi
