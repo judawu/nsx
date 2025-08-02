@@ -207,7 +207,6 @@ installAcme() {
         echoContent green "acme.sh 已安装."
     fi
 }
-
 # Manage certificates
 manageCertificates() {
     # Define defaults
@@ -232,55 +231,53 @@ manageCertificates() {
             read -r -p "确认 SSL 类型为 letsencrypt 还是 zerossl (y=letsencrypt, n=zerossl): " selectSSLType
             if [[ -n "$selectSSLType" && "$selectSSLType" == "n" ]]; then
                 sslType="zerossl"
-              
             else
                 sslType="letsencrypt"
-               
             fi
             echoContent skyBlue " SSL 类型为 $sslType."
             read -r -p "请输入证书域名 (例如: yourdomain.com 或 *.yourdomain.com，多个域名用逗号隔开): " DOMAIN
             if [[ -z "$DOMAIN" ]]; then
-                echoContent red "无效域名，请输入有效域名"
+                echoContent red "请输入域名"
                 return 1
             fi
-            echoContent skyBlue " 证书域名为 $DOMAIN."
+            # Extract the first domain for certificate naming
+            FIRST_DOMAIN=$(echo "$DOMAIN" | cut -d',' -f1 | xargs)
+            echoContent skyBlue " 证书域名为 $DOMAIN (使用 $FIRST_DOMAIN 作为证书文件名)."
             read -r -p "请输入DNS提供商: 0.Cloudflare, 1.阿里云, 2.手动DNS, 3.独立: " DNS_VENDOR
 
             if [[ "$cert_option" == "1" ]]; then
                 # Clear previous credentials for this domain
-                
-                grep -v "^${DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
+                grep -v "^${FIRST_DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
             fi
             echoContent skyBlue " DNS提供商选择 $DNS_VENDOR."
             if [[ "$DNS_VENDOR" == "0" ]]; then
-             
-                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE") ]]; then
+                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE") ]]; then
                     # Load saved Cloudflare credentials for renewal
-                    IFS=':' read -r _ _ cf_type cf_value1 cf_value2 < <(grep "^${DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE")
+                    IFS=':' read -r _ _ cf_type cf_value1 cf_value2 < <(grep "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE")
                     if [[ "$cf_type" == "token" ]]; then
                         cfAPIToken="$cf_value1"
                     else
                         cfAPIEmail="$cf_value1"
                         cfAPIKey="$cf_value2"
                     fi
-                    echoContent green " ---> 使用保存的 Cloudflare 凭据进行续订"
+                    echoContent green "使用保存的 Cloudflare 凭据进行续订"
                 else
-                    read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用 Global API Key: " cfAPIToken
+                    read -r -p "请输入 Cloudflare API Token (推荐) 或按回车使用邮箱和API Key: " cfAPIToken
                     if [[ -n "$cfAPIToken" ]]; then
-                        echoContent green " ---> 保存 Cloudflare API Token $cfAPIToken"
-                        echo "${DOMAIN}:Cloudflare:token:${cfAPIToken}" >> "$CREDENTIALS_FILE"
+                        echoContent green "保存 Cloudflare API Token $cfAPIToken"
+                        echo "${FIRST_DOMAIN}:Cloudflare:token:${cfAPIToken}" >> "$CREDENTIALS_FILE"
                     else
                         read -r -p "请输入 Cloudflare Email: " cfAPIEmail
                         read -r -p "请输入 Cloudflare Global API Key: " cfAPIKey
                         if [[ -z "${cfAPIEmail}" || -z "${cfAPIKey}" ]]; then
-                            echoContent red " ---> 输入为空，请重试"
+                            echoContent red "输入为空，请重试"
                             return 1
                         fi
-                        echoContent green " ---> 保存 Cloudflare Email $cfAPIEmail 和 Global API Key $cfAPIKey"
-                        echo "${DOMAIN}:Cloudflare:key:${cfAPIEmail}:${cfAPIKey}" >> "$CREDENTIALS_FILE"
+                        echoContent green " 保存 Cloudflare Email $cfAPIEmail 和 Global API Key $cfAPIKey"
+                        echo "${FIRST_DOMAIN}:Cloudflare:key:${cfAPIEmail}:${cfAPIKey}" >> "$CREDENTIALS_FILE"
                     fi
                 fi
-                echoContent green " ---> Cloudflare DNS API ${action##--}证书中"
+                echoContent green " Cloudflare DNS API ${action##--}证书中"
                 if [[ -n "$cfAPIToken" ]]; then
                     if ! sudo CF_Token="${cfAPIToken}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_cf -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                         echoContent red "命令失败，请检查 $ACME_LOG 日志"
@@ -294,11 +291,10 @@ manageCertificates() {
                     fi
                     unset CF_Email CF_Key
                 fi
-             
             elif [[ "$DNS_VENDOR" == "1" ]]; then
-                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${DOMAIN}:Alibaba:" "$CREDENTIALS_FILE") ]]; then
+                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${FIRST_DOMAIN}:Alibaba:" "$CREDENTIALS_FILE") ]]; then
                     # Load saved Alibaba credentials for renewal
-                    IFS=':' read -r _ _ aliKey aliSecret < <(grep "^${DOMAIN}:Alibaba:" "$CREDENTIALS_FILE")
+                    IFS=':' read -r _ _ aliKey aliSecret < <(grep "^${FIRST_DOMAIN}:Alibaba:" "$CREDENTIALS_FILE")
                     echoContent green " ---> 使用保存的阿里云凭据进行续订"
                 else
                     read -r -p "请输入阿里云 Key: " aliKey
@@ -308,7 +304,7 @@ manageCertificates() {
                         return 1
                     fi
                     echoContent green " ---> 保存阿里云 Key 和 Secret"
-                    echo "${DOMAIN}:Alibaba:${aliKey}:${aliSecret}" >> "$CREDENTIALS_FILE"
+                    echo "${FIRST_DOMAIN}:Alibaba:${aliKey}:${aliSecret}" >> "$CREDENTIALS_FILE"
                 fi
                 echoContent green " ---> 阿里云 DNS API ${action##--}证书中"
                 if ! sudo Ali_Key="${aliKey}" Ali_Secret="${aliSecret}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_ali -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
@@ -316,9 +312,8 @@ manageCertificates() {
                     exit 1
                 fi
                 unset Ali_Key Ali_Secret
-             
             elif [[ "$DNS_VENDOR" == "2" ]]; then
-                echoContent yellow "手动 DNS 模式，请添加 TXT 记录: https://github.com/judawu/nsx/blob/main/docs/dns_txt.md"
+                echoContent yellow "手动 DNS 模式，请添加 TXT 记录:（例如在cloudware中在DNS下手动建立TXT文件，将下面的字符串输入）"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                     echoContent red "命令失败，请检查 $ACME_LOG 日志"
                     exit 1
@@ -327,10 +322,10 @@ manageCertificates() {
                 if [[ -n "$txtValue" ]]; then
                     echoContent green " ---> 名称: _acme-challenge"
                     echoContent green " ---> 值: ${txtValue}"
-                    echoContent yellow " ---> 请添加 TXT 记录并等待 1-2 分钟"
+                    echoContent yellow " ---> 请添加 TXT 记录（例如在cloudware中在DNS下手动建立TXT文件，将下面的字符串${txtValue}输入）并等待 1-2 分钟"
                     read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
                     if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
-                        txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}' | head -1)
+                        txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${FIRST_DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}' | head -1)
                         if echo "$txtAnswer" | grep -q "^${txtValue}"; then
                             echoContent green " ---> TXT 记录验证通过"
                             if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
@@ -343,7 +338,6 @@ manageCertificates() {
                         fi
                     fi
                 fi
-              
             elif [[ "$DNS_VENDOR" == "3" ]]; then
                 echoContent green " ---> 独立模式 ${action##--}证书中"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --standalone -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
@@ -354,18 +348,16 @@ manageCertificates() {
                 echoContent red "无效 DNS 提供商"
                 return 1
             fi
-            
 
-        
             echoContent yellow "安装证书..."
-            if ! sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${DOMAIN}" --ecc \
-                --fullchain-file "${CERT_DIR}/${DOMAIN}.pem" \
-                --key-file "${CERT_DIR}/${DOMAIN}.key" 2>&1 | tee -a "$ACME_LOG"; then
+            if ! sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${FIRST_DOMAIN}" --ecc \
+                --fullchain-file "${CERT_DIR}/${FIRST_DOMAIN}.pem" \
+                --key-file "${CERT_DIR}/${FIRST_DOMAIN}.key" 2>&1 | tee -a "$ACME_LOG"; then
                 echoContent red "证书安装失败，请检查 $ACME_LOG 日志"
                 exit 1
             fi
-            chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
-            chmod 600 "${CERT_DIR}/${DOMAIN}.key"
+            chmod 644 "${CERT_DIR}/${FIRST_DOMAIN}.pem"
+            chmod 600 "${CERT_DIR}/${FIRST_DOMAIN}.key"
             echoContent green "证书${action##--}并安装成功"
             ;;
         3)
@@ -379,8 +371,8 @@ manageCertificates() {
                 fi
             fi
             read -r -p "请输入自签证书域名 (例如: sub.yourdomain.com): " DOMAIN
-            if [[ -z "$DOMAIN" || ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-                echoContent red "无效域名，请输入有效域名"
+            if [[ -z "$DOMAIN" ]]; then
+                echoContent red "请输入域名"
                 return 1
             fi
             echoContent skyBlue "为 ${DOMAIN} 生成自签证书..."
@@ -422,29 +414,28 @@ EOF
             ;;
     esac
     if [[ "$cert_option" == "1" || "$cert_option" == "2" ]]; then
-                # ... 证书申请/续订逻辑 ...
-                echoContent yellow "清除 TXT 记录..."
-                if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${DOMAIN}" --dns 2>&1 | tee -a "$ACME_LOG"; then
-                    echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
-                else
-                    echoContent green "TXT 记录已清除"
-                fi
-     fi
+        echoContent yellow "清除 TXT 记录..."
+        if ! sudo "$HOME/.acme.sh/acme.sh" --remove -d "${FIRST_DOMAIN}" --dns 2>&1 | tee -a "$ACME_LOG"; then
+            echoContent red "清除 TXT 记录失败，请检查 $ACME_LOG 日志"
+        else
+            echoContent green "TXT 记录已清除"
+        fi
+    fi
     # Schedule renewal for Cloudflare or Alibaba DNS if credentials were saved
     if [[ "$cert_option" == "1" && ("$DNS_VENDOR" == "0" || "$DNS_VENDOR" == "1") ]]; then
         echoContent yellow "设置每3个月自动续订证书..."
         local cron_cmd
         if [[ "$DNS_VENDOR" == "0" ]]; then
             if [[ -n "$cfAPIToken" ]]; then
-                cron_cmd="CF_Token=\"\$(grep '^${DOMAIN}:Cloudflare:token:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" \"$HOME/.acme.sh/acme.sh\" --renew -d \"${DOMAIN}\" --dns dns_cf -k ec-256 --server ${sslType} --install-cert -d \"${DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${DOMAIN}.pem\" --key-file \"${CERT_DIR}/${DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
+                cron_cmd="CF_Token=\"\$(grep '^${FIRST_DOMAIN}:Cloudflare:token:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" \"$HOME/.acme.sh/acme.sh\" --renew -d "${DOMAIN}" --dns dns_cf -k ec-256 --server ${sslType} --install-cert -d \"${FIRST_DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${FIRST_DOMAIN}.pem\" --key-file \"${CERT_DIR}/${FIRST_DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
             else
-                cron_cmd="CF_Email=\"\$(grep '^${DOMAIN}:Cloudflare:key:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" CF_Key=\"\$(grep '^${DOMAIN}:Cloudflare:key:' \"${CREDENTIALS_FILE}\" | cut -d':' -f5)\" \"$HOME/.acme.sh/acme.sh\" --renew -d \"${DOMAIN}\" --dns dns_cf -k ec-256 --server ${sslType} --install-cert -d \"${DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${DOMAIN}.pem\" --key-file \"${CERT_DIR}/${DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
+                cron_cmd="CF_Email=\"\$(grep '^${FIRST_DOMAIN}:Cloudflare:key:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" CF_Key=\"\$(grep '^${FIRST_DOMAIN}:Cloudflare:key:' \"${CREDENTIALS_FILE}\" | cut -d':' -f5)\" \"$HOME/.acme.sh/acme.sh\" --renew -d "${DOMAIN}" --dns dns_cf -k ec-256 --server ${sslType} --install-cert -d \"${FIRST_DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${FIRST_DOMAIN}.pem\" --key-file \"${CERT_DIR}/${FIRST_DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
             fi
         elif [[ "$DNS_VENDOR" == "1" ]]; then
-            cron_cmd="Ali_Key=\"\$(grep '^${DOMAIN}:Alibaba:' \"${CREDENTIALS_FILE}\" | cut -d':' -f3)\" Ali_Secret=\"\$(grep '^${DOMAIN}:Alibaba:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" \"$HOME/.acme.sh/acme.sh\" --renew -d \"${DOMAIN}\" --dns dns_ali -k ec-256 --server ${sslType} --install-cert -d \"${DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${DOMAIN}.pem\" --key-file \"${CERT_DIR}/${DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
+            cron_cmd="Ali_Key=\"\$(grep '^${FIRST_DOMAIN}:Alibaba:' \"${CREDENTIALS_FILE}\" | cut -d':' -f3)\" Ali_Secret=\"\$(grep '^${FIRST_DOMAIN}:Alibaba:' \"${CREDENTIALS_FILE}\" | cut -d':' -f4)\" \"$HOME/.acme.sh/acme.sh\" --renew -d "${DOMAIN}" --dns dns_ali -k ec-256 --server ${sslType} --install-cert -d \"${FIRST_DOMAIN}\" --ecc --fullchain-file \"${CERT_DIR}/${FIRST_DOMAIN}.pem\" --key-file \"${CERT_DIR}/${FIRST_DOMAIN}.key\" 2>&1 | tee -a \"$ACME_LOG\""
         fi
-        (crontab -l 2>/dev/null | grep -v "${DOMAIN}.*acme.sh --renew"; echo "0 3 1 */3 * $cron_cmd") | crontab -
-        echoContent green "已为 ${DOMAIN} 设置每3个月自动续订"
+        (crontab -l 2>/dev/null | grep -v "${FIRST_DOMAIN}.*acme.sh --renew"; echo "0 3 1 */3 * $cron_cmd") | crontab -
+        echoContent green "已为 ${FIRST_DOMAIN} 设置每3个月自动续订"
     fi
 }
 xray_config(){
