@@ -280,13 +280,15 @@ manageCertificates() {
                 echoContent green " Cloudflare DNS API ${action##--}证书中"
                 if [[ -n "$cfAPIToken" ]]; then
                     if ! sudo CF_Token="${cfAPIToken}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_cf -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
-                        echoContent red "命令失败，请检查 $ACME_LOG 日志"
-                        exit 1
+                       sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
+                       echoContent red "请检查 $ACME_LOG 日志以获取详细信息"
+                       exit 1
                     fi
                     unset CF_Token
                 else
                     if ! sudo CF_Email="${cfAPIEmail}" CF_Key="${cfAPIKey}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_cf -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
-                        echoContent red "命令失败，请检查 $ACME_LOG 日志"
+                        sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
+                        echoContent red "请检查 $ACME_LOG 日志以获取详细信息"
                         exit 1
                     fi
                     unset CF_Email CF_Key
@@ -308,15 +310,18 @@ manageCertificates() {
                 fi
                 echoContent green " ---> 阿里云 DNS API ${action##--}证书中"
                 if ! sudo Ali_Key="${aliKey}" Ali_Secret="${aliSecret}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_ali -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
-                    echoContent red "命令失败，请检查 $ACME_LOG 日志"
+                    echoContent red "证书签发失败，清理残留数据并退出"
+                    sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
+                    echoContent red "请检查 $ACME_LOG 日志以获取详细信息"
                     exit 1
                 fi
                 unset Ali_Key Ali_Secret
             elif [[ "$DNS_VENDOR" == "2" ]]; then
                 echoContent yellow "手动 DNS 模式，请添加 TXT 记录:（例如在cloudware中在DNS下手动建立TXT文件，将下面的字符串输入）"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
-                    echoContent red "命令失败，请检查 $ACME_LOG 日志"
-                    exit 1
+                    echoContent red "证书签发失败，清理残留数据并退出"
+                    sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
+                    echoContent red "请检查 $ACME_LOG 日志以获取详细信息"
                 fi
                 txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}' | head -1)
                 if [[ -n "$txtValue" ]]; then
@@ -329,8 +334,9 @@ manageCertificates() {
                         if echo "$txtAnswer" | grep -q "^${txtValue}"; then
                             echoContent green " ---> TXT 记录验证通过"
                             if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
-                                echoContent red "续订失败，请检查 $ACME_LOG 日志"
-                                exit 1
+                                   echoContent red "证书签发失败，清理残留数据并退出"
+                                   sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
+                                   echoContent red "请检查 $ACME_LOG 日志以获取详细信息"
                             fi
                         else
                             echoContent red "TXT 记录验证失败"
@@ -350,6 +356,12 @@ manageCertificates() {
             fi
 
             echoContent yellow "安装证书..."
+            if [[ ! -f "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc/fullchain.cer" ]]; then
+                echoContent red "证书文件未生成，清理残留数据并退出"
+                sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
+                echoContent red "请检查 $ACME_LOG 日志以获取详细信息"
+                exit 1
+            fi
             if ! sudo "$HOME/.acme.sh/acme.sh" --install-cert -d "${FIRST_DOMAIN}" --ecc \
                 --fullchain-file "${CERT_DIR}/${FIRST_DOMAIN}.pem" \
                 --key-file "${CERT_DIR}/${FIRST_DOMAIN}.key" 2>&1 | tee -a "$ACME_LOG"; then
