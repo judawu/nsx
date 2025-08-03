@@ -373,7 +373,7 @@ manageCertificates() {
                 exit 1
             fi
             chmod 644 "${CERT_DIR}/${FIRST_DOMAIN}.pem"
-            chmod 600 "${CERT_DIR}/${FIRST_DOMAIN}.key"
+            chmod 644 "${CERT_DIR}/${FIRST_DOMAIN}.key"
             echoContent green "证书${action##--}并安装成功"
             ;;
         3)
@@ -418,7 +418,7 @@ EOF
             fi
             rm -f /tmp/openssl-san.cnf
             chmod 644 "${CERT_DIR}/${DOMAIN}.pem"
-            chmod 600 "${CERT_DIR}/${DOMAIN}.key"
+            chmod 644 "${CERT_DIR}/${DOMAIN}.key"
             echoContent green "自签证书生成并安装成功，位于 ${CERT_DIR}/${DOMAIN}.pem"
             ;;
         4)
