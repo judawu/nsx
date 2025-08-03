@@ -478,8 +478,8 @@ if [[ ! -f "$XRAY_CONF" ]]; then
 fi
 
 # 获取用户输入的域名
-read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " DOMAIN
-if [[ -z "$DOMAIN" ]]; then
+read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
+if [[ -z "$YOURDOMAIN" ]]; then
     echo "Error: 域名不能为空."
     exit 1
 fi
@@ -571,7 +571,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 done
 
 # 替换 yourdomain 为用户输入的域名
-jq --arg domain "$DOMAIN" \
+jq --arg domain "$YOURDOMAIN" \
    'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
 
@@ -614,8 +614,8 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 fi
 
 # 获取用户输入的域名
-read -p "Please enter the domain to replace 'yourdomain' (e.g., example.com): " DOMAIN
-if [[ -z "$DOMAIN" ]]; then
+read -p "Please enter the domain to replace 'yourdomain' (e.g., example.com): " SINGGOBXDOMAIN
+if [[ -z "$SINGGOBXDOMAIN" ]]; then
     echo "Error: Domain cannot be empty."
     exit 1
 fi
@@ -717,7 +717,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 done
 
 # 替换 yourdomain 为用户输入的域名
-jq --arg domain "$DOMAIN" \
+jq --arg domain "$SINGGOBXDOMAIN" \
    'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
 
@@ -752,16 +752,22 @@ manageConfigurations() {
             read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nignx解密): " PRE_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密): " SING_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站): " WWW_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符或者综合证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
             read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
+            if [[ ! -f "$NEW_IP" ]]; then
+                $NEW_IP="$LOCAL_IP";
+            fi
             read -r -p "请输入 nginx.conf 的新端口 (默认 443): " NEW_PORT
+            if [[ ! -f "$NEW_PORT" ]]; then
+                $NEW_PORT="443";
+            fi
             sed -i "s/tls\.yourdoamin/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/yourdomain/$YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/137\.175\.127\.130/$NEW_IP/g" "$NGINX_CONF"
+            sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
             echoContent green "nginx.conf 更新成功."
             # Reload Nginx if running
