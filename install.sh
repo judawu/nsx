@@ -754,14 +754,14 @@ manageConfigurations() {
             read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站): " WWW_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符或者综合证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
             read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
-            if [[ ! -f "$NEW_IP" ]]; then
-                $NEW_IP="$LOCAL_IP";
+            if [[ -z "$NEW_IP" ]]; then
+                NEW_IP="$LOCAL_IP"
             fi
             read -r -p "请输入 nginx.conf 的新端口 (默认 443): " NEW_PORT
-            if [[ ! -f "$NEW_PORT" ]]; then
-                $NEW_PORT="443";
+            if [[ -z "$NEW_PORT" ]]; then
+                NEW_PORT="443"
             fi
-            sed -i "s/tls\.yourdoamin/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
