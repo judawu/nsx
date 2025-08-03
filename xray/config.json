@@ -481,8 +481,8 @@
         
           "certificates": [
             {    
-               "certificateFile": "/etc/certs/yourdomain.pem",
-               "keyFile":         "/etc/certs/yourdomain.key"
+               "certificateFile": "/usr/local/nsx/certs/yourdomain.pem",
+               "keyFile":         "/usr/local/nsx/certs/yourdomain.key"
             }
           ]
         },
@@ -662,8 +662,6 @@
             "network": "grpc",
             "security": "none",        
             "grpcSettings": {
-              // "authority": "porxy.juda.autos",
-              // 若起始为斜杠时为自定义 path，至少要两个斜杠，例如在服务端填写 "/reality/grpc/g1|g2"，客户端可填写 "/reality/grpc/g1" 或 "/reality/grpc/g1"，客户端填写 "/reality/grpc" 将连接失败
           
                 "serviceName": "/reality/grpc/h1|h2",
                 "multiMode": true
@@ -780,7 +778,7 @@
     //  "sendThrough": "0.0.0.0", //用于发送数据的 IP 地址，当主机有多个 IP 地址时有效，默认值为 "0.0.0.0"
       "protocol": "freedom",
       "settings": {
-       "redirect": "137.175.127.130:18443" //设计了一个10ms的视频试图欺骗，结果失败
+       "redirect": "127.0.0.1:18443" 
         
       },
       "tag": "ad-block"//,
