@@ -1227,15 +1227,22 @@ dockerInstall() {
 
     # Copy configuration files (assuming files are in the script's directory)
     if [[ $(pwd) != $BASE_DIR ]]; then 
-        cp ./docker/docker-compose.yml "$COMPOSE_FILE"
-        cp ./nginx/nginx.conf "$NGINX_CONF"
-        cp ./xray/config.json "$XRAY_CONF"
-        cp ./sing-box/config.json "$SINGBOX_CONF"
+        if [[  -f "$COMPOSE_FILE" ]]; then 
+         cp ./docker/docker-compose.yml "$COMPOSE_FILE"
         chmod 644 "$COMPOSE_FILE"
-        chmod 644 "$NGINX_CONF"
-        chmod 644 "$SINGBOX_CONF"
-        chmod 644 "$XRAY_CONF"
-        
+        fi
+        if [[  -f "$COMPOSE_FILE" ]]; then
+         cp ./nginx/nginx.conf "$NGINX_CONF"
+         chmod 644 "$NGINX_CONF"
+        fi
+        if [[  -f "$COMPOSE_FILE" ]]; then
+          cp ./xray/config.json "$XRAY_CONF"
+          chmod 644 "$SINGBOX_CONF"
+        fi
+        if [[  -f "$COMPOSE_FILE" ]]; then
+           cp ./sing-box/config.json "$SINGBOX_CONF"
+           chmod 644 "$XRAY_CONF"
+        fi       
     fi
 
     # Check certificates
@@ -1724,7 +1731,7 @@ menu() {
 
     case $option in
         1)
-        echoContent green "选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改"
+        echoContent green "输入nsx启动脚本\n选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改"
         exit 1;;
         2)dockerInstall ;;
         3) localInstall ;;
