@@ -125,8 +125,8 @@
       "tls": {
         "enabled": true,
         "server_name": "sing.yourdomain",
-        "certificate_path": "/etc/certs/yourdomain.pem",
-        "key_path": "/etc/certs/yourdomain.key"
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
       
       },
       "fallback": {
@@ -154,8 +154,8 @@
         "enabled": true,
         "server_name": "sing.yourdomain",
         "alpn": "h3",
-        "certificate_path": "/etc/certs/yourdomain.pem",
-        "key_path": "/etc/certs/yourdomain.key"
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
       
       },
     "masquerade": "https://cloudflare.com", // 伪装为 Cloudflare
@@ -182,8 +182,8 @@
         "enabled": true,
         "server_name": "sing.yourdomain",
         "alpn": "h3",
-        "certificate_path": "/etc/certs/yourdomain.pem",
-        "key_path": "/etc/certs/yourdomain.key"
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
        
       }
     },
@@ -201,8 +201,8 @@
       "tls": {
         "enabled": true,
         "server_name": "sing.yourdomain",
-        "certificate_path": "/etc/certs/yourdomain.pem",
-        "key_path": "/etc/certs/yourdomain.key"
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
       }
     },
     {
@@ -325,8 +325,8 @@
       "tls": {
         "enabled": true,
         "server_name": "sing.yourdomain",
-        "certificate_path": "/etc/certs/yourdomain.pem",
-        "key_path": "/etc/certs/yourdomain.key"
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
       }
     }
   ],
