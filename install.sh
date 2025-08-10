@@ -522,7 +522,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
             old_id=$(echo "$client" | jq -r '.id')
 
             new_id=$(xray uuid)
-            echoContent green "替换 $client_index UUID, $tag: $old_id -> $new_id"
+            echoContent yellow "替换 $client_index UUID, $tag: $old_id -> $new_id"
 
             # 更新 id
             jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -540,7 +540,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
         echo "$clients" | while IFS= read -r client; do
             old_password=$(echo "$client" | jq -r '.password')
             new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-            echoContent green "替换 $client_index password $tag: $old_password -> $new_password"
+            echoContent yellow "替换 $client_index password $tag: $old_password -> $new_password"
 
             # 更新 password
             jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
@@ -572,9 +572,9 @@ echo "$inbounds" | while IFS= read -r inbound; do
         echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_verfify"
 
         # 更新 privateKey, publicKey, shortIds, mldsa65Seed
-        jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$new_mldsa65_seed" \
+        jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed"  --arg mldsa65_verfify "$mldsa65_verfify" \
            '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
-            (.privateKey = $private_key | .password = $public_key | .shortIds = $new_short_ids | .mldsa65Seed = $mldsa65_seed | .mldsa65Verify = $mldsa65_verfify)' \
+            (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids | .mldsa65Seed = $mldsa65_seed | .mldsa65Verify = $mldsa65_verfify)' \
            "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
     fi
 done
