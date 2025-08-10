@@ -788,6 +788,7 @@ manageConfigurations() {
 
     case $config_option in
        1)
+            
             configNSX
             ;;
        2)
@@ -1112,52 +1113,8 @@ aliasInstall() {
 
 
 # Update script
-updateNSX() {
-    echoContent skyblue "\n进度 5/${TOTAL_PROGRESS} : 更新 NSX 脚本..."
-    # Check if git is installed
-    if ! command -v git &> /dev/null; then
-        echoContent yellow "安装 git..."
-        ${installCmd} git
-        if [ $? -ne 0 ]; then
-            echoContent red "安装 git 失败，请手动安装."
-            exit 1
-        fi
-    fi
-
-    # Create a temporary directory for cloning
-    TEMP_DIR=$(mktemp -d)
-    if [ $? -ne 0 ]; then
-        echoContent red "创建临时目录失败."
-        exit 1
-    fi
-    # Ensure temporary directory is cleaned up on exit
-    trap 'rm -rf "$TEMP_DIR"' EXIT
-    # Clone the repository
-    # Clone the repository
-    if ! git clone https://github.com/judawu/nsx.git "$TEMP_DIR"; then
-        echoContent red "克隆 Git 仓库失败，请检查网络或仓库地址 https://github.com/judawu/nsx."
-        exit 1
-    fi
-
-    # Remove old install.sh
-    rm -f "$BASE_DIR/install.sh"
-
-    # Copy install.sh from cloned repository
-    if [ -f "$TEMP_DIR/install.sh" ]; then
-        cp "$TEMP_DIR/install.sh" "$BASE_DIR/install.sh"
-        chmod 700 "$BASE_DIR/install.sh"
-        echoContent green "脚本更新成功."
-    else
-        echoContent red "克隆的仓库中未找到 install.sh 文件."
-        rm -rf "$TEMP_DIR"
-        exit 1
-    fi
-
-    read -r -p "是否用 GitHub 仓库替换当前配置文件？(y/n): " keep_config
-    if [[ "$keep_config" == "n" ]]; then
-        echoContent green "保留现有配置文件，不进行更新."
-    elif [[ "$keep_config" == "y" ]]; then
-        echoContent yellow "更新配置文件..."
+updateConfig() {
+   echoContent yellow "更新配置文件..."
         # Backup existing configuration files if they exist
         for file in "$COMPOSE_FILE" "$NGINX_CONF" "$XRAY_CONF" "$SINGBOX_CONF"; do
             if [[ -f "$file" ]]; then
@@ -1223,6 +1180,55 @@ updateNSX() {
         }
 
         echoContent green "配置文件更新成功."
+
+}
+
+updateNSX() {
+    echoContent skyblue "\n进度 5/${TOTAL_PROGRESS} : 更新 NSX 脚本..."
+    # Check if git is installed
+    if ! command -v git &> /dev/null; then
+        echoContent yellow "安装 git..."
+        ${installCmd} git
+        if [ $? -ne 0 ]; then
+            echoContent red "安装 git 失败，请手动安装."
+            exit 1
+        fi
+    fi
+
+    # Create a temporary directory for cloning
+    TEMP_DIR=$(mktemp -d)
+    if [ $? -ne 0 ]; then
+        echoContent red "创建临时目录失败."
+        exit 1
+    fi
+    # Ensure temporary directory is cleaned up on exit
+    trap 'rm -rf "$TEMP_DIR"' EXIT
+    # Clone the repository
+    # Clone the repository
+    if ! git clone https://github.com/judawu/nsx.git "$TEMP_DIR"; then
+        echoContent red "克隆 Git 仓库失败，请检查网络或仓库地址 https://github.com/judawu/nsx."
+        exit 1
+    fi
+
+    # Remove old install.sh
+    rm -f "$BASE_DIR/install.sh"
+
+    # Copy install.sh from cloned repository
+    if [ -f "$TEMP_DIR/install.sh" ]; then
+        cp "$TEMP_DIR/install.sh" "$BASE_DIR/install.sh"
+        chmod 700 "$BASE_DIR/install.sh"
+        echoContent green "脚本更新成功."
+    else
+        echoContent red "克隆的仓库中未找到 install.sh 文件."
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+
+    read -r -p "是否用 GitHub 仓库替换当前配置文件？(y/n): " keep_config
+    if [[ "$keep_config" == "n" ]]; then
+        echoContent green "保留现有配置文件，不进行更新."
+    elif [[ "$keep_config" == "y" ]]; then
+       updateConfig
     else
         echoContent green "保留现有配置文件，不进行更新."
     fi
@@ -1564,6 +1570,7 @@ EOF
    
 }
 configNSX() {
+    updateNSX
     echoContent skyblue "进行nginx的配置修改..."
     configNginx
     echoContent skyblue "\n 删除安装的nginx配置文件，拷贝/usr/local/nsx/nginx/nginx.conf配置文件到/etc/nginx..."
