@@ -1374,11 +1374,30 @@ startServices() {
     echoContent skyBlue "\n启动服务..."
 
     # 启用并启动服务
-    systemctl enable nginx xray sing-box
-    systemctl start nginx xray sing-box
+    sudo systemctl enable nginx xray sing-box
+    sudo systemctl start nginx xray sing-box
 
     # 检查服务状态
-    if systemctl is-active --quiet nginx && systemctl is-active --quiet xray && systemctl is-active --quiet sing-box; then
+    if sudo systemctl is-active --quiet nginx && sudo systemctl is-active --quiet xray && sudo systemctl is-active --quiet sing-box; then
+        echoContent green "所有服务（Nginx, Xray, Sing-box）启动成功！"
+    else
+        echoContent red "部分或全部服务启动失败，请检查日志："
+        echoContent red "Nginx: journalctl -u nginx.service"
+        echoContent red "Xray: journalctl -u xray.service"
+        echoContent red "Sing-box: journalctl -u sing-box.service"
+        exit 1
+    fi
+}
+
+restartServices() {
+    echoContent skyBlue "\重启服务..."
+
+    # 启用并启动服务
+    sudo systemctl stop nginx xray sing-box
+    sudo systemctl start nginx xray sing-box
+
+    # 检查服务状态
+    if sudo systemctl is-active --quiet nginx && sudo systemctl is-active --quiet xray && sudo systemctl is-active --quiet sing-box; then
         echoContent green "所有服务（Nginx, Xray, Sing-box）启动成功！"
     else
         echoContent red "部分或全部服务启动失败，请检查日志："
@@ -1441,12 +1460,7 @@ EOF
         if [ $? -eq 0 ]; then
             echoContent skyBlue "\n nginx安装完成..."
            
-            configNginx
-            echoContent skyBlue "\n 拷贝配置文件到/etc/nginx..."
-            sudo rm /etc/nginx/conf.d/default.conf
-            sudo rm /etc/nginx/nginx.conf
-            sudo cp /usr/local/nsx/nginx/nginx.conf /etc/nginx/nginx.conf
-            sudo chmod 644 /etc/nginx/nginx.conf
+            
         else
             echoContent red "\n nginx安装失败!"
             exit 1
@@ -1503,17 +1517,27 @@ EOF
         chmod 655 /usr/local/nsx/sing-box/sing-box
         echoContent green "singbox安装成功"
     fi
+   
     
+    echoContent skyblue "开始创建服务..."
+    # Start services
+    createSystemdServices
+    echoContent skyblue "进行nginx的配置修改..."
+    configNginx
+    echoContent skyBlue "\n 拷贝配置文件到/etc/nginx..."
+    sudo rm /etc/nginx/conf.d/default.conf
+    sudo rm /etc/nginx/nginx.conf
+    sudo cp /usr/local/nsx/nginx/nginx.conf /etc/nginx/nginx.conf
+    sudo chmod 644 /etc/nginx/nginx.conf
+    
+    echoContent skyblue "开始启动服务..."
+    startServices
+
     echoContent skyblue "进行xray的配置修改..."
     xray_config
     echoContent skyblue "进行singbox的配置修改..."
     singbox_config
-    echoContent skyblue "开始创建服务..."
-    # Start services
-    createSystemdServices
-    echoContent skyblue "开始启动服务..."
-    startServices
-
+    restartServices
     echoContent yellpw "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
 }
