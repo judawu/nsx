@@ -608,8 +608,8 @@ fi
 TEMP_FILE="config_temp.json"
 
 # 检查 config.json 是否存在
-if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "Error: $CONFIG_FILE does not exist."
+if [[ ! -f "$SINGBOX_CONF" ]]; then
+    echo "Error: $SINGBOX_CONF does not exist."
     exit 1
 fi
 
@@ -621,8 +621,8 @@ if [[ -z "$SINGGOBXDOMAIN" ]]; then
 fi
 
 # 备份原始文件
-cp "$CONFIG_FILE" "${CONFIG_FILE}.bak"
-echo "Backup created: ${CONFIG_FILE}.bak"
+cp "$SINGBOX_CONF" "${SINGBOX_CONF}.bak"
+echo "Backup created: ${SINGBOX_CONF}.bak"
 
 # 生成随机的 short_id（16 字节的十六进制字符串）
 generate_short_ids() {
@@ -1542,7 +1542,7 @@ EOF
         echoContent green "singbox安装成功"
     fi
     read -r -p "本地安装已经完成，是否继续配置？(y/n): " config_nsx
-      if [[ -z "$config_nsx" ]]; then
+      if [[ "$config_nsx"=="y" ]]; then
         configNSX
       else 
         echoContent green "nginx，xray singbox安装完成，请手动配置"
