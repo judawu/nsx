@@ -13,7 +13,7 @@ echoContent() {
         "red") echo -e "\033[31m${2}\033[0m" ;;
         "green") echo -e "\033[32m${2}\033[0m" ;;
         "yellow") echo -e "\033[33m${2}\033[0m" ;;
-        "skyBlue") echo -e "\033[1;36m${2}\033[0m" ;;
+        "skyblue") echo -e "\033[1;36m${2}\033[0m" ;;
     esac
 }
 
@@ -42,7 +42,7 @@ TOTAL_PROGRESS=5
 
 # Check system information
 checkSystem() {
-    echoContent skyBlue "检查系统..."
+    echoContent skyblue "检查系统..."
     if [[ -n $(find /etc -name "redhat-release") ]] || grep -q -i "centos" /etc/os-release || grep -q -i "rocky" /etc/os-release; then
         release="centos"
         installCmd='yum -y install'
@@ -112,12 +112,12 @@ checkCentosSELinux() {
 
 # Install tools
 installTools() {
-    echoContent skyBlue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
-    echoContent Green "\n安装以下依赖curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode.."
+    echoContent skyblue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
+    echoContent green "\n安装以下依赖curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode.."
     ${installCmd} curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode -y
   
     if [[ "$release" != "centos" ]]; then
-        echoContent Green "\n执行系统更新..."
+        echoContent green "\n执行系统更新..."
         ${upgradeCmd}
         ${updateCmd}
 
@@ -126,7 +126,7 @@ installTools() {
 
 # Install Docker and Docker Compose
 installDocker() {
-    echoContent skyBlue "\n进度 2/${TOTAL_PROGRESS} : 检查 Docker 安装..."
+    echoContent skyblue "\n进度 2/${TOTAL_PROGRESS} : 检查 Docker 安装..."
     if ! command -v docker &> /dev/null; then
         echoContent yellow "安装 Docker..."
         curl -fsSL https://get.docker.com | bash
@@ -179,7 +179,7 @@ installDocker() {
 
 # Create directories
 createDirectories() {
-    echoContent skyBlue "\n进度 3/${TOTAL_PROGRESS} : 创建目录..."
+    echoContent skyblue "\n进度 3/${TOTAL_PROGRESS} : 创建目录..."
     for DIR in "$CERT_DIR" "$NGINX_DIR" "$NGINX_LOG_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$XRAY_DIR" "$XRAY_LOG_DIR" "$SINGBOX_DIR" "$SINGBOX_LOG_DIR" "$WWW_DIR"  "$SUBSCRIBE_DIR" "$WWW_DIR/wwwroot/blog" "$WWW_DIR/wwwroot/video" "$NGINX_SHM_DIR" "$ACME_DIR"; do
         if [ ! -d "$DIR" ]; then
             echoContent yellow "创建目录 $DIR..."
@@ -197,7 +197,7 @@ createDirectories() {
 # Install acme.sh
 installAcme() {
     if [[ ! -d "$HOME/.acme.sh" ]] || [[ -d "$HOME/.acme.sh" && -z $(find "$HOME/.acme.sh/acme.sh") ]]; then
-        echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 安装证书程序 acme.sh..."
+        echoContent skyblue "\n进度 4/${TOTAL_PROGRESS} : 安装证书程序 acme.sh..."
         curl https://get.acme.sh | sh
         if [[ $? -ne 0 ]]; then
             echoContent red "安装 acme.sh 失败，请参考 https://github.com/acmesh-official/acme.sh."
@@ -216,7 +216,7 @@ manageCertificates() {
     mkdir -p "$CERT_DIR" || { echoContent red "无法创建 $CERT_DIR"; exit 1; }
     touch "$CREDENTIALS_FILE" && chmod 600 "$CREDENTIALS_FILE" || { echoContent red "无法创建 $CREDENTIALS_FILE"; exit 1; }
 
-    echoContent skyBlue "\n证书管理菜单"
+    echoContent skyblue "\n证书管理菜单"
     echoContent yellow "1. 申请证书"
     echoContent yellow "2. 更新证书"
     echoContent yellow "3. 安装自签证书"
@@ -227,7 +227,7 @@ manageCertificates() {
         1|2)
             local action="--issue"
             [[ "$cert_option" == "2" ]] && action="--renew"
-            echoContent skyBlue "${action##--}证书..."
+            echoContent skyblue "${action##--}证书..."
             read -r -p "确认 SSL 类型为 letsencrypt 还是 zerossl (y=letsencrypt, n=zerossl): " selectSSLType
             if [[ -n "$selectSSLType" && "$selectSSLType" == "n" ]]; then
                 sslType="zerossl"
@@ -238,7 +238,7 @@ manageCertificates() {
             else
                 sslType="letsencrypt"
             fi
-            echoContent skyBlue " SSL 类型为 $sslType."
+            echoContent skyblue " SSL 类型为 $sslType."
             read -r -p "请输入证书域名 (例如: yourdomain.com 或 *.yourdomain.com，多个域名用逗号隔开): " DOMAIN
             if [[ -z "$DOMAIN" ]]; then
                 echoContent red "请输入域名"
@@ -246,14 +246,14 @@ manageCertificates() {
             fi
             # Extract the first domain for certificate naming
             FIRST_DOMAIN=$(echo "$DOMAIN" | cut -d',' -f1 | xargs)
-            echoContent skyBlue " 证书域名为 $DOMAIN (使用 $FIRST_DOMAIN 作为证书文件名)."
+            echoContent skyblue " 证书域名为 $DOMAIN (使用 $FIRST_DOMAIN 作为证书文件名)."
             read -r -p "请输入DNS提供商: 0.Cloudflare, 1.阿里云, 2.手动DNS, 3.独立: " DNS_VENDOR
 
             if [[ "$cert_option" == "1" ]]; then
                 # Clear previous credentials for this domain
                 grep -v "^${FIRST_DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
             fi
-            echoContent skyBlue " DNS提供商选择 $DNS_VENDOR."
+            echoContent skyblue " DNS提供商选择 $DNS_VENDOR."
             if [[ "$DNS_VENDOR" == "0" ]]; then
                 if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE") ]]; then
                     # Load saved Cloudflare credentials for renewal
@@ -377,7 +377,7 @@ manageCertificates() {
             echoContent green "证书${action##--}并安装成功"
             ;;
         3)
-            echoContent skyBlue "安装自签证书..."
+            echoContent skyblue "安装自签证书..."
             if ! command -v openssl &>/dev/null; then
                 echoContent yellow "安装 openssl..."
                 ${installCmd:-apt install -y} openssl
@@ -391,7 +391,7 @@ manageCertificates() {
                 echoContent red "请输入域名"
                 return 1
             fi
-            echoContent skyBlue "为 ${DOMAIN} 生成自签证书..."
+            echoContent skyblue "为 ${DOMAIN} 生成自签证书..."
             touch /tmp/openssl-san.cnf || { echoContent red "无法写入 /tmp"; exit 1; }
             cat > /tmp/openssl-san.cnf << EOF
 [req]
@@ -455,7 +455,7 @@ EOF
     fi
 }
 xray_config(){
-    echoContent skyBlue "\nxray配置文件修改"
+    echoContent skyblue "\nxray配置文件修改"
    
 # 检查 jq 和 xray 是否已安装
 if ! command -v jq &> /dev/null; then
@@ -569,7 +569,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
         echoContent yellow "\nGenerated new publicKey: $public_key"
         echoContent yellow "\nGenerated new shortIds: $new_short_ids"
         echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_seed"
-        echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_verfify"
+        echoContent yellow "\nGenerated new mldsa65Verfify: $mldsa65_verfify"
 
         # 更新 privateKey, publicKey, shortIds, mldsa65Seed
         jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed"  --arg mldsa65_verfify "$mldsa65_verfify" \
@@ -778,7 +778,7 @@ configNginx() {
     }
 # Manage configurations
 manageConfigurations() {
-    echoContent skyBlue "\n配置管理菜单"
+    echoContent skyblue "\n配置管理菜单"
     echoContent yellow "1. 配置nsx服务"
     echoContent yellow "2. 修改 nginx.conf"
     echoContent yellow "3. 修改 xray config.json"
@@ -836,7 +836,7 @@ manageConfigurations() {
 }
 # Generate subscriptions
 generateSubscriptions() {
-    echoContent skyBlue "\n生成订阅..."
+    echoContent skyblue "\n生成订阅..."
     read -r -p "请输入订阅域名 (例如: sing.yourdomain): " SUB_DOMAIN
     if [[ -z "$SUB_DOMAIN" ]]; then
         echoContent red "域名不能为空."
@@ -1071,7 +1071,7 @@ generateSubscriptions() {
 }
 # Manage logs
 manageLogs() {
-    echoContent skyBlue "\n日志管理菜单"
+    echoContent skyblue "\n日志管理菜单"
     echoContent yellow "1. 查看 Nginx 访问日志"
     echoContent yellow "2. 查看 Nginx 错误日志"
     echoContent yellow "3. 查看 Xray 日志"
@@ -1113,7 +1113,7 @@ aliasInstall() {
 
 # Update script
 updateNSX() {
-    echoContent skyBlue "\n进度 5/${TOTAL_PROGRESS} : 更新 NSX 脚本..."
+    echoContent skyblue "\n进度 5/${TOTAL_PROGRESS} : 更新 NSX 脚本..."
     # Check if git is installed
     if ! command -v git &> /dev/null; then
         echoContent yellow "安装 git..."
@@ -1243,7 +1243,7 @@ updateNSX() {
 # Docker installation
 dockerInstall() {
     installTools
-    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : Docker 安装..."
+    echoContent skyblue "\n进度 4/${TOTAL_PROGRESS} : Docker 安装..."
     installDocker
     createDirectories
     installAcme
@@ -1303,7 +1303,7 @@ dockerInstall() {
     aliasInstall
 }
 createSystemdServices() {
-    echoContent skyBlue "\n配置 systemd 服务..."
+    echoContent skyblue "\n配置 systemd 服务..."
 
     # Nginx 服务文件
     if [[ "${release}" == "debian" || "${release}" == "ubuntu" ]]; then
@@ -1390,7 +1390,7 @@ EOF
 
 # 修改后的服务启动部分
 startServices() {
-    echoContent skyBlue "\n启动服务..."
+    echoContent skyblue "\n启动服务..."
 
     # 启用并启动服务
     sudo systemctl enable nginx
@@ -1426,7 +1426,7 @@ startServices() {
 }
 
 restartServices() {
-    echoContent skyBlue "\重启服务..."
+    echoContent skyblue "\重启服务..."
 
     # 启用并启动服务
     sudo systemctl stop nginx xray sing-box
@@ -1446,7 +1446,7 @@ restartServices() {
 # Local installation
 localInstall() {
    
-    echoContent skyBlue "\n进度 4/${TOTAL_PROGRESS} : 本地安装..."
+    echoContent skyblue "\n进度 4/${TOTAL_PROGRESS} : 本地安装..."
     installTools
     checkCentosSELinux
     
@@ -1461,7 +1461,7 @@ localInstall() {
    
     # Install Nginx
 
-    echoContent skyBlue "\n 安装nginx..."
+    echoContent skyblue "\n 安装nginx..."
     if [[ "${release}" == "debian" || "${release}" == "ubuntu" ]]; then
         echoContent green "\n 安装nginx依赖..."
         sudo apt update
@@ -1474,7 +1474,7 @@ localInstall() {
         sudo apt update
         sudo apt install -y nginx
         if [ $? -eq 0 ]; then
-            echoContent skyBlue "\n nginx安装完成..."
+            echoContent skyblue "\n nginx安装完成..."
          
         else
             echoContent red "\n nginx安装失败!"
@@ -1494,7 +1494,7 @@ module_hotfixes=true
 EOF
         sudo yum install -y nginx
         if [ $? -eq 0 ]; then
-            echoContent skyBlue "\n nginx安装完成..."
+            echoContent skyblue "\n nginx安装完成..."
            
             
         else
@@ -1509,7 +1509,7 @@ EOF
   
 
     # Install Xray and Sing-box
-    echoContent skyBlue "\n 安装xray..."
+    echoContent skyblue "\n 安装xray..."
    
     version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
     echoContent green " Xray-core版本:${version}"
@@ -1523,16 +1523,16 @@ EOF
         read -r -p "核心下载失败，请重新尝试安装" 
         exit 1
     else
-        echoContent skyBlue "开始安装xray..."
+        echoContent skyblue "开始安装xray..."
         unzip -o "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip" -d /usr/local/nsx/xray >/dev/null
         rm -rf "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip"
         chmod 655 /usr/local/nsx/xray/xray
         ln -sf /usr/local/nsx/xray/xray /usr/bin/xray
-        echoContent skyBlue "安装xray成功..."
+        echoContent skyblue "安装xray成功..."
     fi
    
     
-    echoContent skyBlue "安装singbox..."
+    echoContent skyblue "安装singbox..."
     version=$(curl -s "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=20" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
 
     echoContent green " sing-box版本:${version}"
@@ -1547,7 +1547,7 @@ EOF
         echoContent red "核心下载失败，请重新尝试安装" 
         exit 1
     else
-        echoContent skyBlue "开始安装singbox..."
+        echoContent skyblue "开始安装singbox..."
         tar zxvf "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz" -C "/usr/local/nsx/sing-box/" >/dev/null 2>&1
         mv "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}/sing-box" /usr/local/nsx/sing-box
         rm -rf /usr/local/nsx/sing-box/sing-box-*
@@ -1593,7 +1593,7 @@ configNSX() {
 }
 # Stop NSX
 stopNSX() {
-    echoContent skyBlue "停止 NSX 容器并清理..."
+    echoContent skyblue "停止 NSX 容器并清理..."
     # Check if Docker and docker-compose.yml exist
     if ! command -v docker &> /dev/null || [ ! -f "$COMPOSE_FILE" ]; then
         echoContent red "未找到 Docker 或 docker-compose.yml 文件，如果是本地安装，请手动停止服务."
@@ -1634,7 +1634,7 @@ uninstallNSX() {
     # Define defaults
  
 
-    echoContent skyBlue "卸载 NSX 服务..."
+    echoContent skyblue "卸载 NSX 服务..."
 
     # Stop NSX containers
     if command -v docker &>/dev/null && [[ -f "$COMPOSE_FILE" ]]; then
