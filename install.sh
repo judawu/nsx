@@ -1655,7 +1655,7 @@ uninstallNSX() {
                     exit 1
                 }
             fi
-               if [[ -d "/usr/bin/xray" ]]; then
+               if [[ -f "/usr/bin/xray" ]]; then
                 rm -rf /usr/bin/xray* || {
                     echoContent red "无法清理 /usr/bin/xray，请检查权限."
                     exit 1
@@ -1694,7 +1694,7 @@ uninstallNSX() {
                     exit 1
                 }
             fi
-               if [[ -d "/usr/bin/sing-box" ]]; then
+               if [[ -f "/usr/bin/sing-box" ]]; then
                 rm -rf /usr/bin/sing-box* || {
                     echoContent red "无法清理 /usr/bin/sing-box，请检查权限."
                     exit 1
