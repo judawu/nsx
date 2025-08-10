@@ -758,9 +758,7 @@ configNginx() {
             sed -i "s/yourdomain/$YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
-            echoContent green "nginx.conf 更新成功."
-         
-          
+            echoContent skyblue "nginx.conf 更新成功."        
     }
 # Manage configurations
 manageConfigurations() {
@@ -1518,20 +1516,19 @@ EOF
         echoContent green "singbox安装成功"
     fi
    
-    
-    echoContent skyblue "开始创建服务..."
-    # Start services
-    createSystemdServices
-    
     echoContent skyblue "进行nginx的配置修改..."
 
     configNginx
-    echoContent skyBlue "\n 拷贝配置文件到/etc/nginx..."
+
+    echoContent skyblue "\n 删除安装的nginx配置文件，拷贝/usr/local/nsx/nginx/nginx.conf配置文件到/etc/nginx..."
     sudo rm /etc/nginx/conf.d/default.conf
     sudo rm /etc/nginx/nginx.conf
     sudo cp /usr/local/nsx/nginx/nginx.conf /etc/nginx/nginx.conf
     sudo chmod 644 /etc/nginx/nginx.conf
     
+    echoContent skyblue "开始创建服务..."
+    # Start services
+    createSystemdServices
     echoContent skyblue "开始启动服务..."
     startServices
 
