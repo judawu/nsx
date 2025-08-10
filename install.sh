@@ -1397,8 +1397,8 @@ startServices() {
         echoContent red "Xray: journalctl -u xray.service"
     fi
 
-    sudo systemctl enable nginx xray sing-box
-    sudo systemctl start nginx xray sing-box
+    sudo systemctl enable sing-box
+    sudo systemctl start sing-box
 
     # 检查服务状态
     if sudo systemctl is-active --quiet sing-box; then
