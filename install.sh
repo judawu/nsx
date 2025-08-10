@@ -1309,7 +1309,7 @@ After=network.target remote-fs.target nss-lookup.target
 
 [Service]
 Type=forking
-ExecStart=/usr/sbin/nginx
+ExecStart=/usr/sbin/nginx -c /usr/local/nsx/nginx/nginx.conf -g "daemon on; master_process on;"
 ExecReload=/usr/sbin/nginx -s reload
 ExecStop=/usr/sbin/nginx -s quit
 PrivateTmp=true
@@ -1437,6 +1437,11 @@ if [[ "${release}" == "debian" || "${release}" == "ubuntu" ]]; then
     sudo apt install -y nginx
     if [ $? -eq 0 ]; then
         echoContent skyBlue "\n nginx安装完成..."
+        echoContent skyBlue "\n 拷贝配置文件到/etc/nginx..."
+        sudo rm /etc/nginx/conf.d/default.conf
+        sudo rm /etc/nginx/nginx.conf
+        sudo cp /usr/local/nsx/nginx/nginx.conf /etc/nginx/nginx.conf
+        sudo chmod 644 /etc/nginx/nginx.conf
     else
         echoContent red "\n nginx安装失败!"
         exit 1
