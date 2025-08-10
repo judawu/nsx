@@ -1655,6 +1655,13 @@ uninstallNSX() {
                     exit 1
                 }
             fi
+               if [[ -d "/usr/bin/xray" ]]; then
+                rm -rf /usr/bin/xray* || {
+                    echoContent red "无法清理 /usr/bin/xray，请检查权限."
+                    exit 1
+                }
+              
+            fi
             if [[ -d "/usr/local/nsx/xray" ]]; then
                 rm -rf /usr/local/bin/xray/* || {
                     echoContent red "无法清理 /usr/local/bin/xray，请检查权限."
@@ -1662,6 +1669,8 @@ uninstallNSX() {
                 }
               
             fi
+         
+            
             if ! command -v xray &>/dev/null; then
                 echoContent green "Xray 卸载完成."
             else
@@ -1676,7 +1685,7 @@ uninstallNSX() {
         read -r -p "确认卸载 Sing-box？(y/n): " uninstallSingbox
         if [[ "$uninstallSingbox" == "y" ]]; then
             echoContent yellow "停止并卸载 Sing-box..."
-           
+          
             if [[ -f "/etc/systemd/system/sing-box.service" ]]; then
                 systemctl stop sing-box 2>/dev/null
                 systemctl disable sing-box 2>/dev/null
@@ -1684,6 +1693,13 @@ uninstallNSX() {
                     echoContent red "无法删除 sing-box.service，请检查权限."
                     exit 1
                 }
+            fi
+               if [[ -d "/usr/bin/sing-box" ]]; then
+                rm -rf /usr/bin/sing-box* || {
+                    echoContent red "无法清理 /usr/bin/sing-box，请检查权限."
+                    exit 1
+                }
+              
             fi
             if [[ -d "/usr/local/nsx/sing-box" ]]; then
                 rm -rf /usr/local/nsx/sing-box/* || {
