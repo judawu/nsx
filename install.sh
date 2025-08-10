@@ -752,7 +752,7 @@ configNginx() {
     echoContent green "nginx.conf 采用stream模块分流\n 包括tls,reality,pre,sing等前缀域名进行分流 ."
             read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密): " TLS_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密): " REALITY_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nignx解密): " PRE_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密): " PRE_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密): " SING_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站): " WWW_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符或者综合证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
@@ -1369,7 +1369,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/nsx/sing-box/sing-box -c /usr/local/nsx/sing-box/config.json
+ExecStart=/usr/local/nsx/sing-box/sing-box run -c /usr/local/nsx/sing-box/config.json
 ExecStop=/bin/kill -s QUIT \$MAINPID
 Restart=always
 RestartSec=5
