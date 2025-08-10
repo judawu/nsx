@@ -511,18 +511,18 @@ cp "$XRAY_CONF" "$TEMP_FILE"
 echo "$inbounds" | while IFS= read -r inbound; do
     tag=$(echo "$inbound" | jq -r '.tag')
     protocol=$(echo "$inbound" | jq -r '.protocol')
-    echoContent green "处理 inbound tag: $tag, protocol: $protocol"
+    echoContent skyblue "\n处理 inbound tag: $tag, protocol: $protocol"
 
     # 处理 vless 和 vmess 的 id 替换
     if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
-        echoContent skyblue "处理 vless 和 vmess 的 id 替换,用xray uuid生成新的uuid替换"
+        echoContent green "\n处理 vless 和 vmess 的 id 替换,用 xray uuid 生成新的uuid替换"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
             old_id=$(echo "$client" | jq -r '.id')
 
             new_id=$(xray uuid)
-            echoContent yellow "替换 $client_index UUID, $tag: $old_id -> $new_id"
+            echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id"
 
             # 更新 id
             jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -534,13 +534,13 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 trojan 和 shadowsocks 的 password 替换
     if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
-        echoContent skyblue "处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
+        echoContent green "\n处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
             old_password=$(echo "$client" | jq -r '.password')
             new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-            echoContent yellow "替换 $client_index password $tag: $old_password -> $new_password"
+            echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password"
 
             # 更新 password
             jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
@@ -553,10 +553,10 @@ echo "$inbounds" | while IFS= read -r inbound; do
     # 检查 streamSettings.security 是否为 reality
     security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
     if [[ "$security" == "reality" ]]; then
-        echoContent yellow "检查streamSettings:  reality security for $tag, updating keys and settings..."
+        echoContent green "\n检查 streamSettings:  reality security for $tag, updating keys and settings..."
 
         # 生成公私密钥对
-        echoContent green "用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
+        echoContent green "\n用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
         key_pair=$(xray x25519)
         private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
         public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
@@ -586,7 +586,7 @@ jq --arg domain "$YOURDOMAIN" \
 
 # 替换原始文件
 mv "$TEMP_FILE" "$XRAY_CONF"
-echoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名."
+echoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名$YOURDOMAIN."
 
 # 验证 JSON 文件是否有效
 if jq empty "$XRAY_CONF" &> /dev/null; then
@@ -626,13 +626,13 @@ fi
 echoContent skyblue "请手动输入域名\n"
 read -p "Please enter the domain to replace 'yourdomain' (e.g., example.com): " SINGGOBXDOMAIN
 if [[ -z "$SINGGOBXDOMAIN" ]]; then
-    echo "Error: Domain cannot be empty."
+    echoContent red "Error: Domain cannot be empty."
     exit 1
 fi
 
 # 备份原始文件
 cp "$SINGBOX_CONF" "${SINGBOX_CONF}.bak"
-echo "Backup created: ${SINGBOX_CONF}.bak"
+echoContent green "Backup created: ${SINGBOX_CONF}.bak"
 
 # 生成随机的 short_id（16 字节的十六进制字符串）
 generate_short_ids() {
@@ -641,9 +641,9 @@ generate_short_ids() {
 }
 
 # 提取所有 inbounds
-echoContent green "提取所有 inbounds里的users\n"
+echoContent skyblue "\n提取所有 inbounds里的users\n"
 inbounds=$(jq -c '.inbounds[] | select(.users)' "$SINGBOX_CONF")
-echoContent green "\n$inbounds"
+#echoContent green "\n$inbounds"
 # 创建一个临时 JSON 文件，复制原始内容
 cp "$SINGBOX_CONF" "$TEMP_FILE"
 
@@ -651,17 +651,17 @@ cp "$SINGBOX_CONF" "$TEMP_FILE"
 echo "$inbounds" | while IFS= read -r inbound; do
     tag=$(echo "$inbound" | jq -r '.tag')
     type=$(echo "$inbound" | jq -r '.type')
-    echoContent green "Processing inbound with tag: $tag, type: $type"
+    echoContent skyblue "\nProcessing inbound with tag: $tag, type: $type"
 
     # 处理 vmess、vless 和 tuic 的 uuid 替换
     if [[ "$type" == "vmess" || "$type" == "vless" || "$type" == "tuic" ]]; then
-        echoContent skyblue "处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
+        echoContent green "\n处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
         users=$(echo "$inbound" | jq -c '.users[]')
         user_index=0
         echo "$users" | while IFS= read -r user; do
             old_uuid=$(echo "$user" | jq -r '.uuid')
             new_uuid=$(sing-box generate uuid)
-            echoContent green "Replacing UUID for user $user_index in $tag: $old_uuid -> $new_uuid"
+            echoContent yellow "\nReplacing UUID for user $user_index in $tag: $old_uuid -> $new_uuid"
 
             # 更新 uuid
             jq --arg tag "$tag" --arg old_uuid "$old_uuid" --arg new_uuid "$new_uuid" \
@@ -673,7 +673,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
     if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" ]]; then
-        echoContent skyblue "处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
+        echoContent green "\n处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
         users=$(echo "$inbound" | jq -c '.users[]')
         user_index=0
         echo "$users" | while IFS= read -r user; do
@@ -684,7 +684,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
             else
                 new_password=$(sing-box generate uuid)  # trojan 和 hysteria2 使用 UUID 格式密码
             fi
-            echo "Replacing password for user $user_index in $tag: $old_password -> $new_password"
+            echoContent yellow "\nReplacing password for user $user_index in $tag: $old_password -> $new_password"
 
             # 更新 password
             jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
@@ -695,11 +695,11 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
         # 如果是 shadowsocks 或 shadowtls，更新顶层的 password 字段（如果存在）
         if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
-             echoContent green "如果是 shadowsocks 或 shadowtls，更新顶层的 password 字段"
+            echoContent green "\n shadowsocks 或 shadowtls，更新顶层的 password 字段"
             top_password=$(echo "$inbound" | jq -r '.password // empty')
             if [[ -n "$top_password" ]]; then
                 new_top_password=$(openssl rand -base64 16)
-                echo "Replacing top-level password in $tag: $top_password -> $new_top_password"
+                echoContent yellow "Replacing top-level password in $tag: $top_password -> $new_top_password"
                 jq --arg tag "$tag" --arg new_password "$new_top_password" \
                    '(.inbounds[] | select(.tag == $tag)).password = $new_password' \
                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
@@ -710,7 +710,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
     # 检查 tls.reality.enabled 是否为 true
     reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
     if [[ "$reality_enabled" == "true" ]]; then
-         echoContent green "Detected reality TLS for $tag, updating keys and settings...,using sing-box generate reality-keypair"
+         echoContent green "\nDetected reality TLS for $tag, updating keys and settings...,using sing-box generate reality-keypair"
 
         # 生成公私密钥对
         key_pair=$(sing-box generate reality-keypair)
@@ -718,9 +718,9 @@ echo "$inbounds" | while IFS= read -r inbound; do
         public_key=$(echo "$key_pair" | grep "PublicKey" | awk '{print $2}')
         new_short_ids=$(generate_short_ids)
 
-        echoContent yellow "Generated new private_key: $private_key"
-        echoContent yellow "Generated new public_key: $public_key"
-        echoContent yellow "Generated new short_id: $new_short_ids"
+        echoContent yellow "\nGenerated new private_key: $private_key"
+        echoContent yellow "\nGenerated new public_key: $public_key"
+        echoContent yellow "\nGenerated new short_id: $new_short_ids"
 
         # 更新 private_key, public_key, short_id
         jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" \
@@ -737,13 +737,13 @@ jq --arg domain "$SINGGOBXDOMAIN" \
 
 # 替换原始文件
 mv "$TEMP_FILE" "$SINGBOX_CONF"
-echo "Updated $SINGBOX_CONF with new UUIDs, passwords, reality settings, and domain."
+echoContent skyblue "Updated $SINGBOX_CONF with new UUIDs, passwords, reality settings, and domain as $SINGGOBXDOMAIN ."
 
 # 验证 JSON 文件是否有效
 if jq empty "$SINGBOX_CONF" &> /dev/null; then
-    echo "JSON file is valid."
+    echoContent skyblue "JSON file is valid."
 else
-    echo "Error: Updated JSON file is invalid. Restoring backup."
+    echoContent red "Error: Updated JSON file is invalid. Restoring backup."
     mv "${SINGBOX_CONF}.bak" "$SINGBOX_CONF"
     exit 1
 fi
