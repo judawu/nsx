@@ -1,0 +1,359 @@
+{
+   "log": {
+    "disabled": false,
+    "level": "error",
+    "output": "/var/log/singbox.log",
+    "timestamp": true
+  },
+
+
+  "dns": {
+    "servers": [
+      {
+        "tag": "google",
+        "address": "tls://8.8.8.8"
+      },
+      {
+        "tag": "local",
+        "address": "local"
+      }
+    ],
+    "rules": [
+      {
+        "outbound": "any",
+        "server": "local"
+      }
+    ],
+    "strategy": "ipv4_only"
+  },
+  "inbounds": [
+
+    {
+     "type": "direct",
+     "tag": "direct-in",
+
+     "listen": "::",
+     "listen_port": 8070,
+      // "bind_interface": "",
+      // "routing_mark": 0,
+      // "reuse_addr": false,
+      // "netns": "",
+      // "tcp_fast_open": false,
+      // "tcp_multi_path": false,
+      // "udp_fragment": false,
+      // "udp_timeout": "",
+      // "detour": "",
+
+      "network": "udp",
+      "override_address": "1.0.0.1",
+      "override_port": 53
+    },
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+       "listen": "::",
+      "listen_port": 8071
+    },
+    {
+  "type": "socks",
+  "tag": "socks-in",
+
+     "listen": "::",
+    "listen_port": 8072,
+
+     "users": [
+    {
+      "username": "admin",
+      "password": "admin"
+    }
+  ]
+},
+{
+  "type": "http",
+  "tag": "http-in",
+
+   "listen": "::",
+  "listen_port": 8073,
+
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin"
+    }
+  ],
+  "tls": {
+    "enabled": false
+      },
+  "set_system_proxy": false
+},
+{
+  "type": "vmess",
+  "tag": "vmess-in",
+  "listen": "127.0.0.1",
+  "listen_port": 8074 ,
+  "users": [
+    {
+      "name": "vmess@singbox",
+      "uuid": "bf000d23-0752-40b4-affe-68f7707a9661",
+      "alterId": 0
+    }
+  ],
+   "tls": {
+    "enabled": false
+  },
+  "multiplex": {
+  "enabled": true,
+  "padding": false,
+  "brutal": {  
+    "enabled": true,
+     "up_mbps": 100,
+     "down_mbps": 100
+    }
+  }//,
+   //"transport": {}
+},
+    {
+      "type": "trojan",
+      "listen": "::",
+      "listen_port": 8080,
+      "users": [
+        {
+          "password": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "name": "sinbox@Trojan_TCP"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+      
+      },
+      "fallback": {
+        "server": "google.com",
+        "server_port": 80
+      
+      }
+    },
+    {
+      "type": "hysteria2",
+      "listen": "::",
+      "listen_port": 8081,
+       "up_mbps": 100,
+      "down_mbps": 50,
+      "users": [
+        {
+          "name": "singbox_hysteria2",
+          "password": "9c3bbf02-db78-44d0-8996-675e8532c555"
+         
+        }
+      ],
+     
+     // "ignore_client_bandwidth": false,
+      "tls": {
+        "enabled": true,
+        "server_name": "yourdomain",
+        "alpn": "h3",
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+      
+      },
+    "masquerade": "https://cloudflare.com", // 伪装为 Cloudflare
+     "brutal_debug": true
+    },
+    {
+      "type": "tuic",
+      "tag": "singbox-tuic-in",
+      "listen": "::",  
+      "listen_port": 8082,
+      "users": [
+        {
+          "name": "juda-singbox_tuic",
+          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "password": "QvofbfMIil7768oFAyTpyA=="
+          
+        }
+      ],
+      "congestion_control": "bbr",
+        // "auth_timeout": "5s",
+        // "zero_rtt_handshake": false,
+        // "heartbeat": "10s",
+       "tls": {
+        "enabled": true,
+        "server_name": "yourdomain",
+        "alpn": "h3",
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+       
+      }
+    },
+    {
+      "type": "naive",
+      "listen": "::",
+      "tag": "singbox-naive-in",
+      "listen_port": 8083,
+      "users": [
+        {
+          "password": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "username": "singbox_naive"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+      }
+    },
+    {
+      "type": "shadowsocks",
+      "listen": "::",
+      "listen_port": 8084,
+      "tag": "singbox-shadowsocks-in",
+      "network": ["tcp","udp"],
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "QvofbfMIil7768oFAyTpyA==",
+      "users": [
+        {
+          "name": "ss@singbox",
+          "password": "7oXO/suBqek8LDR9aYGDXg=="
+        }
+      ],
+      "multiplex": {
+        "enabled": true
+      }
+    },
+  {
+  "type": "shadowtls",
+  "tag": "st-in",
+
+   "listen": "::",
+  "listen_port": 8085,
+
+  "version": 3,
+  "password": "QvofbfMIil7768oFAyTpyA==",
+  "users": [
+    {
+      "name": "shadowtls@singbox",
+      "password": "7oXO/suBqek8LDR9aYGDXg=="
+    }
+  ],
+  "handshake": {
+    "server": "cloudflare.com",
+    "server_port": 443
+  },
+    "strict_mode": true,  //改成true可能连接不上
+    "detour": "singbox-shadowsocks-in"
+ 
+},
+
+
+    {
+      "type": "vless",
+      "listen": "::",
+      "listen_port": 8088,
+      "users": [
+        {
+          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "name": "VLESS_Reality_gPRC"
+        }
+      ],
+      "tag": "VLESSRealityGRPC",
+      "tls": {
+        "enabled": true,
+        "server_name": "yourdomain",
+        "reality": {
+          "enabled": true,
+          "handshake": {
+            "server": "www.apple.com",
+            "server_port": 443
+          },
+          "private_key": "1mlAGvxBGQiu_s7rOUukHmeaZWJa3kErMc1DCO4ZI9o",
+          "short_id": [
+            "",
+            "6ba85179e30d4fc2"
+          ]
+        }
+      },
+      "transport": {
+        "type": "grpc",
+        "service_name": "grpc"
+      }
+    },
+    {
+      "type": "vless",
+      "listen": "::",
+      "listen_port": 8089,
+      "tag": "VLESSReality",
+      "users": [
+        {
+          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "flow": "xtls-rprx-vision",
+          "name": "VLESS_Reality_Vision"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "yourdomain",
+        "reality": {
+          "enabled": true,
+          "handshake": {
+            "server": "www.apple.com",
+            "server_port": 443
+          },
+          "private_key": "Up2mnyRAmfJn2xkfJYXE4cHYefAbWSMImkkvLGNncME",
+          "short_id": [
+            "",
+            "6ba85179e30d4fc2"
+          ]
+        }
+      }
+    },
+  
+    {
+      "type": "vless",
+      "listen": "::",
+      "listen_port": 8090,
+      "tag": "VLESSTCP",
+      "users": [
+        {
+          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "flow": "xtls-rprx-vision",
+          "name": "VLESS_TCP/TLS_Vision"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "dns",
+      "tag": "dns-out"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "protocol": "dns",
+        "outbound": "dns-out"
+      },
+      {
+        "geoip": [
+          "private"
+        ],
+        "outbound": "direct"
+      }
+    ],
+    "auto_detect_interface": true,
+    "final": "direct"
+  }
+}
