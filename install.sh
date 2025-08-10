@@ -734,19 +734,8 @@ else
     exit 1
 fi
 }
-
-# Manage configurations
-manageConfigurations() {
-    echoContent skyBlue "\n配置管理菜单"
-    echoContent yellow "1. 修改 nginx.conf"
-    echoContent yellow "2. 修改 xray config.json"
-    echoContent yellow "3. 修改 sing-box config.json"
-    echoContent yellow "4. 退出"
-    read -r -p "请选择一个选项 [1-4]: " config_option
-
-    case $config_option in
-        1)
-            echoContent green "nginx.conf 采用stream模块分流\n 包括tls,reality,pre,sing等前缀域名进行分流 ."
+configNginx() {
+    echoContent green "nginx.conf 采用stream模块分流\n 包括tls,reality,pre,sing等前缀域名进行分流 ."
             read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密): " TLS_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密): " REALITY_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nignx解密): " PRE_YOURDOMAIN
@@ -770,6 +759,21 @@ manageConfigurations() {
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
             echoContent green "nginx.conf 更新成功."
+         
+          
+    }
+# Manage configurations
+manageConfigurations() {
+    echoContent skyBlue "\n配置管理菜单"
+    echoContent yellow "1. 修改 nginx.conf"
+    echoContent yellow "2. 修改 xray config.json"
+    echoContent yellow "3. 修改 sing-box config.json"
+    echoContent yellow "4. 退出"
+    read -r -p "请选择一个选项 [1-4]: " config_option
+
+    case $config_option in
+        1)
+            configNginx
             # Reload Nginx if running
             if pgrep nginx > /dev/null; then
                 nginx -s reload
@@ -777,8 +781,7 @@ manageConfigurations() {
             elif docker ps | grep -q nginx; then
                 docker compose -f "$COMPOSE_FILE" restart
                 echoContent green "Docker Compose 已重启以应用新配置."
-            fi
-            ;;
+            fi;
         2)
             xray_config
             echoContent green "xray config.json 更新成功."
@@ -1250,7 +1253,7 @@ dockerInstall() {
         echoContent yellow "未找到证书，运行证书管理..."
         manageCertificates
     fi
-
+    configNginx
     # Check Nginx configuration
     echoContent yellow "检查 Nginx 配置语法..."
     docker run --rm -v "${NGINX_CONF}:/etc/nginx/nginx.conf:ro" -v "${CERT_DIR}:/etc/nginx/certs:ro" -v "${NGINX_SHM_DIR}:/dev/shm/nsx" nginx:alpine nginx -t
@@ -1399,57 +1402,32 @@ localInstall() {
         echoContent yellow "未找到证书，运行证书管理..."
         manageCertificates
     fi
-
+   
     # Install Nginx
-    #!/bin/bash
 
-# Custom echo function (assuming it's defined elsewhere)
-echoContent() {
-    local color=$1
-    local message=$2
-    case $color in
-        skyBlue) echo -e "\033[1;36m$message\033[0m" ;;
-        green) echo -e "\033[1;32m$message\033[0m" ;;
-        red) echo -e "\033[1;31m$message\033[0m" ;;
-    esac
-}
-
-# Detect OS
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    release=$ID
-else
-    echoContent red "\n 错误: 无法检测操作系统类型!"
-    exit 1
-fi
-
-echoContent skyBlue "\n 安装nginx..."
-if [[ "${release}" == "debian" || "${release}" == "ubuntu" ]]; then
-    echoContent green "\n 安装nginx依赖..."
-    sudo apt update
-    sudo apt install -y gnupg2 ca-certificates lsb-release
-    echo "deb http://nginx.org/packages/mainline/${release} $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
-    if ! curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/nginx_signing.gpg; then
-        echoContent red "\n 错误: 无法下载Nginx签名密钥!"
-        exit 1
-    fi
-    sudo apt update
-    sudo apt install -y nginx
-    if [ $? -eq 0 ]; then
-        echoContent skyBlue "\n nginx安装完成..."
-        echoContent skyBlue "\n 拷贝配置文件到/etc/nginx..."
-        sudo rm /etc/nginx/conf.d/default.conf
-        sudo rm /etc/nginx/nginx.conf
-        sudo cp /usr/local/nsx/nginx/nginx.conf /etc/nginx/nginx.conf
-        sudo chmod 644 /etc/nginx/nginx.conf
-    else
-        echoContent red "\n nginx安装失败!"
-        exit 1
-    fi
-elif [[ "${release}" == "centos" ]]; then
-    echoContent green "\n 安装nginx依赖..."
-    sudo yum install -y yum-utils
-    cat <<EOF | sudo tee /etc/yum.repos.d/nginx.repo
+    echoContent skyBlue "\n 安装nginx..."
+    if [[ "${release}" == "debian" || "${release}" == "ubuntu" ]]; then
+        echoContent green "\n 安装nginx依赖..."
+        sudo apt update
+        sudo apt install -y gnupg2 ca-certificates lsb-release
+        echo "deb http://nginx.org/packages/mainline/${release} $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
+        if ! curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/nginx_signing.gpg; then
+            echoContent red "\n 错误: 无法下载Nginx签名密钥!"
+            exit 1
+        fi
+        sudo apt update
+        sudo apt install -y nginx
+        if [ $? -eq 0 ]; then
+            echoContent skyBlue "\n nginx安装完成..."
+         
+        else
+            echoContent red "\n nginx安装失败!"
+            exit 1
+        fi
+    elif [[ "${release}" == "centos" ]]; then
+        echoContent green "\n 安装nginx依赖..."
+        sudo yum install -y yum-utils
+        cat <<EOF | sudo tee /etc/yum.repos.d/nginx.repo
 [nginx-mainline]
 name=nginx mainline repo
 baseurl=http://nginx.org/packages/mainline/centos/\$releasever/\$basearch/
@@ -1458,18 +1436,26 @@ enabled=1
 gpgkey=https://nginx.org/keys/nginx_signing.key
 module_hotfixes=true
 EOF
-    sudo yum install -y nginx
-    if [ $? -eq 0 ]; then
-        echoContent skyBlue "\n nginx安装完成..."
+        sudo yum install -y nginx
+        if [ $? -eq 0 ]; then
+            echoContent skyBlue "\n nginx安装完成..."
+           
+            configNginx
+            echoContent skyBlue "\n 拷贝配置文件到/etc/nginx..."
+            sudo rm /etc/nginx/conf.d/default.conf
+            sudo rm /etc/nginx/nginx.conf
+            sudo cp /usr/local/nsx/nginx/nginx.conf /etc/nginx/nginx.conf
+            sudo chmod 644 /etc/nginx/nginx.conf
+        else
+            echoContent red "\n nginx安装失败!"
+            exit 1
+        fi
     else
-        echoContent red "\n nginx安装失败!"
+        echoContent red "\n 错误: 不支持的操作系统: ${release}"
         exit 1
     fi
-else
-    echoContent red "\n 错误: 不支持的操作系统: ${release}"
-    exit 1
-fi
-
+    
+  
 
     # Install Xray and Sing-box
     echoContent skyBlue "\n 安装xray..."
@@ -1486,6 +1472,7 @@ fi
         read -r -p "核心下载失败，请重新尝试安装" 
         exit 1
     else
+        echoContent skyBlue "开始安装xray..."
         unzip -o "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip" -d /usr/local/nsx/xray >/dev/null
         rm -rf "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip"
         chmod 655 /usr/local/nsx/xray/xray
@@ -1494,8 +1481,6 @@ fi
    
     
     echoContent skyBlue "安装singbox..."
-   
-
     version=$(curl -s "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=20" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
 
     echoContent green " sing-box版本:${version}"
@@ -1510,7 +1495,7 @@ fi
         echoContent red "核心下载失败，请重新尝试安装" 
         exit 1
     else
-
+        echoContent skyBlue "开始安装singbox..."
         tar zxvf "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz" -C "/usr/local/nsx/sing-box/" >/dev/null 2>&1
         mv "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}/sing-box" /usr/local/nsx/sing-box
         rm -rf /usr/local/nsx/sing-box/sing-box-*
@@ -1518,16 +1503,16 @@ fi
         echoContent green "singbox安装成功"
     fi
     
-
-
-
-    echoContent skyblue "本地安装成功，启动服务."
+    echoContent skyblue "进行xray的配置修改..."
+    xray_config
+    echoContent skyblue "进行singbox的配置修改..."
+    singbox_config
+    echoContent skyblue "开始创建服务..."
     # Start services
     createSystemdServices
+    echoContent skyblue "开始启动服务..."
     startServices
-    
 
-    
     echoContent yellpw "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
 }
