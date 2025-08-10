@@ -503,7 +503,7 @@ generate_short_ids() {
 echoContent green  "提取所有 inbounds\n"
 # 提取所有 inbounds
 inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF")
-echoContent green "$inbounds"
+#echoContent green "$inbounds"
 echoContent green "\n创建一个临时 JSON 文件$TEMP_FILE，复制原始内容$XRAY_CONF"
 cp "$XRAY_CONF" "$TEMP_FILE"
 
@@ -511,18 +511,18 @@ cp "$XRAY_CONF" "$TEMP_FILE"
 echo "$inbounds" | while IFS= read -r inbound; do
     tag=$(echo "$inbound" | jq -r '.tag')
     protocol=$(echo "$inbound" | jq -r '.protocol')
-    echoContent green "处理 inbound  tag: $tag, protocol: $protocol"
+    echoContent green "处理 inbound tag: $tag, protocol: $protocol"
 
     # 处理 vless 和 vmess 的 id 替换
     if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
-        echoContent green "处理 vless 和 vmess 的 id 替换,用xray uuid生成新的uuid替换"
+        echoContent yellow "处理 vless 和 vmess 的 id 替换,用xray uuid生成新的uuid替换"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
             old_id=$(echo "$client" | jq -r '.id')
 
             new_id=$(xray uuid)
-            echoContent green "替换   $client_index UUID, $tag: $old_id -> $new_id"
+            echoContent green "替换 $client_index UUID, $tag: $old_id -> $new_id"
 
             # 更新 id
             jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -534,13 +534,13 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 trojan 和 shadowsocks 的 password 替换
     if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
-        echoContent green "处理处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
+        echoContent yellow "处理处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
             old_password=$(echo "$client" | jq -r '.password')
             new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-            echo "替换密码 for client $client_index in $tag: $old_password -> $new_password"
+            echoContent green "替换 $client_index password $tag: $old_password -> $new_password"
 
             # 更新 password
             jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
@@ -553,10 +553,10 @@ echo "$inbounds" | while IFS= read -r inbound; do
     # 检查 streamSettings.security 是否为 reality
     security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
     if [[ "$security" == "reality" ]]; then
-        ecechoContent green "检查streamSettings:  reality security for $tag, updating keys and settings..."
+        echoContent yellow "检查streamSettings:  reality security for $tag, updating keys and settings..."
 
         # 生成公私密钥对
-        ecechoContent green "用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
+        echoContent yellow "用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
         key_pair=$(xray x25519)
         private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
         public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
@@ -565,10 +565,10 @@ echo "$inbounds" | while IFS= read -r inbound; do
         mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
         mldsa65_verfify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
 
-        ecechoContent yellow "\nGenerated new privateKey: $private_key"
-        ecechoContent yellow "\nGenerated new publicKey: $public_key"
-        ecechoContent yellow "\nGenerated new shortIds: $new_short_ids"
-        ecechoContent yellow "\nGenerated new mldsa65Seed: $new_mldsa65_key_pair"
+        echoContent yellow "\nGenerated new privateKey: $private_key"
+        echoContent yellow "\nGenerated new publicKey: $public_key"
+        echoContent yellow "\nGenerated new shortIds: $new_short_ids"
+        echoContent yellow "\nGenerated new mldsa65Seed: $new_mldsa65_key_pair"
 
         # 更新 privateKey, publicKey, shortIds, mldsa65Seed
         jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$new_mldsa65_seed" \
@@ -585,13 +585,13 @@ jq --arg domain "$YOURDOMAIN" \
 
 # 替换原始文件
 mv "$TEMP_FILE" "$XRAY_CONF"
-ecechoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名."
+echoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名."
 
 # 验证 JSON 文件是否有效
 if jq empty "$XRAY_CONF" &> /dev/null; then
-    ecechoContent green "JSON 有效.可以进行服务重启了。"
+    echoContent green "JSON 有效.可以进行服务重启了。"
 else
-    ecechoContent red "Error: 更新 JSON file 无效. 恢复备份."
+    echoContent red "Error: 更新 JSON file 无效. 恢复备份."
     mv "${XRAY_CONF}.bak" "$XRAY_CONF"
     exit 1
 fi
