@@ -1522,7 +1522,9 @@ EOF
     echoContent skyblue "开始创建服务..."
     # Start services
     createSystemdServices
+    
     echoContent skyblue "进行nginx的配置修改..."
+
     configNginx
     echoContent skyBlue "\n 拷贝配置文件到/etc/nginx..."
     sudo rm /etc/nginx/conf.d/default.conf
