@@ -459,36 +459,39 @@ xray_config(){
    
 # 检查 jq 和 xray 是否已安装
 if ! command -v jq &> /dev/null; then
-    echo "Error: jq is not installed. Please install jq first."
+    echoContent red "jp 没有安装，请先安装jp"
+    
     exit 1
 fi
 
 if ! command -v xray &> /dev/null; then
-    echo "Error: xray is not installed. Please install xray first."
+    echoContent red "xray 没有安装或者没有进行软链接，请先安装xray或者使用 ln -sf /usr/local/nsx/xray/xray /usr/bin/xray生产软连接"
+   
     exit 1
 fi
 
 # JSON 文件路径
-TEMP_FILE="config_temp.json"
 
+TEMP_FILE="/tmp/xray_config_temp.json"
+echoContent green "临时文件位置$TEMP_FILE"
 # 检查 config.json 是否存在
 if [[ ! -f "$XRAY_CONF" ]]; then
-    echo "Error: $XRAY_CONF does not exist."
+    echoContent red "$XRAY_CON 不存在"
     exit 1
 fi
 
 # 获取用户输入的域名
+echoContent skyblue "请手动输入域名\n"
 read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
 if [[ -z "$YOURDOMAIN" ]]; then
-    echo "Error: 域名不能为空."
+    echoContent red "Error: 域名不能为空."
     exit 1
 fi
 
 # 备份原始文件
 cp "$XRAY_CONF" "${XRAY_CONF}.bak"
-echo "创建备份: ${XRAY_CONF}.bak"
+echoContent green "创建备份: ${XRAY_CONF}.bak"
 
-# 生成随机的 shortIds（8 字节和 16 字节的十六进制字符串）
 generate_short_ids() {
     short_id1=$(openssl rand -hex 4)  # 8 字节
     short_id2=$(openssl rand -hex 8)  # 16 字节
@@ -497,26 +500,29 @@ generate_short_ids() {
 
 
 
+echoContent green  "提取所有 inbounds\n"
 # 提取所有 inbounds
 inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF")
-
-# 创建一个临时 JSON 文件，复制原始内容
+echoContent green "$inbounds"
+echoContent green "\n创建一个临时 JSON 文件$TEMP_FILE，复制原始内容$XRAY_CONF"
 cp "$XRAY_CONF" "$TEMP_FILE"
 
 # 遍历每个 inbound
 echo "$inbounds" | while IFS= read -r inbound; do
     tag=$(echo "$inbound" | jq -r '.tag')
     protocol=$(echo "$inbound" | jq -r '.protocol')
-    echo "Processing inbound with tag: $tag, protocol: $protocol"
+    echoContent green "处理 inbound  tag: $tag, protocol: $protocol"
 
     # 处理 vless 和 vmess 的 id 替换
     if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
+        echoContent green "处理 vless 和 vmess 的 id 替换,用xray uuid生成新的uuid替换"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
             old_id=$(echo "$client" | jq -r '.id')
+
             new_id=$(xray uuid)
-            echo "Replacing ID for client $client_index in $tag: $old_id -> $new_id"
+            echoContent green "替换   $client_index UUID, $tag: $old_id -> $new_id"
 
             # 更新 id
             jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -528,12 +534,13 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 trojan 和 shadowsocks 的 password 替换
     if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
+        echoContent green "处理处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
             old_password=$(echo "$client" | jq -r '.password')
             new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-            echo "Replacing password for client $client_index in $tag: $old_password -> $new_password"
+            echo "替换密码 for client $client_index in $tag: $old_password -> $new_password"
 
             # 更新 password
             jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
@@ -546,9 +553,10 @@ echo "$inbounds" | while IFS= read -r inbound; do
     # 检查 streamSettings.security 是否为 reality
     security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
     if [[ "$security" == "reality" ]]; then
-        echo "Detected reality security for $tag, updating keys and settings..."
+        ecechoContent green "检查streamSettings:  reality security for $tag, updating keys and settings..."
 
         # 生成公私密钥对
+        ecechoContent green "用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
         key_pair=$(xray x25519)
         private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
         public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
@@ -557,10 +565,10 @@ echo "$inbounds" | while IFS= read -r inbound; do
         mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
         mldsa65_verfify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
 
-        echo "Generated new privateKey: $private_key"
-        echo "Generated new publicKey: $public_key"
-        echo "Generated new shortIds: $new_short_ids"
-        echo "Generated new mldsa65Seed: $new_mldsa65_key_pair"
+        ecechoContent yellow "\nGenerated new privateKey: $private_key"
+        ecechoContent yellow "\nGenerated new publicKey: $public_key"
+        ecechoContent yellow "\nGenerated new shortIds: $new_short_ids"
+        ecechoContent yellow "\nGenerated new mldsa65Seed: $new_mldsa65_key_pair"
 
         # 更新 privateKey, publicKey, shortIds, mldsa65Seed
         jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$new_mldsa65_seed" \
@@ -577,30 +585,30 @@ jq --arg domain "$YOURDOMAIN" \
 
 # 替换原始文件
 mv "$TEMP_FILE" "$XRAY_CONF"
-echo "Updated $XRAY_CONF with new UUIDs, passwords, reality settings, and domain."
+ecechoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名."
 
 # 验证 JSON 文件是否有效
 if jq empty "$XRAY_CONF" &> /dev/null; then
-    echo "JSON file is valid."
+    ecechoContent green "JSON 有效.可以进行服务重启了。"
 else
-    echo "Error: Updated JSON file is invalid. Restoring backup."
+    ecechoContent red "Error: 更新 JSON file 无效. 恢复备份."
     mv "${XRAY_CONF}.bak" "$XRAY_CONF"
     exit 1
 fi
 
 }
 singbox_config(){
-    echoContent skyBlue "\nsingbox配置文件修改"
+    echoContent skyblue "\nsingbox配置文件修改"
   #!/bin/bash
 
 # 检查 jq 和 sing-box 是否已安装
 if ! command -v jq &> /dev/null; then
-    echo "Error: jq is not installed. Please install jq first."
+    echoContent red "Error: jq 没有安装. 请先安装."
     exit 1
 fi
 
 if ! command -v sing-box &> /dev/null; then
-    echo "Error: sing-box is not installed. Please install sing-box first."
+    echoContent red "Error: sing-box 没有安装. 请先安装."
     exit 1
 fi
 
@@ -609,11 +617,12 @@ TEMP_FILE="config_temp.json"
 
 # 检查 config.json 是否存在
 if [[ ! -f "$SINGBOX_CONF" ]]; then
-    echo "Error: $SINGBOX_CONF does not exist."
+    echoContent red "Error: $SINGBOX_CONF不存在"
     exit 1
 fi
 
 # 获取用户输入的域名
+echoContent skyblue "请手动输入域名\n"
 read -p "Please enter the domain to replace 'yourdomain' (e.g., example.com): " SINGGOBXDOMAIN
 if [[ -z "$SINGGOBXDOMAIN" ]]; then
     echo "Error: Domain cannot be empty."
@@ -631,8 +640,9 @@ generate_short_ids() {
 }
 
 # 提取所有 inbounds
+echoContent green "提取所有 inbounds里的users\n"
 inbounds=$(jq -c '.inbounds[] | select(.users)' "$SINGBOX_CONF")
-
+echoContent green "\n$inbounds"
 # 创建一个临时 JSON 文件，复制原始内容
 cp "$SINGBOX_CONF" "$TEMP_FILE"
 
@@ -640,16 +650,17 @@ cp "$SINGBOX_CONF" "$TEMP_FILE"
 echo "$inbounds" | while IFS= read -r inbound; do
     tag=$(echo "$inbound" | jq -r '.tag')
     type=$(echo "$inbound" | jq -r '.type')
-    echo "Processing inbound with tag: $tag, type: $type"
+    echoContent green "Processing inbound with tag: $tag, type: $type"
 
     # 处理 vmess、vless 和 tuic 的 uuid 替换
     if [[ "$type" == "vmess" || "$type" == "vless" || "$type" == "tuic" ]]; then
+        echoContent green "处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
         users=$(echo "$inbound" | jq -c '.users[]')
         user_index=0
         echo "$users" | while IFS= read -r user; do
             old_uuid=$(echo "$user" | jq -r '.uuid')
             new_uuid=$(sing-box generate uuid)
-            echo "Replacing UUID for user $user_index in $tag: $old_uuid -> $new_uuid"
+            echoContent green "Replacing UUID for user $user_index in $tag: $old_uuid -> $new_uuid"
 
             # 更新 uuid
             jq --arg tag "$tag" --arg old_uuid "$old_uuid" --arg new_uuid "$new_uuid" \
@@ -661,6 +672,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
     if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" ]]; then
+        echoContent green "处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
         users=$(echo "$inbound" | jq -c '.users[]')
         user_index=0
         echo "$users" | while IFS= read -r user; do
@@ -682,6 +694,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
         # 如果是 shadowsocks 或 shadowtls，更新顶层的 password 字段（如果存在）
         if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
+             echoContent green "如果是 shadowsocks 或 shadowtls，更新顶层的 password 字段"
             top_password=$(echo "$inbound" | jq -r '.password // empty')
             if [[ -n "$top_password" ]]; then
                 new_top_password=$(openssl rand -base64 16)
@@ -696,7 +709,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
     # 检查 tls.reality.enabled 是否为 true
     reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
     if [[ "$reality_enabled" == "true" ]]; then
-        echo "Detected reality TLS for $tag, updating keys and settings..."
+         echoContent green "Detected reality TLS for $tag, updating keys and settings...,using sing-box generate reality-keypair"
 
         # 生成公私密钥对
         key_pair=$(sing-box generate reality-keypair)
@@ -704,9 +717,9 @@ echo "$inbounds" | while IFS= read -r inbound; do
         public_key=$(echo "$key_pair" | grep "PublicKey" | awk '{print $2}')
         new_short_ids=$(generate_short_ids)
 
-        echo "Generated new private_key: $private_key"
-        echo "Generated new public_key: $public_key"
-        echo "Generated new short_id: $new_short_ids"
+        echoContent yellow "Generated new private_key: $private_key"
+        echoContent yellow "Generated new public_key: $public_key"
+        echoContent yellow "Generated new short_id: $new_short_ids"
 
         # 更新 private_key, public_key, short_id
         jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" \
@@ -869,7 +882,7 @@ generateSubscriptions() {
             SUB_LINK="vless://${uuid}@${SUB_DOMAIN}:${port}?${params}#${email}"
             echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/vless_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Xray VLESS 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Xray VLESS 订阅链接: $SUB_LINK"
         done <<< "$XRAY_VLESS"
 
         # VMess subscriptions
@@ -884,7 +897,7 @@ generateSubscriptions() {
             SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)"
             echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/vmess_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Xray VMess 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Xray VMess 订阅链接: $SUB_LINK"
         done <<< "$XRAY_VMESS"
 
         # Trojan subscriptions
@@ -897,7 +910,7 @@ generateSubscriptions() {
             SUB_LINK="trojan://${password}@${SUB_DOMAIN}:${port}?security=tls#${email}"
             echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/trojan_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Xray Trojan 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Xray Trojan 订阅链接: $SUB_LINK"
         done <<< "$XRAY_TROJAN"
 
         # Shadowsocks subscriptions
@@ -910,7 +923,7 @@ generateSubscriptions() {
             SUB_LINK="ss://$(echo -n "${method}:${password}" | base64 -w 0)@${SUB_DOMAIN}:${port}#${email}"
             echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/ss_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Xray Shadowsocks 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Xray Shadowsocks 订阅链接: $SUB_LINK"
         done <<< "$XRAY_SS"
 
         if [ -s "$XRAY_SUB_FILE" ]; then
@@ -952,7 +965,7 @@ generateSubscriptions() {
             SUB_LINK="vless://${uuid}@${SUB_DOMAIN}:${port}?${params}#${name}"
             echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/vless_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Sing-box VLESS 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Sing-box VLESS 订阅链接: $SUB_LINK"
         done <<< "$SINGBOX_VLESS"
 
         # VMess subscriptions
@@ -967,7 +980,7 @@ generateSubscriptions() {
             SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)"
             echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/vmess_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Sing-box VMess 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Sing-box VMess 订阅链接: $SUB_LINK"
         done <<< "$SINGBOX_VMESS"
 
         # Trojan subscriptions
@@ -980,7 +993,7 @@ generateSubscriptions() {
             SUB_LINK="trojan://${password}@${SUB_DOMAIN}:${port}?security=tls#${name}"
             echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/trojan_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Sing-box Trojan 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Sing-box Trojan 订阅链接: $SUB_LINK"
         done <<< "$SINGBOX_TROJAN"
 
         # Shadowsocks subscriptions
@@ -993,7 +1006,7 @@ generateSubscriptions() {
             SUB_LINK="ss://$(echo -n "${method}:${password}" | base64 -w 0)@${SUB_DOMAIN}:${port}#${name}"
             echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/ss_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Sing-box Shadowsocks 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Sing-box Shadowsocks 订阅链接: $SUB_LINK"
         done <<< "$SINGBOX_SS"
 
         # Hysteria2 subscriptions
@@ -1006,7 +1019,7 @@ generateSubscriptions() {
             SUB_LINK="hysteria2://${password}@${SUB_DOMAIN}:${port}?insecure=0#${name}"
             echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/hysteria2_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Sing-box Hysteria2 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Sing-box Hysteria2 订阅链接: $SUB_LINK"
         done <<< "$SINGBOX_HYSTERIA2"
 
         # TUIC subscriptions
@@ -1019,7 +1032,7 @@ generateSubscriptions() {
             SUB_LINK="tuic://${uuid}:${password}@${SUB_DOMAIN}:${port}?alpn=h3&congestion_control=bbr#${name}"
             echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/tuic_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Sing-box TUIC 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Sing-box TUIC 订阅链接: $SUB_LINK"
         done <<< "$SINGBOX_TUIC"
 
         # Naive subscriptions
@@ -1032,7 +1045,7 @@ generateSubscriptions() {
             SUB_LINK="naive+https://${username}:${password}@${SUB_DOMAIN}:${port}?insecure=0#${name}"
             echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
             qrencode -o "${SUBSCRIBE_DIR}/naive_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "生成 Sing-box Naive 订阅链接: $SUB_LINK"
+            echoContent green "\n生成 Sing-box Naive 订阅链接: $SUB_LINK"
         done <<< "$SINGBOX_NAIVE"
 
         if [ -s "$SINGBOX_SUB_FILE" ]; then
