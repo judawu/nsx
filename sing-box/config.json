@@ -5,68 +5,6 @@
     "output": "/var/log/singbox.log",
     "timestamp": true
   },
-"dns": {
-    "servers": [
-      {
-        "tag": "local-dns",
-        "type": "local"
-      },
-      {
-        "tag": "cloudflare-tcp",
-        "type": "tcp",
-        "server": "1.1.1.1",
-        "server_port": 53
-      },
-      {
-        "tag": "google",
-        "type": "udp",
-        "server": "8.8.8.8",
-        "server_port": 53
-      },
-      {
-        "tag": "quad9-tls",
-        "type": "tls",
-        "server": "4.4.4.4",
-        "server_port": 853,
-        "tls": {
-        "enabled": false
-      }
-      },
-      {
-        "tag": "cloudflare-doh",
-        "type": "https",
-        "server": "https://1.1.1.1/dns-query",
-        "server_port": 443,
-        "detour": "direct"
-      },
-      {
-        "tag": "cloudflare-doq",
-        "type": "quic",
-        "server": "1.1.1.1",
-        "server_port": 853,
-        "tls": {
-        "enabled": false
-      },
-        "detour": "direct"
-      },
-      {
-        "tag": "cloudflare-h3",
-        "type": "h3",
-        "server": "h3://1.1.1.1/dns-query",
-        "server_port": 443,
-        "tls": {
-        "enabled": false
-      },
-        "detour": "direct"
-      }
-    ],
-    "rules": [
-      {
-        "domain": ["google.com"],
-        "server": "google"
-      }
-    ]
-  },
   "inbounds": [
     {
       "type": "direct",
@@ -344,17 +282,7 @@
         "key_path": "/usr/local/nsx/certs/yourdomain.key"
       }
     }
-  ],
-  "outbounds": [
-    { "type": "direct", "tag": "direct" }
-  ],
-  "route": {
-    "rules": [
-      { "protocol": ["dns"], "action": "dns" },
-      { "geoip": ["private"], "outbound": "direct" },
-      { "domain": ["ads.example.com"], "action": "block" }
-    ],
-    "auto_detect_interface": true,
-    "final": "direct"
-  }
+  ]
+
+ 
 }
