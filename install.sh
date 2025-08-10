@@ -584,7 +584,7 @@ if jq empty "$XRAY_CONF" &> /dev/null; then
     echo "JSON file is valid."
 else
     echo "Error: Updated JSON file is invalid. Restoring backup."
-    mv "${CONFIG_FILE}.bak" "$XRAY_CONF"
+    mv "${XRAY_CONF}.bak" "$XRAY_CONF"
     exit 1
 fi
 
@@ -631,10 +631,10 @@ generate_short_ids() {
 }
 
 # 提取所有 inbounds
-inbounds=$(jq -c '.inbounds[] | select(.users)' "$CONFIG_FILE")
+inbounds=$(jq -c '.inbounds[] | select(.users)' "$SINGBOX_CONF")
 
 # 创建一个临时 JSON 文件，复制原始内容
-cp "$CONFIG_FILE" "$TEMP_FILE"
+cp "$SINGBOX_CONF" "$TEMP_FILE"
 
 # 遍历每个 inbound
 echo "$inbounds" | while IFS= read -r inbound; do
@@ -722,15 +722,15 @@ jq --arg domain "$SINGGOBXDOMAIN" \
    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
 
 # 替换原始文件
-mv "$TEMP_FILE" "$CONFIG_FILE"
-echo "Updated $CONFIG_FILE with new UUIDs, passwords, reality settings, and domain."
+mv "$TEMP_FILE" "$SINGBOX_CONF"
+echo "Updated $SINGBOX_CONF with new UUIDs, passwords, reality settings, and domain."
 
 # 验证 JSON 文件是否有效
-if jq empty "$CONFIG_FILE" &> /dev/null; then
+if jq empty "$SINGBOX_CONF" &> /dev/null; then
     echo "JSON file is valid."
 else
     echo "Error: Updated JSON file is invalid. Restoring backup."
-    mv "${CONFIG_FILE}.bak" "$CONFIG_FILE"
+    mv "${SINGBOX_CONF}.bak" "$SINGBOX_CONF"
     exit 1
 fi
 }
@@ -1246,11 +1246,11 @@ dockerInstall() {
         fi
         if [[  -f "$COMPOSE_FILE" ]]; then
           cp ./xray/config.json "$XRAY_CONF"
-          chmod 644 "$SINGBOX_CONF"
+          chmod 644 "$XRAY_CONF"
         fi
         if [[  -f "$COMPOSE_FILE" ]]; then
            cp ./sing-box/config.json "$SINGBOX_CONF"
-           chmod 644 "$XRAY_CONF"
+           chmod 644 "$SINGBOX_CONF"
         fi       
     fi
 
