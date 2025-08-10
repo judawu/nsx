@@ -756,6 +756,8 @@ configNginx() {
             sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/yourdomain/$YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/yourdomain/$YOURDOMAIN/g" "$XRAY_CONF"
+            sed -i "s/yourdomain/$YOURDOMAIN/g" "$SINGBOX_CONF"
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
             echoContent skyblue "nginx.conf 更新成功."        
@@ -1515,11 +1517,17 @@ EOF
         chmod 655 /usr/local/nsx/sing-box/sing-box
         echoContent green "singbox安装成功"
     fi
+    read -r -p "本地安装已经完成，是否继续配置？(y/n): " config_nsx
+      if [[ -z "$config_nsx" ]]; then
+        configNSX
+      else 
+        echoContent green "nginx，xray singbox安装完成，请手动配置"
+      fi
    
+}
+configNSX() {
     echoContent skyblue "进行nginx的配置修改..."
-
     configNginx
-
     echoContent skyblue "\n 删除安装的nginx配置文件，拷贝/usr/local/nsx/nginx/nginx.conf配置文件到/etc/nginx..."
     sudo rm /etc/nginx/conf.d/default.conf
     sudo rm /etc/nginx/nginx.conf
@@ -1529,18 +1537,22 @@ EOF
     echoContent skyblue "开始创建服务..."
     # Start services
     createSystemdServices
+
     echoContent skyblue "开始启动服务..."
     startServices
 
     echoContent skyblue "进行xray的配置修改..."
     xray_config
+
     echoContent skyblue "进行singbox的配置修改..."
     singbox_config
+
     restartServices
     echoContent yellpw "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
     aliasInstall
-}
 
+
+}
 # Stop NSX
 stopNSX() {
     echoContent skyBlue "停止 NSX 容器并清理..."
