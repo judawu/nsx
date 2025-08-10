@@ -672,8 +672,8 @@ echo "$inbounds" | while IFS= read -r inbound; do
     fi
 
     # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
-    if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" ]]; then
-        echoContent green "\n处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
+    if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" || "$type" == "naive" ]]; then
+        echoContent green "\n处理 trojan、shadowsocks、shadowtls、naive 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
         users=$(echo "$inbound" | jq -c '.users[]')
         user_index=0
         echo "$users" | while IFS= read -r user; do
@@ -723,9 +723,9 @@ echo "$inbounds" | while IFS= read -r inbound; do
         echoContent yellow "\nGenerated new short_id: $new_short_ids"
 
         # 更新 private_key, public_key, short_id
-        jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" \
+        jq --arg tag "$tag" --arg private_key "$private_key"  --argjson short_ids "$new_short_ids" \
            '(.inbounds[] | select(.tag == $tag) | .tls.reality) |=
-            (.private_key = $private_key | .public_key = $public_key | .short_id = $short_ids)' \
+            (.private_key = $private_key  | .short_id = $short_ids)' \
            "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
     fi
 done

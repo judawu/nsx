@@ -1,39 +1,78 @@
 {
-   "log": {
+  "log": {
     "disabled": false,
     "level": "error",
     "output": "/var/log/singbox.log",
     "timestamp": true
   },
-
-
-  "dns": {
+"dns": {
     "servers": [
       {
-        "tag": "google",
-        "address": "tls://8.8.8.8"
+        "tag": "local-dns",
+        "type": "local"
       },
       {
-        "tag": "local",
-        "address": "local"
+        "tag": "cloudflare-tcp",
+        "type": "tcp",
+        "server": "1.1.1.1",
+        "server_port": 53
+      },
+      {
+        "tag": "google",
+        "type": "udp",
+        "server": "8.8.8.8",
+        "server_port": 53
+      },
+      {
+        "tag": "quad9-tls",
+        "type": "tls",
+        "server": "4.4.4.4",
+        "server_port": 853,
+        "tls": {
+        "enabled": false
+      }
+      },
+      {
+        "tag": "cloudflare-doh",
+        "type": "https",
+        "server": "https://1.1.1.1/dns-query",
+        "server_port": 443,
+        "detour": "direct"
+      },
+      {
+        "tag": "cloudflare-doq",
+        "type": "quic",
+        "server": "1.1.1.1",
+        "server_port": 853,
+        "tls": {
+        "enabled": false
+      },
+        "detour": "direct"
+      },
+      {
+        "tag": "cloudflare-h3",
+        "type": "h3",
+        "server": "h3://1.1.1.1/dns-query",
+        "server_port": 443,
+        "tls": {
+        "enabled": false
+      },
+        "detour": "direct"
       }
     ],
     "rules": [
       {
-        "outbound": "any",
-        "server": "local"
+        "domain": ["google.com"],
+        "server": "google"
       }
-    ],
-    "strategy": "ipv4_only"
+    ]
   },
   "inbounds": [
-
     {
-     "type": "direct",
-     "tag": "direct-in",
-
-     "listen": "::",
-     "listen_port": 8070,
+      "type": "direct",
+      "tag": "direct-in",
+      "listen": "::",
+      "listen_port": 8070,
       "network": "udp",
       "override_address": "1.0.0.1",
       "override_port": 53
@@ -41,66 +80,62 @@
     {
       "type": "mixed",
       "tag": "mixed-in",
-       "listen": "::",
+      "listen": "::",
       "listen_port": 8071
     },
     {
-  "type": "socks",
-  "tag": "socks-in",
-
-     "listen": "::",
-    "listen_port": 8072,
-
-     "users": [
+      "type": "socks",
+      "tag": "socks-in",
+      "listen": "::",
+      "listen_port": 8072,
+      "users": [
+        {
+          "username": "admin",
+          "password": "admin"
+        }
+      ]
+    },
     {
-      "username": "admin",
-      "password": "admin"
-    }
-  ]
-},
-{
-  "type": "http",
-  "tag": "http-in",
-
-   "listen": "::",
-  "listen_port": 8073,
-
-  "users": [
-    {
-      "username": "admin",
-      "password": "admin"
-    }
-  ],
-  "tls": {
-    "enabled": false
+      "type": "http",
+      "tag": "http-in",
+      "listen": "::",
+      "listen_port": 8073,
+      "users": [
+        {
+          "username": "admin",
+          "password": "admin"
+        }
+      ],
+      "tls": {
+        "enabled": false
       },
-  "set_system_proxy": false
-},
-{
-  "type": "vmess",
-  "tag": "vmess-in",
-  "listen": "127.0.0.1",
-  "listen_port": 8074 ,
-  "users": [
+      "set_system_proxy": false
+    },
     {
-      "name": "vmess@singbox",
-      "uuid": "bf000d23-0752-40b4-affe-68f7707a9661",
-      "alterId": 0
-    }
-  ],
-   "tls": {
-    "enabled": false
-  },
-  "multiplex": {
-  "enabled": true,
-  "padding": false,
-  "brutal": {  
-    "enabled": true,
-     "up_mbps": 100,
-     "down_mbps": 100
-    }
-  }
-},
+      "type": "vmess",
+      "tag": "vmess-in",
+      "listen": "127.0.0.1",
+      "listen_port": 8074,
+      "users": [
+        {
+          "name": "vmess@singbox",
+          "uuid": "4cceb232-b5f4-4f00-bd24-b3a59abbd256",
+          "alterId": 0
+        }
+      ],
+      "tls": {
+        "enabled": false
+      },
+      "multiplex": {
+        "enabled": true,
+        "padding": false,
+        "brutal": {
+          "enabled": true,
+          "up_mbps": 100,
+          "down_mbps": 100
+        }
+      }
+    },
     {
       "type": "trojan",
       "listen": "::",
@@ -116,64 +151,56 @@
         "server_name": "yourdomain",
         "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
         "key_path": "/usr/local/nsx/certs/yourdomain.key"
-      
       },
       "fallback": {
         "server": "google.com",
         "server_port": 80
-      
       }
     },
     {
       "type": "hysteria2",
       "listen": "::",
       "listen_port": 8081,
-       "up_mbps": 100,
+      "up_mbps": 100,
       "down_mbps": 50,
       "users": [
         {
           "name": "singbox_hysteria2",
           "password": "9c3bbf02-db78-44d0-8996-675e8532c555"
-         
         }
       ],
-     
-     
       "tls": {
         "enabled": true,
         "server_name": "yourdomain",
         "alpn": "h3",
         "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
         "key_path": "/usr/local/nsx/certs/yourdomain.key"
-      
       },
-    "masquerade": "https://cloudflare.com", 
-     "brutal_debug": true
+      "masquerade": "https://cloudflare.com",
+      "brutal_debug": true
     },
     {
       "type": "tuic",
       "tag": "singbox-tuic-in",
-      "listen": "::",  
+      "listen": "::",
       "listen_port": 8082,
       "users": [
         {
           "name": "juda-singbox_tuic",
-          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "uuid": "73a9bd83-954b-45d3-9625-4ea36cfbe2fe",
           "password": "QvofbfMIil7768oFAyTpyA=="
-          
         }
       ],
       "congestion_control": "bbr",
-        "auth_timeout": "5s",
-        "zero_rtt_handshake": false,
-        "heartbeat": "10s",
-       "tls": {
+      "auth_timeout": "5s",
+      "zero_rtt_handshake": false,
+      "heartbeat": "10s",
+      "tls": {
         "enabled": true,
         "server_name": "yourdomain",
         "alpn": "h3",
         "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
         "key_path": "/usr/local/nsx/certs/yourdomain.key"
-       
       }
     },
     {
@@ -199,51 +226,49 @@
       "listen": "::",
       "listen_port": 8084,
       "tag": "singbox-shadowsocks-in",
-      "network": ["tcp","udp"],
+      "network": [
+        "tcp",
+        "udp"
+      ],
       "method": "2022-blake3-aes-128-gcm",
-      "password": "QvofbfMIil7768oFAyTpyA==",
+      "password": "c7+ipPfGTBjvIiXaEm3Vew==",
       "users": [
         {
           "name": "ss@singbox",
-          "password": "7oXO/suBqek8LDR9aYGDXg=="
+          "password": "kYtIQvS1hnPsxSauQezlbw=="
         }
       ],
       "multiplex": {
         "enabled": true
       }
     },
-  {
-  "type": "shadowtls",
-  "tag": "st-in",
-
-   "listen": "::",
-  "listen_port": 8085,
-
-  "version": 3,
-  "password": "QvofbfMIil7768oFAyTpyA==",
-  "users": [
     {
-      "name": "shadowtls@singbox",
-      "password": "7oXO/suBqek8LDR9aYGDXg=="
-    }
-  ],
-  "handshake": {
-    "server": "cloudflare.com",
-    "server_port": 443
-  },
-    "strict_mode": true,  
-    "detour": "singbox-shadowsocks-in"
- 
-},
-
-
+      "type": "shadowtls",
+      "tag": "st-in",
+      "listen": "::",
+      "listen_port": 8085,
+      "version": 3,
+      "password": "MIFlwNt4fWmJvavrvtFciw==",
+      "users": [
+        {
+          "name": "shadowtls@singbox",
+          "password": "EPtoNA05vqUSKxAIsRYVcg=="
+        }
+      ],
+      "handshake": {
+        "server": "cloudflare.com",
+        "server_port": 443
+      },
+      "strict_mode": true,
+      "detour": "singbox-shadowsocks-in"
+    },
     {
       "type": "vless",
       "listen": "::",
       "listen_port": 8088,
       "users": [
         {
-          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "uuid": "82c588fa-267e-4831-8395-77978da435ba",
           "name": "VLESS_Reality_gPRC"
         }
       ],
@@ -257,11 +282,12 @@
             "server": "www.apple.com",
             "server_port": 443
           },
-          "private_key": "1mlAGvxBGQiu_s7rOUukHmeaZWJa3kErMc1DCO4ZI9o",
+          "private_key": "YHaKjrRRJPEOCIjh8S5f2kdX0aYb1MgxbSKzN_pwQVM",
           "short_id": [
             "",
-            "6ba85179e30d4fc2"
+            "b1603eeab8001d0e"
           ]
+          
         }
       },
       "transport": {
@@ -276,7 +302,7 @@
       "tag": "VLESSReality",
       "users": [
         {
-          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "uuid": "a5a18127-d8a9-488a-b371-cb5db958b78a",
           "flow": "xtls-rprx-vision",
           "name": "VLESS_Reality_Vision"
         }
@@ -290,15 +316,15 @@
             "server": "www.apple.com",
             "server_port": 443
           },
-          "private_key": "Up2mnyRAmfJn2xkfJYXE4cHYefAbWSMImkkvLGNncME",
+          "private_key": "kNrc1JryvPFAfRAIRvLnMpPyePEassPeh2QzL5Rq2kg",
           "short_id": [
             "",
-            "6ba85179e30d4fc2"
+            "9e18ed250258f29f"
           ]
+    
         }
       }
     },
-  
     {
       "type": "vless",
       "listen": "::",
@@ -306,7 +332,7 @@
       "tag": "VLESSTCP",
       "users": [
         {
-          "uuid": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "uuid": "d3eb8a70-3b3c-4b71-97c2-f63ef2e951d5",
           "flow": "xtls-rprx-vision",
           "name": "VLESS_TCP/TLS_Vision"
         }
@@ -320,27 +346,13 @@
     }
   ],
   "outbounds": [
-    {
-      "type": "direct",
-      "tag": "direct"
-    },
-    {
-      "type": "dns",
-      "tag": "dns-out"
-    }
+    { "type": "direct", "tag": "direct" }
   ],
   "route": {
     "rules": [
-      {
-        "protocol": "dns",
-        "outbound": "dns-out"
-      },
-      {
-        "geoip": [
-          "private"
-        ],
-        "outbound": "direct"
-      }
+      { "protocol": ["dns"], "action": "dns" },
+      { "geoip": ["private"], "outbound": "direct" },
+      { "domain": ["ads.example.com"], "action": "block" }
     ],
     "auto_detect_interface": true,
     "final": "direct"
