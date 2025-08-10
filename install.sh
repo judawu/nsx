@@ -1401,50 +1401,69 @@ localInstall() {
     fi
 
     # Install Nginx
-    echoContent skyBlue "\n 安装nginx..."
-    if [[ "${release}" == "debian" ]]; then
-        echoContent green "\n 安装nginx依赖..."
-        sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
-        echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
-        curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
-        # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
-        sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
-        sudo apt update >/dev/null 2>&1
+    #!/bin/bash
 
-    elif [[ "${release}" == "ubuntu" ]]; then
-        echoContent green "\n 安装nginx依赖..."
-        sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
-        echo "deb http://nginx.org/packages/mainline/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
-        curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key >/dev/null 2>&1
-        # gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
-        sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
-        sudo apt update >/dev/null 2>&1
+# Custom echo function (assuming it's defined elsewhere)
+echoContent() {
+    local color=$1
+    local message=$2
+    case $color in
+        skyBlue) echo -e "\033[1;36m$message\033[0m" ;;
+        green) echo -e "\033[1;32m$message\033[0m" ;;
+        red) echo -e "\033[1;31m$message\033[0m" ;;
+    esac
+}
 
-    elif [[ "${release}" == "centos" ]]; then
-        ${installType} yum-utils >/dev/null 2>&1
-        cat <<EOF >/etc/yum.repos.d/nginx.repo
-[nginx-stable]
-name=nginx stable repo
-baseurl=http://nginx.org/packages/centos/\$releasever/\$basearch/
-gpgcheck=1
-enabled=1
-gpgkey=https://nginx.org/keys/nginx_signing.key
-module_hotfixes=true
+# Detect OS
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    release=$ID
+else
+    echoContent red "\n 错误: 无法检测操作系统类型!"
+    exit 1
+fi
 
+echoContent skyBlue "\n 安装nginx..."
+if [[ "${release}" == "debian" || "${release}" == "ubuntu" ]]; then
+    echoContent green "\n 安装nginx依赖..."
+    sudo apt update
+    sudo apt install -y gnupg2 ca-certificates lsb-release
+    echo "deb http://nginx.org/packages/mainline/${release} $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
+    if ! curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/nginx_signing.gpg; then
+        echoContent red "\n 错误: 无法下载Nginx签名密钥!"
+        exit 1
+    fi
+    sudo apt update
+    sudo apt install -y nginx
+    if [ $? -eq 0 ]; then
+        echoContent skyBlue "\n nginx安装完成..."
+    else
+        echoContent red "\n nginx安装失败!"
+        exit 1
+    fi
+elif [[ "${release}" == "centos" ]]; then
+    echoContent green "\n 安装nginx依赖..."
+    sudo yum install -y yum-utils
+    cat <<EOF | sudo tee /etc/yum.repos.d/nginx.repo
 [nginx-mainline]
 name=nginx mainline repo
 baseurl=http://nginx.org/packages/mainline/centos/\$releasever/\$basearch/
 gpgcheck=1
-enabled=0
+enabled=1
 gpgkey=https://nginx.org/keys/nginx_signing.key
 module_hotfixes=true
 EOF
-        sudo yum-config-manager --enable nginx-mainline >/dev/null 2>&1
-    elif [[ "${release}" == "alpine" ]]; then
-        rm "${nginxConfigPath}default.conf"
+    sudo yum install -y nginx
+    if [ $? -eq 0 ]; then
+        echoContent skyBlue "\n nginx安装完成..."
+    else
+        echoContent red "\n nginx安装失败!"
+        exit 1
     fi
-
-    echoContent skyBlue "\n nginx安装完成..."
+else
+    echoContent red "\n 错误: 不支持的操作系统: ${release}"
+    exit 1
+fi
 
 
     # Install Xray and Sing-box
