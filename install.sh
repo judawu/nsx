@@ -1089,10 +1089,11 @@ manageLogs() {
 # Install alias
 aliasInstall() {
     if [[ -f "$BASE_DIR/install.sh" ]] && [[ -d "$BASE_DIR" ]]; then
-        ln -sf "$BASE_DIR/install.sh" /usr/bin/nsx
+        ln -sf "$BASE_DIR/install.sh" /usr/bin/nsx  
         chmod 700 "$BASE_DIR/install.sh"
         echoContent green "已创建别名 'nsx'，运行 'nsx' 以执行脚本."
     fi
+      
 }
 
 
@@ -1512,6 +1513,7 @@ EOF
         unzip -o "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip" -d /usr/local/nsx/xray >/dev/null
         rm -rf "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip"
         chmod 655 /usr/local/nsx/xray/xray
+        ln -sf /usr/local/nsx/xray/xray /usr/bin/xray
         echoContent skyBlue "安装xray成功..."
     fi
    
@@ -1536,6 +1538,7 @@ EOF
         mv "/usr/local/nsx/sing-box/sing-box-${version/v/}${singBoxCoreCPUVendor}/sing-box" /usr/local/nsx/sing-box
         rm -rf /usr/local/nsx/sing-box/sing-box-*
         chmod 655 /usr/local/nsx/sing-box/sing-box
+        ln -sf /usr/local/nsx/sing-box/sing-box /usr/bin/sing-box
         echoContent green "singbox安装成功"
     fi
     read -r -p "本地安装已经完成，是否继续配置？(y/n): " config_nsx
