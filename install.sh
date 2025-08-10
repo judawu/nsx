@@ -1378,18 +1378,35 @@ startServices() {
     echoContent skyBlue "\n启动服务..."
 
     # 启用并启动服务
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+     # 检查服务状态
+    if sudo systemctl is-active --quiet nginx; then
+        echoContent green "Nginx启动成功！"
+    else
+        echoContent red "Nginx服务启动失败，请检查日志："
+        echoContent red "Nginx: journalctl -u nginx.service"
+   
+    fi
+    sudo systemctl enable xray 
+    sudo systemctl start  xray 
+    if sudo systemctl is-active --quiet xray; then
+        echoContent green "xray启动成功！"
+    else
+        echoContent red "xray服务启动失败，请检查日志："
+        echoContent red "Xray: journalctl -u xray.service"
+    fi
+
     sudo systemctl enable nginx xray sing-box
     sudo systemctl start nginx xray sing-box
 
     # 检查服务状态
-    if sudo systemctl is-active --quiet nginx && sudo systemctl is-active --quiet xray && sudo systemctl is-active --quiet sing-box; then
-        echoContent green "所有服务（Nginx, Xray, Sing-box）启动成功！"
+    if sudo systemctl is-active --quiet sing-box; then
+        echoContent green  "Sing-box启动成功！"
     else
-        echoContent red "部分或全部服务启动失败，请检查日志："
-        echoContent red "Nginx: journalctl -u nginx.service"
-        echoContent red "Xray: journalctl -u xray.service"
+        echoContent red "Sing-box服务启动失败，请检查日志："     
         echoContent red "Sing-box: journalctl -u sing-box.service"
-        exit 1
+
     fi
 }
 
