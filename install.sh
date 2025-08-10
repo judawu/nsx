@@ -515,7 +515,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 vless 和 vmess 的 id 替换
     if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
-        echoContent yellow "处理 vless 和 vmess 的 id 替换,用xray uuid生成新的uuid替换"
+        echoContent skyblue "处理 vless 和 vmess 的 id 替换,用xray uuid生成新的uuid替换"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
@@ -534,7 +534,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 trojan 和 shadowsocks 的 password 替换
     if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
-        echoContent yellow "处理处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
+        echoContent skyblue "处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
         clients=$(echo "$inbound" | jq -c '.settings.clients[]')
         client_index=0
         echo "$clients" | while IFS= read -r client; do
@@ -556,7 +556,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
         echoContent yellow "检查streamSettings:  reality security for $tag, updating keys and settings..."
 
         # 生成公私密钥对
-        echoContent yellow "用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
+        echoContent green "用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
         key_pair=$(xray x25519)
         private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
         public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
@@ -568,12 +568,13 @@ echo "$inbounds" | while IFS= read -r inbound; do
         echoContent yellow "\nGenerated new privateKey: $private_key"
         echoContent yellow "\nGenerated new publicKey: $public_key"
         echoContent yellow "\nGenerated new shortIds: $new_short_ids"
-        echoContent yellow "\nGenerated new mldsa65Seed: $new_mldsa65_key_pair"
+        echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_seed"
+        echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_verfify"
 
         # 更新 privateKey, publicKey, shortIds, mldsa65Seed
         jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$new_mldsa65_seed" \
            '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
-            (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids | .mldsa65Seed = $mldsa65_seed | .mldsa65Verify = $mldsa65Verify)' \
+            (.privateKey = $private_key | .password = $public_key | .shortIds = $new_short_ids | .mldsa65Seed = $mldsa65_seed | .mldsa65Verify = $mldsa65_verfify)' \
            "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
     fi
 done
@@ -589,7 +590,7 @@ echoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality 
 
 # 验证 JSON 文件是否有效
 if jq empty "$XRAY_CONF" &> /dev/null; then
-    echoContent green "JSON 有效.可以进行服务重启了。"
+    echoContent skyblue "JSON 有效.可以进行服务重启了。"
 else
     echoContent red "Error: 更新 JSON file 无效. 恢复备份."
     mv "${XRAY_CONF}.bak" "$XRAY_CONF"
@@ -654,7 +655,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 vmess、vless 和 tuic 的 uuid 替换
     if [[ "$type" == "vmess" || "$type" == "vless" || "$type" == "tuic" ]]; then
-        echoContent green "处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
+        echoContent skyblue "处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
         users=$(echo "$inbound" | jq -c '.users[]')
         user_index=0
         echo "$users" | while IFS= read -r user; do
@@ -672,7 +673,7 @@ echo "$inbounds" | while IFS= read -r inbound; do
 
     # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
     if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" ]]; then
-        echoContent green "处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
+        echoContent skyblue "处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
         users=$(echo "$inbound" | jq -c '.users[]')
         user_index=0
         echo "$users" | while IFS= read -r user; do
