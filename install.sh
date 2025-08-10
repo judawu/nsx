@@ -765,14 +765,18 @@ configNginx() {
 # Manage configurations
 manageConfigurations() {
     echoContent skyBlue "\n配置管理菜单"
-    echoContent yellow "1. 修改 nginx.conf"
-    echoContent yellow "2. 修改 xray config.json"
-    echoContent yellow "3. 修改 sing-box config.json"
-    echoContent yellow "4. 退出"
+    echoContent yellow "1. 配置nsx服务"
+    echoContent yellow "2. 修改 nginx.conf"
+    echoContent yellow "3. 修改 xray config.json"
+    echoContent yellow "4. 修改 sing-box config.json"
+    echoContent yellow "5. 退出"
     read -r -p "请选择一个选项 [1-4]: " config_option
 
     case $config_option in
-        1)
+       1)
+            configNSX
+            ;;
+       2)
             configNginx
             # Reload Nginx if running
             if pgrep nginx > /dev/null; then
@@ -783,7 +787,7 @@ manageConfigurations() {
                 echoContent green "Docker Compose 已重启以应用新配置."
             fi
             ;;
-        2)
+        3)
             xray_config
             echoContent green "xray config.json 更新成功."
             # Restart Xray if running
@@ -795,7 +799,7 @@ manageConfigurations() {
                 echoContent green "Docker Compose 已重启以应用新配置."
             fi
             ;;
-        3)
+        4)
             singbox_config
             echoContent green "sing-box config.json 更新成功."
             # Restart Sing-box if running
@@ -807,7 +811,7 @@ manageConfigurations() {
                 echoContent green "Docker Compose 已重启以应用新配置."
             fi
             ;;
-        4)
+        5)
             return
             ;;
         *)
