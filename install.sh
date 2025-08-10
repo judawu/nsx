@@ -781,7 +781,8 @@ manageConfigurations() {
             elif docker ps | grep -q nginx; then
                 docker compose -f "$COMPOSE_FILE" restart
                 echoContent green "Docker Compose 已重启以应用新配置."
-            fi;
+            fi
+            ;;
         2)
             xray_config
             echoContent green "xray config.json 更新成功."
