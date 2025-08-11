@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-# NSX Installation and Management Script
+# NSX 安装管理加博爱
 # Project directory: /usr/local/nsx
 # Supports Docker and local installation, certificate management, and configuration management
 
 # Set language
 export LANG=en_US.UTF-8
 
-# Colors for output
+# 输出颜色
 echoContent() {
     case $1 in
         "red") echo -e "\033[31m${2}\033[0m" ;;
@@ -17,7 +17,7 @@ echoContent() {
     esac
 }
 
-# Define variables
+# 定义变量
 BASE_DIR="/usr/local/nsx"
 CERT_DIR="${BASE_DIR}/certs"
 NGINX_DIR="${BASE_DIR}/nginx"
@@ -38,15 +38,16 @@ XRAY_LOG_DIR="${XRAY_DIR}/log"
 SINGBOX_LOG_DIR="${SINGBOX_DIR}/log"
 ACME_DIR="${BASE_DIR}/acme"
 ACME_LOG="${ACME_DIR}/acme.log"
-TOTAL_PROGRESS=5
 
-# Check system information
+
+# 检查系统信息
 checkSystem() {
     echoContent skyblue "检查系统..."
     if [[ -n $(find /etc -name "redhat-release") ]] || grep -q -i "centos" /etc/os-release || grep -q -i "rocky" /etc/os-release; then
         release="centos"
         installCmd='yum -y install'
         upgradeCmd='yum -y update'
+        updateCmd='yum -y update'
         uninstallCmd='yum -y remove'
     elif grep -q -i "ubuntu" /etc/os-release; then
         release="ubuntu"
@@ -101,7 +102,7 @@ checkSystem() {
     echoContent green "本地 IP: $LOCAL_IP"
 }
 
-# Check SELinux
+# 检查 SELinux
 checkCentosSELinux() {
     if [[ "$release" == "centos" ]] && [[ -f "/etc/selinux/config" ]] && ! grep -q "SELINUX=disabled" /etc/selinux/config; then
         echoContent yellow "禁用 SELinux 以确保兼容性..."
@@ -110,9 +111,9 @@ checkCentosSELinux() {
     fi
 }
 
-# Install tools
+# 安装工具
 installTools() {
-    echoContent skyblue "\n进度 1/${TOTAL_PROGRESS} : 安装工具..."
+    echoContent skyblue "\n安装工具..."
     echoContent green "\n安装以下依赖curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode.."
     ${installCmd} curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode -y
   
@@ -124,9 +125,9 @@ installTools() {
     fi
 }
 
-# Install Docker and Docker Compose
+# 安装 Docker 和 Docker Compose
 installDocker() {
-    echoContent skyblue "\n进度 2/${TOTAL_PROGRESS} : 检查 Docker 安装..."
+    echoContent skyblue "Docker 安装..."
     if ! command -v docker &> /dev/null; then
         echoContent yellow "安装 Docker..."
         curl -fsSL https://get.docker.com | bash
@@ -140,10 +141,11 @@ installDocker() {
         echoContent green "Docker 已安装."
     fi
 
-    # Check for Docker Compose plugin
+    # 检查 Docker Compose 插件
     if ! docker compose version &> /dev/null; then
         echoContent yellow "安装 Docker Compose 插件..."
         if [[ "$release" == "ubuntu" || "$release" == "debian" ]]; then
+            ${updateCmd}
             ${upgradeCmd}
             ${installCmd} docker-compose-plugin
             if [ $? -ne 0 ]; then
@@ -151,7 +153,7 @@ installDocker() {
                 exit 1
             fi
         elif [[ "$release" == "centos" ]]; then
-            # Install Docker Compose plugin binary for CentOS/Rocky Linux
+            # 为 CentOS/Rocky Linux 安装 Docker Compose 插件二进制文件
             mkdir -p /usr/libexec/docker/cli-plugins
             curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/libexec/docker/cli-plugins/docker-compose
             chmod +x /usr/libexec/docker/cli-plugins/docker-compose
@@ -167,7 +169,7 @@ installDocker() {
         echoContent green "Docker Compose 插件已安装."
     fi
 
-    # Verify Docker Compose version
+    # 验证 Docker Compose 版本
     docker compose version
     if [ $? -eq 0 ]; then
         echoContent green "Docker Compose 插件验证成功: $(docker compose version --short)"
@@ -177,9 +179,9 @@ installDocker() {
     fi
 }
 
-# Create directories
+# 创建目录
 createDirectories() {
-    echoContent skyblue "\n进度 3/${TOTAL_PROGRESS} : 创建目录..."
+    echoContent skyblue "\n创建目录..."
     for DIR in "$CERT_DIR" "$NGINX_DIR" "$NGINX_LOG_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$XRAY_DIR" "$XRAY_LOG_DIR" "$SINGBOX_DIR" "$SINGBOX_LOG_DIR" "$WWW_DIR"  "$SUBSCRIBE_DIR" "$WWW_DIR/wwwroot/blog" "$WWW_DIR/wwwroot/video" "$NGINX_SHM_DIR" "$ACME_DIR"; do
         if [ ! -d "$DIR" ]; then
             echoContent yellow "创建目录 $DIR..."
@@ -194,7 +196,7 @@ createDirectories() {
     chmod -R 700 "$NGINX_SHM_DIR" "$NGINX_LOG_DIR" "$XRAY_LOG_DIR" "$SINGBOX_LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
 }
 
-# Install acme.sh
+# 安装 acme.sh
 installAcme() {
     if [[ ! -d "$HOME/.acme.sh" ]] || [[ -d "$HOME/.acme.sh" && -z $(find "$HOME/.acme.sh/acme.sh") ]]; then
         echoContent skyblue "\n进度 4/${TOTAL_PROGRESS} : 安装证书程序 acme.sh..."
@@ -207,7 +209,7 @@ installAcme() {
         echoContent green "acme.sh 已安装."
     fi
 }
-# Manage certificates
+# 管理证书
 manageCertificates() {
     # Define defaults
     ACME_LOG="${ACME_LOG:-/var/log/acme.log}"
@@ -244,19 +246,20 @@ manageCertificates() {
                 echoContent red "请输入域名"
                 return 1
             fi
-            # Extract the first domain for certificate naming
+            # 提取第一个域名用于证书命名
             FIRST_DOMAIN=$(echo "$DOMAIN" | cut -d',' -f1 | xargs)
             echoContent skyblue " 证书域名为 $DOMAIN (使用 $FIRST_DOMAIN 作为证书文件名)."
             read -r -p "请输入DNS提供商: 0.Cloudflare, 1.阿里云, 2.手动DNS, 3.独立: " DNS_VENDOR
 
             if [[ "$cert_option" == "1" ]]; then
-                # Clear previous credentials for this domain
+                # 清除此域名的先前凭据
                 grep -v "^${FIRST_DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
             fi
             echoContent skyblue " DNS提供商选择 $DNS_VENDOR."
             if [[ "$DNS_VENDOR" == "0" ]]; then
-                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE") ]]; then
-                    # Load saved Cloudflare credentials for renewal
+ 
+                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" ]] && grep -q "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE"; then
+                    # 为续订加载保存的 Cloudflare 凭据
                     IFS=':' read -r _ _ cf_type cf_value1 cf_value2 < <(grep "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE")
                     if [[ "$cf_type" == "token" ]]; then
                         cfAPIToken="$cf_value1"
@@ -298,21 +301,21 @@ manageCertificates() {
                     unset CF_Email CF_Key
                 fi
             elif [[ "$DNS_VENDOR" == "1" ]]; then
-                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" && $(grep "^${FIRST_DOMAIN}:Alibaba:" "$CREDENTIALS_FILE") ]]; then
-                    # Load saved Alibaba credentials for renewal
+                if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" ]] && grep -q "^${FIRST_DOMAIN}:Alibaba:" "$CREDENTIALS_FILE"; then
+                    # 为续订加载保存的 Alibaba 凭据
                     IFS=':' read -r _ _ aliKey aliSecret < <(grep "^${FIRST_DOMAIN}:Alibaba:" "$CREDENTIALS_FILE")
-                    echoContent green " ---> 使用保存的阿里云凭据进行续订"
+                    echoContent green " 使用保存的阿里云凭据进行续订"
                 else
                     read -r -p "请输入阿里云 Key: " aliKey
                     read -r -p "请输入阿里云 Secret: " aliSecret
                     if [[ -z "${aliKey}" || -z "${aliSecret}" ]]; then
-                        echoContent red " ---> 输入为空，请重试"
+                        echoContent red " 输入为空，请重试"
                         return 1
                     fi
-                    echoContent green " ---> 保存阿里云 Key 和 Secret"
+                    echoContent green "保存阿里云 Key 和 Secret"
                     echo "${FIRST_DOMAIN}:Alibaba:${aliKey}:${aliSecret}" >> "$CREDENTIALS_FILE"
                 fi
-                echoContent green " ---> 阿里云 DNS API ${action##--}证书中"
+                echoContent green " 阿里云 DNS API ${action##--}证书中"
                 if ! sudo Ali_Key="${aliKey}" Ali_Secret="${aliSecret}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_ali -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                     echoContent red "证书签发失败，清理残留数据并退出"
                     sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
@@ -329,14 +332,14 @@ manageCertificates() {
                 fi
                 txtValue=$(tail -n 10 "$ACME_LOG" | grep "TXT value" | awk -F "'" '{print $2}' | head -1)
                 if [[ -n "$txtValue" ]]; then
-                    echoContent green " ---> 名称: _acme-challenge"
-                    echoContent green " ---> 值: ${txtValue}"
-                    echoContent yellow " ---> 请添加 TXT 记录（例如在cloudware中在DNS下手动建立TXT文件，将下面的字符串${txtValue}输入）并等待 1-2 分钟"
+                    echoContent green "  名称: _acme-challenge"
+                    echoContent green " 值: ${txtValue}"
+                    echoContent yellow " 请添加 TXT 记录（例如在cloudware中在DNS下手动建立TXT文件，将下面的字符串${txtValue}输入）并等待 1-2 分钟"
                     read -r -p "是否已添加 TXT 记录? [y/n]: " addDNSTXTRecordStatus
                     if [[ "$addDNSTXTRecordStatus" == "y" ]]; then
                         txtAnswer=$(dig @1.1.1.1 +nocmd "_acme-challenge.${FIRST_DOMAIN}" txt +noall +answer | awk -F "[\"]" '{print $2}' | head -1)
                         if echo "$txtAnswer" | grep -q "^${txtValue}"; then
-                            echoContent green " ---> TXT 记录验证通过"
+                            echoContent green "TXT 记录验证通过"
                             if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                                    echoContent red "证书签发失败，清理残留数据并退出"
                                    sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
@@ -454,299 +457,578 @@ EOF
         echoContent green "已为 ${FIRST_DOMAIN} 设置每3个月自动续订"
     fi
 }
+
+url_encode() {
+    local input="$1"
+    if ! command -v jq &> /dev/null; then
+        echo "Error: jq is not installed" >&2
+        return 1
+    fi
+    local encoded
+    encoded=$(printf '%s' "$input" | jq -nr --arg v "$input" '$v | @uri' | sed 's/%23/#/' 2>/dev/null) || {
+        echo "Error: URL encoding failed" >&2
+        return 1
+    }
+    printf '%s' "$encoded"
+}
 xray_config(){
-    echoContent skyblue "\nxray配置文件修改"
+        echoContent skyblue "\nxray配置文件修改"
    
-# 检查 jq 和 xray 是否已安装
-if ! command -v jq &> /dev/null; then
-    echoContent red "jp 没有安装，请先安装jp"
-    
-    exit 1
-fi
+        # 检查 jq 和 xray 是否已安装
+        if ! command -v jq &> /dev/null; then
+            echoContent red "jq 没有安装，请先安装jq" 
+            exit 1
+        fi
 
-if ! command -v xray &> /dev/null; then
-    echoContent red "xray 没有安装或者没有进行软链接，请先安装xray或者使用 ln -sf /usr/local/nsx/xray/xray /usr/bin/xray生产软连接"
-   
-    exit 1
-fi
+        if ! command -v xray &> /dev/null; then
+            echoContent red "xray 没有安装或者没有进行软链接，请先安装xray或者使用 ln -sf /usr/local/nsx/xray/xray /usr/bin/xray生产软连接" 
+            exit 1
+        fi
 
-# JSON 文件路径
+        # JSON 文件路径
 
-TEMP_FILE="/tmp/xray_config_temp.json"
-echoContent green "临时文件位置$TEMP_FILE"
-# 检查 config.json 是否存在
-if [[ ! -f "$XRAY_CONF" ]]; then
-    echoContent red "$XRAY_CON 不存在"
-    exit 1
-fi
+        TEMP_FILE="/tmp/xray_config_temp.json"
+        echoContent green "临时文件位置$TEMP_FILE"
+        # 检查 config.json 是否存在
+        if [[ ! -f "$XRAY_CONF" ]]; then
+            echoContent red "$XRAY_CONF 不存在"
+            exit 1
+        fi
+        # Create subscription directory if not exists
+        if [ ! -d "$SUBSCRIBE_DIR" ]; then
+                mkdir -p "$SUBSCRIBE_DIR"
+                chown nobody:nogroup "$SUBSCRIBE_DIR"
+                chmod 755 "$SUBSCRIBE_DIR"
+        fi
 
-# 获取用户输入的域名
-echoContent skyblue "请手动输入域名\n"
-read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
-if [[ -z "$YOURDOMAIN" ]]; then
-    echoContent red "Error: 域名不能为空."
-    exit 1
-fi
+        # Generate Xray subscription
+        if [ -f "$XRAY_CONF" ]; then
+                echoContent yellow "生成 Xray 订阅..."
+                XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
+                > "$XRAY_SUB_FILE"
+        fi
+        # 获取用户输入的域名
+        echoContent skyblue "请手动输入域名\n"
+        read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
+        if [[ -z "$YOURDOMAIN" ]]; then
+            echoContent red "Error: 域名不能为空."
+            exit 1
+        fi
 
-# 备份原始文件
-cp "$XRAY_CONF" "${XRAY_CONF}.bak"
-echoContent green "创建备份: ${XRAY_CONF}.bak"
+        # 备份原始文件
+        cp "$XRAY_CONF" "${XRAY_CONF}.bak" || {
+        echoContent red "Error: Failed to create backup ${XRAY_CONF}.bak"
+        exit 1
+        }
+        echoContent green "创建备份: ${XRAY_CONF}.bak"
 
-generate_short_ids() {
-    short_id1=$(openssl rand -hex 4)  # 8 字节
-    short_id2=$(openssl rand -hex 8)  # 16 字节
-    echo "[\"$short_id1\", \"$short_id2\"]"
-}
+       generate_short_ids() {
+            short_id1=$(openssl rand -hex 4)  # 8 字节
+            short_id2=$(openssl rand -hex 8)  # 16 字节
+            echo "[\"$short_id1\", \"$short_id2\"]"
+        }
+
+        echoContent green "\n创建一个临时 JSON 文件$TEMP_FILE，复制原始内容$XRAY_CONF"
+        cp "$XRAY_CONF" "$TEMP_FILE" || {
+        echoContent red "Error: Failed to create temporary file $TEMP_FILE"
+        exit 1
+        }
+        # 替换 yourdomain 为用户输入的域名
+        jq --arg domain "$YOURDOMAIN" \
+        'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
+        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+        echoContent red "Error: Failed to update domain."
+        exit 1
+        }
 
 
 
-echoContent green  "提取所有 inbounds\n"
-# 提取所有 inbounds
-inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF")
-#echoContent green "$inbounds"
-echoContent green "\n创建一个临时 JSON 文件$TEMP_FILE，复制原始内容$XRAY_CONF"
-cp "$XRAY_CONF" "$TEMP_FILE"
+        echoContent green  "提取所有 inbounds\n"
+        # 提取所有 inbounds
+        inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE")
+        #echoContent green "$inbounds"
 
-# 遍历每个 inbound
-echo "$inbounds" | while IFS= read -r inbound; do
-    tag=$(echo "$inbound" | jq -r '.tag')
-    protocol=$(echo "$inbound" | jq -r '.protocol')
-    echoContent skyblue "\n处理 inbound tag: $tag, protocol: $protocol"
 
-    # 处理 vless 和 vmess 的 id 替换
-    if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
-        echoContent green "\n处理 vless 和 vmess 的 id 替换,用 xray uuid 生成新的uuid替换"
-        clients=$(echo "$inbound" | jq -c '.settings.clients[]')
-        client_index=0
-        echo "$clients" | while IFS= read -r client; do
-            old_id=$(echo "$client" | jq -r '.id')
+        # 遍历每个 inbound
+        jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
+            declare -g url=""
+            tag=$(echo "$inbound" | jq -r '.tag')
+            protocol=$(echo "$inbound" | jq -r '.protocol')
+            port=$(echo "$inbound" | jq -r '.port')
+            if [[ "$port" == "null" || -z "$port" ]]; then
+            port="443"
+            fi
+            echoContent skyblue "\n处理 inbound tag: $tag, protocol: $protocol"
+            network=$(echo "$inbound" | jq -r '.streamSettings.network // "tcp"')
+            url="$url?type=$network"
+            case "$network" in
+                        "grpc") 
+                        serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName') 
+                        serviceName=$(url_encode "$serviceName")
+                        url="$url&serviceName=$serviceName"
+                        ;;
+                        "ws") 
+                        path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path') 
+                        path=$(url_encode "$path")
+                        url="$url&path=$path"
+                        ;;
+                        "xhttp") 
+                        xhttpSettings=$(echo "$inbound" | jq -r '.streamSettings.xhttpSettings')
+                        host=$(echo "$xhttpSettings" | jq -r '.host')
+                        path=$(echo "$xhttpSettings" | jq -r '.path')
+                        host=$(url_encode "$host")
+                        path=$(url_encode "$path")
+                        url="$url&host=$host&path=$path"
+                        ;;
+                        "splithttp") 
+                        path=$(echo "$inbound" | jq -r '.streamSettings.splithttpSettings.path')
+                        path=$(url_encode "$path")
+                        url="$url&path=$path"
+                        ;;
+                        "httpupgrade")
+                        path=$(echo "$inbound" | jq -r '.streamSettings.httpupgradeSettings.path') 
+                        path=$(url_encode "$path")
+                        url="$url&path=$path"
+                        ;;
+                        "kcp")
+                        seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed')
+                        seed=$(url_encode "$seed")
+                        url="$url&seed=$seed"
+                        ;;
+                        *) 
+                        ;;
+            esac
+            # 检查 streamSettings.security 是否为 reality
+            security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
+            if [[ "$security" == "reality" ]]; then
+                echoContent green "\n检查 streamSettings:  reality security for $tag, updating keys and settings..."
 
-            new_id=$(xray uuid)
-            echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id"
+                # 生成公私密钥对
+                echoContent green "\n用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
+                key_pair=$(xray x25519)
+                private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
+                public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
+                new_short_ids=$(generate_short_ids)
+                new_mldsa65_key_pair=$(xray mldsa65) || {
+                    echoContent red "Error: Failed to generate mldsa65 key pair."
+                    exit 1
+                    }
+                mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
+                mldsa65_verify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
 
-            # 更新 id
-            jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
-               '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.id == $old_id)).id = $new_id' \
-               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-            ((client_index++))
+                echoContent yellow "\nGenerated new privateKey: $private_key"
+                echoContent yellow "\nGenerated new publicKey: $public_key"
+                echoContent yellow "\nGenerated new shortIds: $new_short_ids"
+                echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_seed"
+                echoContent yellow "\nGenerated new mldsa65Verify: $mldsa65_verify"
+
+                # 更新 privateKey, publicKey, shortIds, mldsa65Seed
+                jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed"  --arg mldsa65_verify "$mldsa65_verify" \
+                '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
+                    (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids | .mldsa65Seed = $mldsa65_seed | .mldsa65Verify = $mldsa65_verify)' \
+                "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "Error: Failed to update reality settings."
+                    exit 1
+                    }
+                short_id=$(echo "$new_short_ids" | jq -r '.[0]') # 取第一个 short_id
+                url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id&pqv=$mldsa65_verify#$tag"
+            
+            elif [[ "$security" == "tls" ]]; then
+                        tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
+                        fp=$(echo "$tlsSettings" | jq -r '.fingerprint // "chrome"')
+                        sni=$(echo "$tlsSettings" | jq -r '.serverName // "$YOURDOMAIN"')
+                        alpn=$(echo "$inbound" | jq -r '.tls.alpn // "h2,http/1.1"')
+
+                        # 如果 alpn 是数组，则将其转换为逗号分隔的字符串
+                        if [[ "$alpn" == \[*\] ]]; then
+                            alpn=$(echo "$alpn" | jq -r 'join(",")')
+                        fi
+                      
+                        url="$url&security=tls&fp=$fp&sni=$YOURDOMAIN&alpn=$alpn#$tag"
+            else
+                url="$url#$tag"
+            
+            fi
+
+            # 处理 vless 和 vmess 的 id 替换
+            if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
+                echoContent green "\n处理 vless 和 vmess 的 id 替换,用 xray uuid 生成新的uuid替换"
+                clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+                client_index=0
+                echo "$clients" | while IFS= read -r client; do
+                    old_id=$(echo "$client" | jq -r '.id')
+                    new_id=$(xray uuid) || {
+                    echoContent red "Error: Failed to generate UUID."
+                    exit 1
+                    }
+                url="$protocol://$new_id@$YOURDOMAIN:$port$url"
+                echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id \n"
+                # 更新 id
+                jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
+                '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.id == $old_id)).id = $new_id' \
+                "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                        echoContent red "Error: Failed to update UUID."
+                        exit 1
+                        }
+                echo "$url" >> "$XRAY_SUB_FILE"
+                echoContent skyblue "\n生成 $protocol 订阅链接: $url" 
+                qrencode -t ANSIUTF8 "$url"
+                qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url"
+                
+                ((client_index++))
+                done
+                
+            fi
+
+            # 处理 trojan 和 shadowsocks 的 password 替换
+            if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
+                echoContent green "\n处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
+                clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+                client_index=0
+                echo "$clients" | while IFS= read -r client; do
+                    old_password=$(echo "$client" | jq -r '.password')
+                    new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
+                    url="$protocol://$new_password@$YOURDOMAIN:$port$url"
+                    echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password \n"
+
+                    # 更新 password
+                    jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
+                    '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.password == $old_password)).password = $new_password' \
+                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                        echoContent red "Error: Failed to update password."
+                        exit 1
+                        }
+                    echo "$url" >> "$XRAY_SUB_FILE"
+                    echoContent skyblue "\n生成 $protocol 订阅链接: $url" 
+                    qrencode -t ANSIUTF8 "$url"
+                    qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url"
+                 
+                    ((client_index++))        
+                done
+            fi
+           
+           
+        
+            # 在构造 URL 时使用：
+           
+           
+
         done
-    fi
 
-    # 处理 trojan 和 shadowsocks 的 password 替换
-    if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
-        echoContent green "\n处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
-        clients=$(echo "$inbound" | jq -c '.settings.clients[]')
-        client_index=0
-        echo "$clients" | while IFS= read -r client; do
-            old_password=$(echo "$client" | jq -r '.password')
-            new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-            echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password"
+        # 替换原始文件
+            mv "$TEMP_FILE" "$XRAY_CONF" || {
+                echoContent red "Error: Failed to replace $XRAY_CONF"
+                exit 1
+                }
+        echoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名$YOURDOMAIN."
 
-            # 更新 password
-            jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
-               '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.password == $old_password)).password = $new_password' \
-               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-            ((client_index++))
-        done
-    fi
-
-    # 检查 streamSettings.security 是否为 reality
-    security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
-    if [[ "$security" == "reality" ]]; then
-        echoContent green "\n检查 streamSettings:  reality security for $tag, updating keys and settings..."
-
-        # 生成公私密钥对
-        echoContent green "\n用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds\n用xray mldsa65生成mldsa65 seed和verfify"
-        key_pair=$(xray x25519)
-        private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
-        public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
-        new_short_ids=$(generate_short_ids)
-        new_mldsa65_key_pair=$(xray mldsa65)
-        mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
-        mldsa65_verfify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
-
-        echoContent yellow "\nGenerated new privateKey: $private_key"
-        echoContent yellow "\nGenerated new publicKey: $public_key"
-        echoContent yellow "\nGenerated new shortIds: $new_short_ids"
-        echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_seed"
-        echoContent yellow "\nGenerated new mldsa65Verfify: $mldsa65_verfify"
-
-        # 更新 privateKey, publicKey, shortIds, mldsa65Seed
-        jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed"  --arg mldsa65_verfify "$mldsa65_verfify" \
-           '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
-            (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids | .mldsa65Seed = $mldsa65_seed | .mldsa65Verify = $mldsa65_verfify)' \
-           "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-    fi
-done
-
-# 替换 yourdomain 为用户输入的域名
-jq --arg domain "$YOURDOMAIN" \
-   'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
-   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-
-# 替换原始文件
-mv "$TEMP_FILE" "$XRAY_CONF"
-echoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名$YOURDOMAIN."
-
-# 验证 JSON 文件是否有效
-if jq empty "$XRAY_CONF" &> /dev/null; then
-    echoContent skyblue "JSON 有效.可以进行服务重启了。"
-else
-    echoContent red "Error: 更新 JSON file 无效. 恢复备份."
-    mv "${XRAY_CONF}.bak" "$XRAY_CONF"
-    exit 1
-fi
-
+        # 验证 JSON 文件是否有效
+        if jq empty "$XRAY_CONF" &> /dev/null; then
+            echoContent skyblue "JSON 有效.可以进行服务重启了。"
+        
+        else
+            echoContent red "Error: 更新 JSON file 无效. 恢复备份."
+            mv "${XRAY_CONF}.bak" "$XRAY_CONF"
+            exit 1
+        fi
 }
-singbox_config(){
+singbox_config() {
     echoContent skyblue "\nsingbox配置文件修改"
-  #!/bin/bash
 
-# 检查 jq 和 sing-box 是否已安装
-if ! command -v jq &> /dev/null; then
-    echoContent red "Error: jq 没有安装. 请先安装."
-    exit 1
-fi
+    # 定义默认变量
+    TEMP_FILE="/tmp/singbox_config_temp.json"
 
-if ! command -v sing-box &> /dev/null; then
-    echoContent red "Error: sing-box 没有安装. 请先安装."
-    exit 1
-fi
+    # 清理临时文件
+    trap 'rm -f "$TEMP_FILE" "${TEMP_FILE}.tmp" 2>/dev/null' EXIT
 
+    # 检查变量
+    if [[ -z "$SINGBOX_CONF" || -z "$SUBSCRIBE_DIR" ]]; then
+        echoContent red "Error: SINGBOX_CONF or SUBSCRIBE_DIR is not set."
+        exit 1
+    fi
 
-TEMP_FILE="config_temp.json"
+    # 检查文件权限
+    if [[ ! -r "$SINGBOX_CONF" || ! -w "$SINGBOX_CONF" ]]; then
+        echoContent red "Error: $SINGBOX_CONF is not readable or writable."
+        exit 1
+    fi
 
-# 检查 config.json 是否存在
-if [[ ! -f "$SINGBOX_CONF" ]]; then
-    echoContent red "Error: $SINGBOX_CONF不存在"
-    exit 1
-fi
+    # 检查 jq 和 sing-box
+    if ! command -v jq &> /dev/null; then
+        echoContent red "Error: jq 没有安装. 请先安装."
+        exit 1
+    fi
+    if ! command -v sing-box &> /dev/null; then
+        echoContent red "Error: sing-box 没有安装. 请先安装."
+        exit 1
+    fi
 
-# 获取用户输入的域名
-echoContent skyblue "请手动输入域名\n"
-read -p "Please enter the domain to replace 'yourdomain' (e.g., example.com): " SINGGOBXDOMAIN
-if [[ -z "$SINGGOBXDOMAIN" ]]; then
-    echoContent red "Error: Domain cannot be empty."
-    exit 1
-fi
+    # 检查 qrencode 依赖（用于生成二维码）
+    if ! command -v qrencode &> /dev/null; then
+        echoContent yellow "Warning: qrencode is not installed, skipping QR code generation."
+        QRENCODE_AVAILABLE=false
+    else
+        QRENCODE_AVAILABLE=true
+    fi
 
-# 备份原始文件
-cp "$SINGBOX_CONF" "${SINGBOX_CONF}.bak"
-echoContent green "Backup created: ${SINGBOX_CONF}.bak"
+    # 检查 config.json
+    if [[ ! -f "$SINGBOX_CONF" ]]; then
+        echoContent red "Error: $SINGBOX_CONF不存在"
+        exit 1
+    fi
 
-# 生成随机的 short_id（16 字节的十六进制字符串）
-generate_short_ids() {
+    # 创建订阅目录
+    if [ ! -d "$SUBSCRIBE_DIR" ]; then
+        mkdir -p "$SUBSCRIBE_DIR" || {
+            echoContent red "Error: Failed to create directory $SUBSCRIBE_DIR"
+            exit 1
+        }
+        chown nobody:nogroup "$SUBSCRIBE_DIR"
+        chmod 755 "$SUBSCRIBE_DIR"
+    fi
+
+    # 生成订阅文件
+    echoContent yellow "生成 Sing-box 订阅..."
+    SINGBOX_SUB_FILE="${SUBSCRIBE_DIR}/singbox_sub.txt"
+    > "$SINGBOX_SUB_FILE"
+
+    # 获取用户输入的域名
+    echoContent skyblue "请手动输入域名\n"
+    read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " SINGBOXDOMAIN
+    if [[ -z "$SINGBOXDOMAIN" ]]; then
+        echoContent red "Error: Domain cannot be empty."
+        exit 1
+    fi
+
+    # 备份原始文件
+    cp "$SINGBOX_CONF" "${SINGBOX_CONF}.bak" || {
+        echoContent red "Error: Failed to create backup ${SINGBOX_CONF}.bak"
+        exit 1
+    }
+    echoContent green "Backup created: ${SINGBOX_CONF}.bak"
+
+   generate_short_ids() {
     short_id=$(openssl rand -hex 8)  # 16 字节
     echo "[\"\", \"$short_id\"]"
 }
 
-# 提取所有 inbounds
-echoContent skyblue "\n提取所有 inbounds里的users\n"
-inbounds=$(jq -c '.inbounds[] | select(.users)' "$SINGBOX_CONF")
-#echoContent green "\n$inbounds"
-# 创建一个临时 JSON 文件，复制原始内容
-cp "$SINGBOX_CONF" "$TEMP_FILE"
+    # 创建临时 JSON 文件
+    cp "$SINGBOX_CONF" "$TEMP_FILE" || {
+        echoContent red "Error: Failed to create temporary file $TEMP_FILE"
+        exit 1
+    }
 
-# 遍历每个 inbound
-echo "$inbounds" | while IFS= read -r inbound; do
-    tag=$(echo "$inbound" | jq -r '.tag')
-    type=$(echo "$inbound" | jq -r '.type')
-    echoContent skyblue "\nProcessing inbound with tag: $tag, type: $type"
+    # 替换 yourdomain 为用户输入的域名
+    jq --arg domain "$SINGBOXDOMAIN" \
+       'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
+       "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+        echoContent red "Error: Failed to update domain."
+        exit 1
+    }
 
-    # 处理 vmess、vless 和 tuic 的 uuid 替换
-    if [[ "$type" == "vmess" || "$type" == "vless" || "$type" == "tuic" ]]; then
-        echoContent green "\n处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
-        users=$(echo "$inbound" | jq -c '.users[]')
-        user_index=0
-        echo "$users" | while IFS= read -r user; do
-            old_uuid=$(echo "$user" | jq -r '.uuid')
-            new_uuid=$(sing-box generate uuid)
-            echoContent yellow "\nReplacing UUID for user $user_index in $tag: $old_uuid -> $new_uuid"
+    # 提取所有 inbounds
+    echoContent skyblue "\n提取所有 inbounds里的users\n"
+    jq -c '.inbounds[] | select(.users)' "$TEMP_FILE" | while IFS= read -r inbound; do
+        # 初始化 URL
+        url=""
 
-            # 更新 uuid
-            jq --arg tag "$tag" --arg old_uuid "$old_uuid" --arg new_uuid "$new_uuid" \
-               '(.inbounds[] | select(.tag == $tag) | .users[] | select(.uuid == $old_uuid)).uuid = $new_uuid' \
-               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-            ((user_index++))
-        done
-    fi
+        tag=$(echo "$inbound" | jq -r '.tag')
+        type=$(echo "$inbound" | jq -r '.type')
+        port=$(echo "$inbound" | jq -r '.listen_port // "443"')
+        echoContent skyblue "\nProcessing inbound with tag: $tag, type: $type, port: $port"
+         # 添加传输协议参数
+        transport=$(echo "$inbound" | jq -r '.transport.type // "tcp"')
+        url="?type=$transport"
+        case "$transport" in
+            "grpc")
+                serviceName=$(echo "$inbound" | jq -r '.transport.service_name // empty')
+                if [[ -n "$serviceName" ]]; then
+                    serviceName=$(url_encode "$serviceName")
+                    url="$url&serviceName=$serviceName"
+                fi
+                ;;
+            "ws")
+                path=$(echo "$inbound" | jq -r '.transport.path // empty')
+                if [[ -n "$path" ]]; then
+                    path=$(url_encode "$path")
+                    url="$url&path=$path"
+                fi
+                ;;
+            "http")
+                path=$(echo "$inbound" | jq -r '.transport.path // empty')
+                host=$(echo "$inbound" | jq -r '.transport.header.host // empty')
+                if [[ -n "$path" ]]; then
+                    path=$(url_encode "$path")
+                    url="$url&path=$path"
+                fi
+                if [[ -n "$host" ]]; then
+                    host=$(url_encode "$host")
+                    url="$url&host=$host"
+                fi
+                ;;
+            "httpupgrade")
+                path=$(echo "$inbound" | jq -r '.transport.path // empty')
+                if [[ -n "$path" ]]; then
+                    path=$(url_encode "$path")
+                    url="$url&path=$path"
+                fi
+                ;;
+            *)
+                ;;
+        esac
 
-    # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
-    if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" || "$type" == "naive" ]]; then
-        echoContent green "\n处理 trojan、shadowsocks、shadowtls、naive 和 hysteria2 的 password 替换,用openssl rand -base64 16生成密码\n"
-        users=$(echo "$inbound" | jq -c '.users[]')
-        user_index=0
-        echo "$users" | while IFS= read -r user; do
-            old_password=$(echo "$user" | jq -r '.password')
-            # 为 shadowsocks 和 shadowtls 生成 2022-blake3-aes-128-gcm 兼容的 16 字节密码
-            if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
-                new_password=$(openssl rand -base64 16)
+        # 检查 TLS 设置
+        tls_enabled=$(echo "$inbound" | jq -r '.tls.enabled // false')
+        if [[ "$tls_enabled" == "true" ]]; then
+            reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
+            if [[ "$reality_enabled" == "true" ]]; then
+                echoContent green "\nDetected reality TLS for $tag, updating keys and settings..."
+                key_pair=$(sing-box generate reality-keypair) || {
+                    echoContent red "Error: Failed to generate reality key pair."
+                    exit 1
+                }
+                private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
+                public_key=$(echo "$key_pair" | grep "PublicKey" | awk '{print $2}')
+                new_short_ids=$(generate_short_ids)
+                short_id=$(echo "$new_short_ids" | jq -r '.[1]') # 取第二个 short_id
+
+                echoContent yellow "\nGenerated new private_key: $private_key"
+                echoContent yellow "\nGenerated new public_key: $public_key"
+                echoContent yellow "\nGenerated new short_id: $new_short_ids"
+
+                # 更新 private_key, short_id
+                jq --arg tag "$tag" --arg private_key "$private_key" --argjson short_ids "$new_short_ids" \
+                   '(.inbounds[] | select(.tag == $tag) | .tls.reality) |=
+                    (.private_key = $private_key | .short_id = $short_ids)' \
+                   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "Error: Failed to update reality settings."
+                    exit 1
+                }
+
+                url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$SINGBOXDOMAIN&sid=$short_id#$tag"
             else
-                new_password=$(sing-box generate uuid)  # trojan 和 hysteria2 使用 UUID 格式密码
+                fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
+                sni=$(echo "$inbound" | jq -r '.tls.server_name // "'"$SINGBOXDOMAIN"'"')
+                alpn=$(echo "$inbound" | jq -r '.tls.alpn // "http/1.1"')
+
+                # 如果 alpn 是数组，则将其转换为逗号分隔的字符串
+                if [[ "$alpn" == \[*\] ]]; then
+                    alpn=$(echo "$alpn" | jq -r 'join(",")')
+                fi
+                url="$url&security=tls&fp=$fp&sni=$sni&alpn=$alpn#$tag"
             fi
-            echoContent yellow "\nReplacing password for user $user_index in $tag: $old_password -> $new_password"
+        else
+            url="$url#$tag"
+        fi
 
-            # 更新 password
-            jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
-               '(.inbounds[] | select(.tag == $tag) | .users[] | select(.password == $old_password)).password = $new_password' \
-               "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-            ((user_index++))
-        done
+     
+        # 处理 vmess、vless 和 tuic 的 uuid 替换
+        if [[ "$type" == "vmess" || "$type" == "vless" || "$type" == "tuic" ]]; then
+            echoContent green "\n处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
+            user_index=0
+            echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
+                old_uuid=$(echo "$user" | jq -r '.uuid')
+                new_uuid=$(sing-box generate uuid) || {
+                    echoContent red "Error: Failed to generate UUID."
+                    exit 1
+                }
+                echoContent yellow "\nReplacing UUID for user $user_index in $tag: $old_uuid -> $new_uuid"
 
-        # 如果是 shadowsocks 或 shadowtls，更新顶层的 password 字段（如果存在）
-        if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
-            echoContent green "\n shadowsocks 或 shadowtls，更新顶层的 password 字段"
-            top_password=$(echo "$inbound" | jq -r '.password // empty')
-            if [[ -n "$top_password" ]]; then
-                new_top_password=$(openssl rand -base64 16)
-                echoContent yellow "Replacing top-level password in $tag: $top_password -> $new_top_password"
-                jq --arg tag "$tag" --arg new_password "$new_top_password" \
-                   '(.inbounds[] | select(.tag == $tag)).password = $new_password' \
-                   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
+                # 更新 uuid
+                jq --arg tag "$tag" --arg old_uuid "$old_uuid" --arg new_uuid "$new_uuid" \
+                   '(.inbounds[] | select(.tag == $tag) | .users[] | select(.uuid == $old_uuid)).uuid = $new_uuid' \
+                   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "Error: Failed to update UUID."
+                    exit 1
+                }
+
+                # 构造 URL
+                url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url"
+                echo "$url" >> "$SINGBOX_SUB_FILE"
+                echoContent skyblue "\n生成 $type 订阅链接: $url"
+                qrencode -t ANSIUTF8 "$url" 2>/dev/null
+                qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null || {
+                echoContent red "生成二维码失败: $url"
+                }
+                ((user_index++))
+            done
+        fi
+
+        # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
+        if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" || "$type" == "naive" ]]; then
+            echoContent green "\n处理 trojan、shadowsocks、shadowtls、naive 和 hysteria2 的 password 替换\n"
+            user_index=0
+            echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
+                old_password=$(echo "$user" | jq -r '.password')
+                if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
+                    new_password=$(openssl rand -base64 16)
+                else
+                    new_password=$(sing-box generate uuid)
+                fi
+                echoContent yellow "\nReplacing password for user $user_index in $tag: $old_password -> $new_password"
+
+                # 更新 password
+                jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
+                   '(.inbounds[] | select(.tag == $tag) | .users[] | select(.password == $old_password)).password = $new_password' \
+                   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "Error: Failed to update password."
+                    exit 1
+                }
+
+                # 构造 URL
+                url="$type://$new_password@$SINGBOXDOMAIN:$port$url"
+                  echo "$url" >> "$SINGBOX_SUB_FILE"
+                 echoContent skyblue "\n生成 $type 订阅链接: $url"
+                 qrencode -t ANSIUTF8 "$url" 2>/dev/null
+                qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null || {
+                    echoContent red "生成二维码失败: $url"
+                }
+                ((user_index++))
+            done
+
+            # 更新 shadowsocks 或 shadowtls 的顶层 password
+            if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
+                echoContent green "\n shadowsocks 或 shadowtls，更新顶层的 password 字段"
+                top_password=$(echo "$inbound" | jq -r '.password // empty')
+                if [[ -n "$top_password" ]]; then
+                    new_top_password=$(openssl rand -base64 16)
+                    echoContent yellow "Replacing top-level password in $tag: $top_password -> $new_top_password"
+                    jq --arg tag "$tag" --arg new_password "$new_top_password" \
+                       '(.inbounds[] | select(.tag == $tag)).password = $new_password' \
+                       "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                        echoContent red "Error: Failed to update top-level password."
+                        exit 1
+                    }
+                fi
             fi
         fi
+
+       
+        
+           
+          
+      \
+    done
+
+    # 替换原始文件
+    mv "$TEMP_FILE" "$SINGBOX_CONF" || {
+        echoContent red "Error: Failed to replace $SINGBOX_CONF"
+        exit 1
+    }
+    echoContent skyblue "Updated $SINGBOX_CONF with new UUIDs, passwords, reality settings, and domain as $SINGBOXDOMAIN."
+
+    # 验证 JSON 文件是否有效
+    if jq empty "$SINGBOX_CONF" &> /dev/null; then
+        echoContent skyblue "JSON file is valid. Restarting sing-box service..."
+        systemctl restart sing-box || {
+            echoContent red "Error: Failed to restart sing-box service."
+            exit 1
+        }
+    else
+        echoContent red "Error: Updated JSON file is invalid. Restoring backup."
+        mv "${SINGBOX_CONF}.bak" "$SINGBOX_CONF"
+        exit 1
     fi
-
-    # 检查 tls.reality.enabled 是否为 true
-    reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
-    if [[ "$reality_enabled" == "true" ]]; then
-         echoContent green "\nDetected reality TLS for $tag, updating keys and settings...,using sing-box generate reality-keypair"
-
-        # 生成公私密钥对
-        key_pair=$(sing-box generate reality-keypair)
-        private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
-        public_key=$(echo "$key_pair" | grep "PublicKey" | awk '{print $2}')
-        new_short_ids=$(generate_short_ids)
-
-        echoContent yellow "\nGenerated new private_key: $private_key"
-        echoContent yellow "\nGenerated new public_key: $public_key"
-        echoContent yellow "\nGenerated new short_id: $new_short_ids"
-
-        # 更新 private_key, public_key, short_id
-        jq --arg tag "$tag" --arg private_key "$private_key"  --argjson short_ids "$new_short_ids" \
-           '(.inbounds[] | select(.tag == $tag) | .tls.reality) |=
-            (.private_key = $private_key  | .short_id = $short_ids)' \
-           "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-    fi
-done
-
-# 替换 yourdomain 为用户输入的域名
-jq --arg domain "$SINGGOBXDOMAIN" \
-   'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
-   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE"
-
-# 替换原始文件
-mv "$TEMP_FILE" "$SINGBOX_CONF"
-echoContent skyblue "Updated $SINGBOX_CONF with new UUIDs, passwords, reality settings, and domain as $SINGGOBXDOMAIN ."
-
-# 验证 JSON 文件是否有效
-if jq empty "$SINGBOX_CONF" &> /dev/null; then
-    echoContent skyblue "JSON file is valid."
-else
-    echoContent red "Error: Updated JSON file is invalid. Restoring backup."
-    mv "${SINGBOX_CONF}.bak" "$SINGBOX_CONF"
-    exit 1
-fi
 }
 configNginx() {
     echoContent green "nginx.conf 采用stream模块分流\n 包括tls,reality,pre,sing等前缀域名进行分流 ."
@@ -775,7 +1057,7 @@ configNginx() {
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
             echoContent skyblue "nginx.conf 更新成功."        
-    }
+}
 # Manage configurations
 manageConfigurations() {
     echoContent skyblue "\n配置管理菜单"
@@ -835,20 +1117,44 @@ manageConfigurations() {
             ;;
     esac
 }
-# Generate subscriptions
 generateSubscriptions() {
     echoContent skyblue "\n生成订阅..."
+
+
+
+    # 检查变量
+    if [[ -z "$XRAY_CONF" || -z "$SINGBOX_CONF" || -z "$SUBSCRIBE_DIR" || -z "$COMPOSE_FILE" ]]; then
+        echoContent red "Error: XRAY_CONF, SINGBOX_CONF, SUBSCRIBE_DIR, or COMPOSE_FILE is not set."
+        return 1
+    fi
+
+    # 检查依赖
+    if ! command -v jq &> /dev/null; then
+        echoContent red "Error: jq is not installed."
+        return 1
+    fi
+    if ! command -v qrencode &> /dev/null; then
+        echoContent yellow "Warning: qrencode is not installed, skipping QR code generation."
+        QRENCODE_AVAILABLE=false
+    else
+        QRENCODE_AVAILABLE=true
+    fi
+
+    # 创建订阅目录
+    if [ ! -d "$SUBSCRIBE_DIR" ]; then
+        mkdir -p "$SUBSCRIBE_DIR" || {
+            echoContent red "Error: Failed to create directory $SUBSCRIBE_DIR"
+            return 1
+        }
+        chown nobody:nogroup "$SUBSCRIBE_DIR"
+        chmod 755 "$SUBSCRIBE_DIR"
+    fi
+
+    # 获取用户输入的域名
     read -r -p "请输入订阅域名 (例如: sing.yourdomain): " SUB_DOMAIN
     if [[ -z "$SUB_DOMAIN" ]]; then
         echoContent red "域名不能为空."
         return 1
-    fi
-
-    # Create subscription directory if not exists
-    if [ ! -d "$SUBSCRIBE_DIR" ]; then
-        mkdir -p "$SUBSCRIBE_DIR"
-        chown nobody:nogroup "$SUBSCRIBE_DIR"
-        chmod 755 "$SUBSCRIBE_DIR"
     fi
 
     # Generate Xray subscription
@@ -857,81 +1163,138 @@ generateSubscriptions() {
         XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
         > "$XRAY_SUB_FILE"
 
-        # VLESS subscriptions
-        XRAY_VLESS=$(jq -r '.inbounds[] | select(.protocol=="vless") | .tag as $tag | .settings.clients[] | . as $client | .streamSettings // {network:"tcp",security:"none"} | "\($tag)#\(.id)#\(.email)#\(input_filename)#\(.streamSettings.network // "tcp")#\(.streamSettings.security // "none")#\(.streamSettings.realitySettings.shortIds[0] // "")#\(.streamSettings.grpcSettings.serviceName // "")#\(.streamSettings.wsSettings.path // "")#\(.streamSettings.splithttpSettings.path // "")#\(.streamSettings.httpupgradeSettings.path // "")#\(.streamSettings.kcpSettings.seed // "")"' "$XRAY_CONF")
-        while IFS='#' read -r tag uuid email filename network security short_id grpc_path ws_path splithttp_path httpupgrade_path kcp_seed; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .port // (.listen | split(":")[-1])' "$XRAY_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                port="443"
-            fi
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            params=""
+        # 提取所有 inbounds
+        jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF" | while IFS= read -r inbound; do
+            tag=$(echo "$inbound" | jq -r '.tag')
+            protocol=$(echo "$inbound" | jq -r '.protocol')
+            port=$(echo "$inbound" | jq -r '.port // "443"')
+            encryption=$(echo "$inbound" | jq -r '.settings.decryption // "none"')
+            network=$(echo "$inbound" | jq -r '.streamSettings.network // "tcp"')
+            security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
+
+            # 构造传输参数
+            params="type=$network"
             case "$network" in
-                "grpc") params="type=grpc&serviceName=${grpc_path}" ;;
-                "ws") params="type=ws&path=${ws_path}" ;;
-                "splithttp") params="type=http&path=${splithttp_path}" ;;
-                "httpupgrade") params="type=httpupgrade&path=${httpupgrade_path}" ;;
-                "kcp") params="type=kcp&seed=${kcp_seed}" ;;
-                *) params="type=tcp" ;;
+                "grpc")
+                    serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName // empty')
+                    if [[ -n "$serviceName" ]]; then
+                        serviceName=$(url_encode "$serviceName")
+                        params="$params&serviceName=$serviceName"
+                    fi
+                    ;;
+                "ws")
+                    path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path // empty')
+                    if [[ -n "$path" ]]; then
+                        path=$(url_encode "$path")
+                        params="$params&path=$path"
+                    fi
+                    ;;
+                "xhttp")
+                    xhttpSettings=$(echo "$inbound" | jq -r '.streamSettings.xhttpSettings')
+                    host=$(echo "$xhttpSettings" | jq -r '.host // empty')
+                    path=$(echo "$xhttpSettings" | jq -r '.path // empty')
+                    if [[ -n "$host" ]]; then
+                        host=$(url_encode "$host")
+                        params="$params&host=$host"
+                    fi
+                    if [[ -n "$path" ]]; then
+                        path=$(url_encode "$path")
+                        params="$params&path=$path"
+                    fi
+                    ;;
+                "splithttp")
+                    path=$(echo "$inbound" | jq -r '.streamSettings.splithttpSettings.path // empty')
+                    if [[ -n "$path" ]]; then
+                        path=$(url_encode "$path")
+                        params="$params&path=$path"
+                    fi
+                    ;;
+                "httpupgrade")
+                    path=$(echo "$inbound" | jq -r '.streamSettings.httpupgradeSettings.path // empty')
+                    if [[ -n "$path" ]]; then
+                        path=$(url_encode "$path")
+                        params="$params&path=$path"
+                    fi
+                    ;;
+                "kcp")
+                    seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed // empty')
+                    if [[ -n "$seed" ]]; then
+                        seed=$(url_encode "$seed")
+                        params="$params&seed=$seed"
+                    fi
+                    ;;
+                *)
+                    ;;
             esac
+
+            # 处理安全设置
             if [[ "$security" == "reality" ]]; then
-                params="${params}&security=reality&sid=${short_id}"
+                realitySettings=$(echo "$inbound" | jq -r '.streamSettings.realitySettings')
+                pbk=$(echo "$realitySettings" | jq -r '.password // empty')
+                sid=$(echo "$realitySettings" | jq -r '.shortIds[0] // empty')
+                pqv=$(echo "$realitySettings" | jq -r '.mldsa65Verify // empty')
+                params="$params&security=reality&pbk=$pbk&sid=$sid&pqv=$pqv&fp=chrome&sni=$SUB_DOMAIN"
             elif [[ "$security" == "tls" ]]; then
-                params="${params}&security=tls"
+                tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
+                fp=$(echo "$tlsSettings" | jq -r '.fingerprint // "chrome"')
+                sni=$(echo "$tlsSettings" | jq -r '.serverName // "'"$SUB_DOMAIN"'"')
+                alpn=$(echo "$tlsSettings" | jq -r '.alpn | join(",") // "http/1.1"')
+                params="$params&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
             fi
-            SUB_LINK="vless://${uuid}@${SUB_DOMAIN}:${port}?${params}#${email}"
-            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/vless_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Xray VLESS 订阅链接: $SUB_LINK"
-        done <<< "$XRAY_VLESS"
 
-        # VMess subscriptions
-        XRAY_VMESS=$(jq -r '.inbounds[] | select(.protocol=="vmess") | .tag as $tag | .settings.clients[] | . as $client | .streamSettings // {network:"tcp"} | "\($tag)#\(.id)#\(.email)#\(input_filename)#\(.streamSettings.network // "tcp")#\(.streamSettings.wsSettings.path // "")"' "$XRAY_CONF")
-        while IFS='#' read -r tag uuid email filename network ws_path; do
-            port="443"
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            vmess_json=$(jq -n --arg id "$uuid" --arg add "$SUB_DOMAIN" --arg port "$port" --arg ps "$email" --arg path "$ws_path" \
-                '{v:"2",ps:$ps,add:$add,port:$port,id:$id,aid:0,net:($ws_path != "" | if . then "ws" else "tcp" end),type:"none",tls:"tls",path:$path}')
-            SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)"
-            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/vmess_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Xray VMess 订阅链接: $SUB_LINK"
-        done <<< "$XRAY_VMESS"
+            # 处理 clients
+            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+            echo "$clients" | while IFS= read -r client; do
+                email=$(echo "$client" | jq -r '.email // "unknown"')
+                SUB_LINK=""
+                case "$protocol" in
+                    "vmess")
+                        id=$(echo "$client" | jq -r '.id')
+                        vmess_json=$(jq -n --arg id "$id" --arg add "$SUB_DOMAIN" --arg port "$port" --arg ps "$email" --arg enc "$encryption" \
+                            '{v:"2",ps:$ps,add:$add,port:$port,id:$id,aid:0,net:(.network // "tcp"),type:"none",tls:(.security // "none"),enc:$enc}')
+                        SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)?$params#$tag"
+                        ;;
+                    "vless")
+                        id=$(echo "$client" | jq -r '.id')
+                        flow=$(echo "$client" | jq -r '.flow // empty')
+                        if [[ -n "$flow" ]]; then
+                            params="$params&flow=$flow"
+                        fi
+                        SUB_LINK="vless://$id@$SUB_DOMAIN:$port?$params#$tag"
+                        ;;
+                    "trojan")
+                        password=$(echo "$client" | jq -r '.password')
+                        SUB_LINK="trojan://$password@$SUB_DOMAIN:$port?$params#$tag"
+                        ;;
+                    "shadowsocks")
+                        password=$(echo "$client" | jq -r '.password')
+                        method=$(echo "$inbound" | jq -r '.settings.method // "aes-256-gcm"')
+                        SUB_LINK="ss://$(echo -n "$method:$password" | base64 -w 0)@$SUB_DOMAIN:$port#$tag"
+                        ;;
+                    *)
+                        echoContent yellow "Unsupported protocol: $protocol for tag: $tag, skipping."
+                        continue
+                        ;;
+                esac
 
-        # Trojan subscriptions
-        XRAY_TROJAN=$(jq -r '.inbounds[] | select(.protocol=="trojan") | .tag as $tag | .settings.clients[] | "\($tag)#\(.password)#\(.email)#\(input_filename)"' "$XRAY_CONF")
-        while IFS='#' read -r tag password email filename; do
-            port=443
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            SUB_LINK="trojan://${password}@${SUB_DOMAIN}:${port}?security=tls#${email}"
-            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/trojan_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Xray Trojan 订阅链接: $SUB_LINK"
-        done <<< "$XRAY_TROJAN"
-
-        # Shadowsocks subscriptions
-        XRAY_SS=$(jq -r '.inbounds[] | select(.protocol=="shadowsocks") | .tag as $tag | .settings.clients[] | "\($tag)#\(.password)#\(.email)#\(input_filename)#\(.settings.method)"' "$XRAY_CONF")
-        while IFS='#' read -r tag password email filename method; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .port' "$XRAY_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            SUB_LINK="ss://$(echo -n "${method}:${password}" | base64 -w 0)@${SUB_DOMAIN}:${port}#${email}"
-            echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/ss_${email//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Xray Shadowsocks 订阅链接: $SUB_LINK"
-        done <<< "$XRAY_SS"
+                if [[ -n "$SUB_LINK" ]]; then
+                  
+                    echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
+                    echoContent green "\n生成 Xray $protocol 订阅链接: $SUB_LINK"
+                    if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
+                        qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
+                        qrencode -o "${SUBSCRIBE_DIR}/${protocol}_${email//[@\/]/_}_${tag//[@\/]/_}.png" "$SUB_LINK" 2>/dev/null || {
+                            echoContent red "生成二维码失败: $SUB_LINK"
+                        }
+                    fi
+                fi
+            done
+        done
 
         if [ -s "$XRAY_SUB_FILE" ]; then
             echo "$(cat "$XRAY_SUB_FILE" | base64 -w 0)" > "$XRAY_SUB_FILE"
-            chown nobody:nogroup "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png"
-            chmod 644 "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png"
+            chown nobody:nogroup "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
+            chmod 644 "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
             echoContent green "Xray 订阅已保存至 ${XRAY_SUB_FILE}，二维码已生成."
         else
             echoContent red "未生成任何 Xray 订阅链接."
@@ -946,114 +1309,160 @@ generateSubscriptions() {
         SINGBOX_SUB_FILE="${SUBSCRIBE_DIR}/singbox_sub.txt"
         > "$SINGBOX_SUB_FILE"
 
-        # VLESS subscriptions
-        SINGBOX_VLESS=$(jq -r '.inbounds[] | select(.type=="vless") | .tag as $tag | .users[] | . as $user | .tls // {enabled:false} | "\($tag)#\(.uuid)#\(.name)#\(input_filename)#\(.tls.enabled)#\(.tls.reality.enabled // false)#\(.tls.reality.short_id[0] // "")#\(.transport.type // "tcp")#\(.transport.service_name // "")#\(.transport.path // "")"' "$SINGBOX_CONF")
-        while IFS='#' read -r tag uuid name filename tls_enabled reality_enabled short_id transport service_name path; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            params=""
+        # 提取所有 inbounds
+        jq -c '.inbounds[] | select(.users)' "$SINGBOX_CONF" | while IFS= read -r inbound; do
+            tag=$(echo "$inbound" | jq -r '.tag')
+            type=$(echo "$inbound" | jq -r '.type')
+            port=$(echo "$inbound" | jq -r '.listen_port // "443"')
+            transport=$(echo "$inbound" | jq -r '.transport.type // "tcp"')
+            tls_enabled=$(echo "$inbound" | jq -r '.tls.enabled // false')
+
+            # 构造传输参数
+            params="type=$transport"
             case "$transport" in
-                "grpc") params="type=grpc&serviceName=${service_name}" ;;
-                "http") params="type=http&path=${path}" ;;
-                *) params="type=tcp" ;;
+                "grpc")
+                    serviceName=$(echo "$inbound" | jq -r '.transport.service_name // empty')
+                    if [[ -n "$serviceName" ]]; then
+                        serviceName=$(url_encode "$serviceName")
+                        params="$params&serviceName=$serviceName"
+                    fi
+                    ;;
+                "ws")
+                    path=$(echo "$inbound" | jq -r '.transport.path // empty')
+                    if [[ -n "$path" ]]; then
+                        path=$(url_encode "$path")
+                        params="$params&path=$path"
+                    fi
+                    ;;
+                "http")
+                    path=$(echo "$inbound" | jq -r '.transport.path // empty')
+                    host=$(echo "$inbound" | jq -r '.transport.header.host // empty')
+                    if [[ -n "$path" ]]; then
+                        path=$(url_encode "$path")
+                        params="$params&path=$path"
+                    fi
+                    if [[ -n "$host" ]]; then
+                        host=$(url_encode "$host")
+                        params="$params&host=$host"
+                    fi
+                    ;;
+                "httpupgrade")
+                    path=$(echo "$inbound" | jq -r '.transport.path // empty')
+                    if [[ -n "$path" ]]; then
+                        path=$(url_encode "$path")
+                        params="$params&path=$path"
+                    fi
+                    ;;
+                *)
+                    ;;
             esac
-            if [[ "$reality_enabled" == "true" ]]; then
-                params="${params}&security=reality&sid=${short_id}"
-            elif [[ "$tls_enabled" == "true" ]]; then
-                params="${params}&security=tls"
-            fi
-            SUB_LINK="vless://${uuid}@${SUB_DOMAIN}:${port}?${params}#${name}"
-            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/vless_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Sing-box VLESS 订阅链接: $SUB_LINK"
-        done <<< "$SINGBOX_VLESS"
 
-        # VMess subscriptions
-        SINGBOX_VMESS=$(jq -r '.inbounds[] | select(.type=="vmess") | .tag as $tag | .users[] | "\($tag)#\(.uuid)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
-        while IFS='#' read -r tag uuid name filename; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
+            # 处理 TLS 设置
+            if [[ "$tls_enabled" == "true" ]]; then
+                reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
+                if [[ "$reality_enabled" == "true" ]]; then
+                    short_id=$(echo "$inbound" | jq -r '.tls.reality.short_id[0] // empty')
+                    public_key=$(echo "$inbound" | jq -r '.tls.reality.public_key // empty')
+                    params="$params&security=reality&pbk=$public_key&sid=$short_id&fp=chrome&sni=$SUB_DOMAIN"
+                else
+                    fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
+                    sni=$(echo "$inbound" | jq -r '.tls.server_name // "'"$SUB_DOMAIN"'"')
+                    alpn=$(echo "$inbound" | jq -r '.tls.alpn | join(",") // "http/1.1"')
+                    params="$params&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
+                fi
             fi
-            vmess_json=$(jq -n --arg id "$uuid" --arg add "$SUB_DOMAIN" --arg port "$port" --arg ps "$name" \
-                '{v:"2",ps:$ps,add:$add,port:$port,id:$id,aid:0,net:"tcp",type:"none",tls:"none"}')
-            SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)"
-            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/vmess_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Sing-box VMess 订阅链接: $SUB_LINK"
-        done <<< "$SINGBOX_VMESS"
 
-        # Trojan subscriptions
-        SINGBOX_TROJAN=$(jq -r '.inbounds[] | select(.type=="trojan") | .tag as $tag | .users[] | "\($tag)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
-        while IFS='#' read -r tag password name filename; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            SUB_LINK="trojan://${password}@${SUB_DOMAIN}:${port}?security=tls#${name}"
-            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/trojan_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Sing-box Trojan 订阅链接: $SUB_LINK"
-        done <<< "$SINGBOX_TROJAN"
+            # 处理 users
+            users=$(echo "$inbound" | jq -c '.users[]')
+            echo "$users" | while IFS= read -r user; do
+                name=$(echo "$user" | jq -r '.name // "unknown"')
+                SUB_LINK=""
+                case "$type" in
+                    "vless")
+                        uuid=$(echo "$user" | jq -r '.uuid')
+                        if [[ -z "$uuid" || -z "$name" ]]; then
+                            echoContent red "跳过无效 VLESS 配置: UUID 或 name 为空 (tag: $tag)"
+                            continue
+                        fi
+                        SUB_LINK="vless://$uuid@$SUB_DOMAIN:$port?$params#$name"
+                        ;;
+                    "vmess")
+                        uuid=$(echo "$user" | jq -r '.uuid')
+                        if [[ -z "$uuid" || -z "$name" ]]; then
+                            echoContent red "跳过无效 VMess 配置: UUID 或 name 为空 (tag: $tag)"
+                            continue
+                        fi
+                        vmess_json=$(jq -n --arg id "$uuid" --arg add "$SUB_DOMAIN" --arg port "$port" --arg ps "$name" \
+                            '{v:"2",ps:$ps,add:$add,port:$port,id:$id,aid:0,net:"'$transport'",type:"none",tls:(.security // "none")}')
+                        SUB_LINK="vmess://$(echo -n "$vmess_json" | base64 -w 0)?$params#$name"
+                        ;;
+                    "trojan")
+                        password=$(echo "$user" | jq -r '.password')
+                        if [[ -z "$password" || -z "$name" ]]; then
+                            echoContent red "跳过无效 Trojan 配置: password 或 name 为空 (tag: $tag)"
+                            continue
+                        fi
+                        SUB_LINK="trojan://$password@$SUB_DOMAIN:$port?$params#$name"
+                        ;;
+                    "shadowsocks")
+                        password=$(echo "$user" | jq -r '.password')
+                        method=$(echo "$user" | jq -r '.method // "aes-256-gcm"')
+                        if [[ -z "$password" || -z "$name" ]]; then
+                            echoContent red "跳过无效 Shadowsocks 配置: password 或 name 为空 (tag: $tag)"
+                            continue
+                        fi
+                        SUB_LINK="ss://$(echo -n "$method:$password" | base64 -w 0)@$SUB_DOMAIN:$port#$name"
+                        ;;
+                    "hysteria2")
+                        password=$(echo "$user" | jq -r '.password')
+                        if [[ -z "$password" || -z "$name" ]]; then
+                            echoContent red "跳过无效 Hysteria2 配置: password 或 name 为空 (tag: $tag)"
+                            continue
+                        fi
+                        SUB_LINK="hysteria2://$password@$SUB_DOMAIN:$port?insecure=0&$params#$name"
+                        ;;
+                    "tuic")
+                        uuid=$(echo "$user" | jq -r '.uuid')
+                        password=$(echo "$user" | jq -r '.password')
+                        if [[ -z "$uuid" || -z "$password" || -z "$name" ]]; then
+                            echoContent red "跳过无效 TUIC 配置: UUID, password 或 name 为空 (tag: $tag)"
+                            continue
+                        fi
+                        SUB_LINK="tuic://$uuid:$password@$SUB_DOMAIN:$port?alpn=h3&congestion_control=bbr&$params#$name"
+                        ;;
+                    "naive")
+                        username=$(echo "$user" | jq -r '.username')
+                        password=$(echo "$user" | jq -r '.password')
+                        if [[ -z "$username" || -z "$password" || -z "$name" ]]; then
+                            echoContent red "跳过无效 Naive 配置: username, password 或 name 为空 (tag: $tag)"
+                            continue
+                        fi
+                        SUB_LINK="naive+https://$username:$password@$SUB_DOMAIN:$port?insecure=0&$params#$name"
+                        ;;
+                    *)
+                        echoContent yellow "Unsupported protocol: $type for tag: $tag, skipping."
+                        continue
+                        ;;
+                esac
 
-        # Shadowsocks subscriptions
-        SINGBOX_SS=$(jq -r '.inbounds[] | select(.type=="shadowsocks") | .tag as $tag | .users[] | "\($tag)#\(.password)#\(.name)#\(input_filename)#\(.method)"' "$SINGBOX_CONF")
-        while IFS='#' read -r tag password name filename method; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            SUB_LINK="ss://$(echo -n "${method}:${password}" | base64 -w 0)@${SUB_DOMAIN}:${port}#${name}"
-            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/ss_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Sing-box Shadowsocks 订阅链接: $SUB_LINK"
-        done <<< "$SINGBOX_SS"
-
-        # Hysteria2 subscriptions
-        SINGBOX_HYSTERIA2=$(jq -r '.inbounds[] | select(.type=="hysteria2") | .tag as $tag | .users[] | "\($tag)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
-        while IFS='#' read -r tag password name filename; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            SUB_LINK="hysteria2://${password}@${SUB_DOMAIN}:${port}?insecure=0#${name}"
-            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/hysteria2_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Sing-box Hysteria2 订阅链接: $SUB_LINK"
-        done <<< "$SINGBOX_HYSTERIA2"
-
-        # TUIC subscriptions
-        SINGBOX_TUIC=$(jq -r '.inbounds[] | select(.type=="tuic") | .tag as $tag | .users[] | "\($tag)#\(.uuid)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
-        while IFS='#' read -r tag uuid password name filename; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            SUB_LINK="tuic://${uuid}:${password}@${SUB_DOMAIN}:${port}?alpn=h3&congestion_control=bbr#${name}"
-            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/tuic_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Sing-box TUIC 订阅链接: $SUB_LINK"
-        done <<< "$SINGBOX_TUIC"
-
-        # Naive subscriptions
-        SINGBOX_NAIVE=$(jq -r '.inbounds[] | select(.type=="naive") | .tag as $tag | .users[] | "\($tag)#\(.username)#\(.password)#\(.name)#\(input_filename)"' "$SINGBOX_CONF")
-        while IFS='#' read -r tag username password name filename; do
-            port=$(jq -r --arg tag "$tag" '.inbounds[] | select(.tag==$tag) | .listen_port' "$SINGBOX_CONF")
-            if [[ "$port" == "null" || -z "$port" ]]; then
-                continue
-            fi
-            SUB_LINK="naive+https://${username}:${password}@${SUB_DOMAIN}:${port}?insecure=0#${name}"
-            echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
-            qrencode -o "${SUBSCRIBE_DIR}/naive_${name//[@\/]/_}.png" "$SUB_LINK"
-            echoContent green "\n生成 Sing-box Naive 订阅链接: $SUB_LINK"
-        done <<< "$SINGBOX_NAIVE"
+                if [[ -n "$SUB_LINK" ]]; then
+                   
+                    echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+                    echoContent green "\n生成 Sing-box $type 订阅链接: $SUB_LINK"
+                    if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
+                        qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
+                        qrencode -o "${SUBSCRIBE_DIR}/${type}_${name//[@\/]/_}_${tag//[@\/]/_}.png" "$SUB_LINK" 2>/dev/null || {
+                            echoContent red "生成二维码失败: $SUB_LINK"
+                        }
+                    fi
+                fi
+            done
+        done
 
         if [ -s "$SINGBOX_SUB_FILE" ]; then
             echo "$(cat "$SINGBOX_SUB_FILE" | base64 -w 0)" > "$SINGBOX_SUB_FILE"
-            chown nobody:nogroup "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png" "${SUBSCRIBE_DIR}/hysteria2_*.png" "${SUBSCRIBE_DIR}/tuic_*.png" "${SUBSCRIBE_DIR}/naive_*.png"
-            chmod 644 "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}/vless_*.png" "${SUBSCRIBE_DIR}/vmess_*.png" "${SUBSCRIBE_DIR}/trojan_*.png" "${SUBSCRIBE_DIR}/ss_*.png" "${SUBSCRIBE_DIR}/hysteria2_*.png" "${SUBSCRIBE_DIR}/tuic_*.png" "${SUBSCRIBE_DIR}/naive_*.png"
+            chown nobody:nogroup "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
+            chmod 644 "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
             echoContent green "Sing-box 订阅已保存至 ${SINGBOX_SUB_FILE}，二维码已生成."
         else
             echoContent red "未生成任何 Sing-box 订阅链接."
@@ -1062,9 +1471,28 @@ generateSubscriptions() {
         echoContent red "Sing-box 配置文件 ${SINGBOX_CONF} 不存在."
     fi
 
-    # Reload Nginx to apply changes
-    if docker ps | grep -q nginx; then
-        docker compose -f "$COMPOSE_FILE" restart nginx
+    # 重启服务
+    if [ -s "$XRAY_SUB_FILE" ] && command -v xray &> /dev/null; then
+        echoContent skyblue "正在重启 Xray 服务..."
+        systemctl restart xray || {
+            echoContent red "Error: Failed to restart Xray service."
+            return 1
+        }
+    fi
+    if [ -s "$SINGBOX_SUB_FILE" ] && command -v sing-box &> /dev/null; then
+        echoContent skyblue "正在重启 Sing-box 服务..."
+        systemctl restart sing-box || {
+            echoContent red "Error: Failed to restart Sing-box service."
+            return 1
+        }
+    fi
+
+    # Reload Nginx if running in Docker
+    if docker ps | grep -q nginx && [ -f "$COMPOSE_FILE" ]; then
+        docker compose -f "$COMPOSE_FILE" restart nginx || {
+            echoContent red "Error: Failed to restart Nginx."
+            return 1
+        }
         echoContent green "Nginx 已重启以应用订阅文件."
     fi
 
@@ -1832,7 +2260,7 @@ menu() {
     echoContent yellow "8. 停止 Docker"
     echoContent yellow "9. 生成订阅"
     echoContent yellow "10. 卸载nsx"
-    echoContent yellow "10. 退出"
+    echoContent yellow "11. 退出"
     read -r -p "请选择一个选项 [1-9]: " option
 
     case $option in
