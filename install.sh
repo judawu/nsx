@@ -1747,7 +1747,7 @@ After=network.target remote-fs.target nss-lookup.target
 
 [Service]
 Type=forking
-ExecStart=/usr/sbin/nginx
+ExecStart=/usr/sbin/nginx -c /usr/local/nsx/nginx/nginx.conf -g "daemon on; master_process on;"
 ExecReload=/usr/sbin/nginx -s reload
 ExecStop=/usr/sbin/nginx -s quit
 PrivateTmp=true
