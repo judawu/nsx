@@ -1859,7 +1859,7 @@ startServices() {
 
     fi
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR" -name "*.*" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    find "$SHM_DIR" -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
     find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
@@ -1882,7 +1882,7 @@ restartServices() {
     sudo systemctl start nginx xray sing-box
 
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR"  -name "*.*" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    find "$SHM_DIR"  -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
     find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
