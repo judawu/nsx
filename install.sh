@@ -1858,7 +1858,7 @@ startServices() {
 
     fi
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR"  -type f -name "*.socks" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+    find "$SHM_DIR"  -type f -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
         echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
@@ -1878,9 +1878,9 @@ restartServices() {
     sudo rm -rf "$SHM_DIR"/*
     echoContent yellow "启动服务."
     sudo systemctl start nginx xray sing-box
-    
+
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR"  -type f -name "*.socks" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+    find "$SHM_DIR"  -type f -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
         echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
