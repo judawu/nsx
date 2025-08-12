@@ -1724,7 +1724,7 @@ dockerInstall() {
     fi
 
     # Set permissions for log files
-    find "$SHM_DIR"  -type f -name "*.socks" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+    find "$SHM_DIR"  -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
     find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
 
     echoContent green "Docker 容器启动成功."
@@ -1859,7 +1859,8 @@ startServices() {
 
     fi
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR"  -type s -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    find "$SHM_DIR" -name "*.*" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
         echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
@@ -1881,7 +1882,8 @@ restartServices() {
     sudo systemctl start nginx xray sing-box
 
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR"  -type s -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    find "$SHM_DIR"  -name "*.*" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
         echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
