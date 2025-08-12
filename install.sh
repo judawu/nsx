@@ -2012,6 +2012,8 @@ configNSX() {
     createSystemdServices
 
     echoContent skyblue "开始启动服务..."
+    echoContent yellow "清理/dev/shm/nsx/."
+    sudo rm -rf /dev/shm/nsx/*
     startServices
 
     echoContent skyblue "进行xray的配置修改..."
@@ -2210,7 +2212,8 @@ uninstallNSX() {
             fi
         fi
     fi
-
+    echoContent yellow "清理/dev/shm/nsx/."
+    sudo rm -rf /dev/shm/nsx/*
     # Clean up NSX configuration and certificate files
     read -r -p "是否删除 NSX 配置文件和证书？(y/n): " removeConfigs
     if [[ "$removeConfigs" == "y" ]]; then

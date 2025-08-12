@@ -1,8 +1,8 @@
 {
   "log": {
-    "loglevel": "error",
-    "error": "/var/log/xray_error.log",
-    "access": "/var/log/xray_access.log"
+    "loglevel": "debug",
+    "error": "/usr/local/nsx/log/xray_error.log",
+    "access": "/usr/local/nsx/log/xray_access.log"
   },
   "api": {
     "tag": "api",
@@ -19,7 +19,6 @@
       "dns.google": ["8.8.8.8", "8.8.4.4"]
     },
     "servers": [ 
- 
       "quic+local://dns.adguard.com",
       "tcp+local://94.140.14.49:53",
       "94.140.14.59",  
@@ -28,11 +27,9 @@
       "146.112.61.108",
       "185.220.100.240",
       "185.220.101.240",
-      "tls://dns.unfiltered.adguard-dns.com",
-      "https://dns.unfiltered.adguard-dns.com/dns-query",
-      "tcp://1.1.1.1:53",
       "8.8.8.8",
       "8.8.4.4",
+      "1.1.1.1",
       {
       "address": "8.8.8.8",
       "port": 53,
@@ -40,20 +37,7 @@
       "expectedIPs": ["geoip:us"],
       "skipFallback": false
      },
-      {
-        "address": "https+local://dns.google/dns-query",
-        "domains": [
-          "geosite:netflix",
-          "geosite:tiktok"],
-        "skipFallback": true,
-        "queryStrategy": "UseIPv4"
-      },
-      {
-        "address": "https://1.1.1.1/dns-query",
-        "domains": ["geosite:openai"],
-        "skipFallback": true,
-        "queryStrategy": "UseIPv6"
-      },
+    
       "localhost"
     ],
     "queryStrategy": "UseIP",
@@ -241,7 +225,7 @@
             
           ],
           "privateKey": "LfkzLDajizcdQLBj2S6KPzVPo7lshGwPGsj-cry1AG0",   
-           "password": "",
+          "password": "",
           "maxTimeDiff": 0,
           "shortIds": [
              "",
