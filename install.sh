@@ -1822,6 +1822,7 @@ EOF
 
 # 修改后的服务启动部分
 startServices() {
+
     echoContent skyblue "\n启动服务..."
 
     # 启用并启动服务
@@ -1854,6 +1855,15 @@ startServices() {
         echoContent red "Sing-box服务启动失败，请检查日志："     
         echoContent red "Sing-box: journalctl -u sing-box.service"
 
+    fi
+    echoContent green  "设置$SHM_DIR 下的socks文件权限！"
+    find "$SHM_DIR" -type s -exec chmod 666 {} \;
+    # Check if the find command was successful
+    if [ $? -eq 0 ]; then
+        echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
+    else
+        echo "Error: Failed to change permissions for some or all socket files."
+        exit 1
     fi
 }
 
