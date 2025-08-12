@@ -22,6 +22,7 @@ BASE_DIR="/usr/local/nsx"
 CERT_DIR="${BASE_DIR}/certs"
 NGINX_DIR="${BASE_DIR}/nginx"
 XRAY_DIR="${BASE_DIR}/xray"
+LOG_DIR="${BASE_DIR}/log"
 SINGBOX_DIR="${BASE_DIR}/sing-box"
 WWW_DIR="${BASE_DIR}/www"
 SUBSCRIBE_DIR="${BASE_DIR}/www/subscribe"
@@ -29,15 +30,12 @@ COMPOSE_FILE="${BASE_DIR}/docker/docker-compose.yml"
 NGINX_CONF="${NGINX_DIR}/nginx.conf"
 XRAY_CONF="${XRAY_DIR}/config.json"
 SINGBOX_CONF="${SINGBOX_DIR}/config.json"
-NGINX_SHM_DIR="/dev/shm/nsx"
-NGINX_LOG_DIR="${NGINX_DIR}/log"
+SHM_DIR="/dev/shm/nsx"
 NGINX_CACHE_DIR="${NGINX_DIR}/cache"
 NGINX_RUN_DIR="${NGINX_DIR}/run"
 NGINX_CONF_DIR="${NGINX_DIR}/conf.d"
-XRAY_LOG_DIR="${XRAY_DIR}/log"
-SINGBOX_LOG_DIR="${SINGBOX_DIR}/log"
 ACME_DIR="${BASE_DIR}/acme"
-ACME_LOG="${ACME_DIR}/acme.log"
+ACME_LOG="${LOG_DIR}/acme.log"
 
 
 # 检查系统信息
@@ -182,7 +180,7 @@ installDocker() {
 # 创建目录
 createDirectories() {
     echoContent skyblue "\n创建目录..."
-    for DIR in "$CERT_DIR" "$NGINX_DIR" "$NGINX_LOG_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$XRAY_DIR" "$XRAY_LOG_DIR" "$SINGBOX_DIR" "$SINGBOX_LOG_DIR" "$WWW_DIR"  "$SUBSCRIBE_DIR" "$WWW_DIR/wwwroot/blog" "$WWW_DIR/wwwroot/video" "$NGINX_SHM_DIR" "$ACME_DIR"; do
+    for DIR in "$CERT_DIR" "$NGINX_DIR" "$LOG_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$XRAY_DIR"  "$SINGBOX_DIR" "$WWW_DIR"  "$SUBSCRIBE_DIR" "$WWW_DIR/wwwroot/blog" "$WWW_DIR/wwwroot/video" "$SHM_DIR" "$ACME_DIR"; do
         if [ ! -d "$DIR" ]; then
             echoContent yellow "创建目录 $DIR..."
             mkdir -p "$DIR"
@@ -192,8 +190,8 @@ createDirectories() {
     done
 
     echoContent yellow "设置权限..."
-    chown -R nobody:nogroup "$NGINX_SHM_DIR" "$NGINX_LOG_DIR" "$XRAY_LOG_DIR" "$SINGBOX_LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
-    chmod -R 700 "$NGINX_SHM_DIR" "$NGINX_LOG_DIR" "$XRAY_LOG_DIR" "$SINGBOX_LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
+    chown -R nobody:nogroup "$SHM_DIR" "$LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
+    chmod -R 700 "$SHM_DIR" "LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
 }
 
 # 安装 acme.sh
@@ -1503,7 +1501,7 @@ manageLogs() {
     echoContent skyblue "\n日志管理菜单"
     echoContent yellow "1. 查看 Nginx 访问日志"
     echoContent yellow "2. 查看 Nginx 错误日志"
-    echoContent yellow "3. 查看 Xray 日志"
+    echoContent yellow "3. 查看 Xray 访问日志"
     echoContent yellow "4. 查看 Sing-box 日志"
     echoContent yellow "5. 查看证书日志"
     echoContent yellow "6. 清除所有日志"
@@ -1511,17 +1509,17 @@ manageLogs() {
     read -r -p "请选择一个选项 [1-7]: " log_option
 
     case $log_option in
-        1) tail -f "${NGINX_LOG_DIR}/access.log" ;;
-        2) tail -f "${NGINX_LOG_DIR}/error.log" ;;
-        3) tail -f "${XRAY_LOG_DIR}/access.log" ;;
-        4) tail -f "${SINGBOX_LOG_DIR}/box.log" ;;
+        1) tail -f "${LOG_DIR}/nginx_access.log" ;;
+        2) tail -f "${LOG_DIR}/nginx_error.log" ;;
+        3) tail -f "${LOG_DIR}/xray_access.log" ;;
+        4) tail -f "${LOG_DIR}/singbox.log" ;;
         5) tail -n 100 "${ACME_LOG}" ;;
         6)
-            echo > "${NGINX_LOG_DIR}/access.log"
-            echo > "${NGINX_LOG_DIR}/error.log"
-            echo > "${XRAY_LOG_DIR}/access.log"
-            echo > "${XRAY_LOG_DIR}/error.log"
-            echo > "${SINGBOX_LOG_DIR}/box.log"
+            echo > "${LOG_DIR}/nginx_access.log"
+            echo > "${LOG_DIR}/nginx_error.log"
+            echo > "${LOG_DIR}/xray_access.log"
+            echo > "${LOG_DIR}/xray_error.log"
+            echo > "${LOG_DIR}/singbox.log"
             echoContent green "所有日志已清除."
             ;;
         7) return ;;
@@ -1710,7 +1708,7 @@ dockerInstall() {
     configNginx
     # Check Nginx configuration
     echoContent yellow "检查 Nginx 配置语法..."
-    docker run --rm -v "${NGINX_CONF}:/etc/nginx/nginx.conf:ro" -v "${CERT_DIR}:/etc/nginx/certs:ro" -v "${NGINX_SHM_DIR}:/dev/shm/nsx" nginx:alpine nginx -t
+    docker run --rm -v "${NGINX_CONF}:/etc/nginx/nginx.conf:ro" -v "${CERT_DIR}:/etc/nginx/certs:ro" -v "${SHM_DIR}:/dev/shm/nsx" nginx:alpine nginx -t
     if [ $? -ne 0 ]; then
         echoContent red "错误：Nginx 配置语法检查失败！"
         exit 1
@@ -1725,7 +1723,7 @@ dockerInstall() {
     fi
 
     # Set permissions for log files
-    find "$NGINX_LOG_DIR" "$XRAY_LOG_DIR" "$SINGBOX_LOG_DIR" -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+    find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
 
     echoContent green "Docker 容器启动成功."
 
@@ -2013,7 +2011,7 @@ configNSX() {
 
     echoContent skyblue "开始启动服务..."
     echoContent yellow "清理/dev/shm/nsx/."
-    sudo rm -rf /dev/shm/nsx/*
+    sudo rm -rf "$SHM_DIR"/*
     startServices
 
     echoContent skyblue "进行xray的配置修改..."
@@ -2050,16 +2048,16 @@ stopNSX() {
     fi
 
     # Clean up /dev/shm/nsx if empty
-    if [ -d "$NGINX_SHM_DIR" ] && [ -z "$(ls -A "$NGINX_SHM_DIR")" ]; then
-        echoContent yellow "目录 $NGINX_SHM_DIR 为空，删除..."
-        if ! rm -rf "$NGINX_SHM_DIR"; then
-                echoContent red "无法删除 $NGINX_SHM_DIR，请检查权限."
+    if [ -d "$SHM_DIR" ] && [ -z "$(ls -A "$SHM_DIR")" ]; then
+        echoContent yellow "目录 $SHM_DIR 为空，删除..."
+        if ! rm -rf "$SHM_DIR"; then
+                echoContent red "无法删除 $SHM_DIR，请检查权限."
                 exit 1
          fi
-    elif [ -d "$NGINX_SHM_DIR" ]; then
-        echoContent yellow "清理 $NGINX_SHM_DIR 中的文件..."
-        if ! rm -rf "$NGINX_SHM_DIR"/*; then
-                echoContent red "无法清理 $NGINX_SHM_DIR 中的文件，请检查权限."
+    elif [ -d "$SHM_DIR" ]; then
+        echoContent yellow "清理 $SHM_DIR 中的文件..."
+        if ! rm -rf "$SHM_DIR"/*; then
+                echoContent red "无法清理 $SHM_DIR 中的文件，请检查权限."
                 exit 1
         fi
     fi
@@ -2213,7 +2211,7 @@ uninstallNSX() {
         fi
     fi
     echoContent yellow "清理/dev/shm/nsx/."
-    sudo rm -rf /dev/shm/nsx/*
+    sudo rm -rf "$SHM_DIR"/*
     # Clean up NSX configuration and certificate files
     read -r -p "是否删除 NSX 配置文件和证书？(y/n): " removeConfigs
     if [[ "$removeConfigs" == "y" ]]; then
