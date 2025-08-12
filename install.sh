@@ -191,7 +191,8 @@ createDirectories() {
 
     echoContent yellow "设置权限..."
     chown -R nobody:nogroup "$SHM_DIR" "$LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
-    chmod -R 700 "$SHM_DIR" "LOG_DIR" "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
+    chmod -R 700  "$CERT_DIR" "$NGINX_CACHE_DIR" "$NGINX_RUN_DIR" "$NGINX_CONF_DIR" "$ACME_DIR"
+    chmod -R 766  "$SHM_DIR" "$LOG_DIR"
 }
 
 # 安装 acme.sh
@@ -1858,7 +1859,7 @@ startServices() {
 
     fi
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR"  -type f -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+    find "$SHM_DIR"  -type s -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
         echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
@@ -1880,7 +1881,7 @@ restartServices() {
     sudo systemctl start nginx xray sing-box
 
     echoContent green  "设置$SHM_DIR 下的socks文件权限！"
-    find "$SHM_DIR"  -type f -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+    find "$SHM_DIR"  -type s -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
         echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
