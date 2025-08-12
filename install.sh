@@ -1872,9 +1872,22 @@ restartServices() {
     echoContent skyblue "\重启服务..."
 
     # 启用并启动服务
+    echoContent yellow "停止服务."
     sudo systemctl stop nginx xray sing-box
+    echoContent yellow "清理$SHM_DIR/."
+    sudo rm -rf "$SHM_DIR"/*
+    echoContent yellow "启动服务."
     sudo systemctl start nginx xray sing-box
-
+    
+    echoContent green  "设置$SHM_DIR 下的socks文件权限！"
+    find "$SHM_DIR"  -type f -name "*.socks" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+    # Check if the find command was successful
+    if [ $? -eq 0 ]; then
+        echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
+    else
+        echo "Error: Failed to change permissions for some or all socket files."
+        exit 1
+    fi
     # 检查服务状态
     if sudo systemctl is-active --quiet nginx && sudo systemctl is-active --quiet xray && sudo systemctl is-active --quiet sing-box; then
         echoContent green "所有服务（Nginx, Xray, Sing-box）启动成功！"
