@@ -897,9 +897,9 @@ singbox_config() {
                 echoContent yellow "\nGenerated new short_id: $new_short_ids"
 
                 # 更新 private_key, short_id
-                jq --arg tag "$tag" --arg private_key "$private_key" --argjson short_ids "$new_short_ids" \
+                jq --arg tag "$tag" --arg private_key "$private_key" --arg private_key "$public_key" --argjson short_ids "$new_short_ids" \
                    '(.inbounds[] | select(.tag == $tag) | .tls.reality) |=
-                    (.private_key = $private_key | .short_id = $short_ids)' \
+                    (.private_key = $private_key |.public_key = $public_key | .short_id = $short_ids)' \
                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                     echoContent red "Error: Failed to update reality settings."
                     exit 1
@@ -1149,7 +1149,6 @@ generateSubscriptions() {
 
     # Generate Xray subscription
     if [ -f "$XRAY_CONF" ]; then
-    
 
         # 提取所有 inbounds
         jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF" | while IFS= read -r inbound; do
@@ -1232,7 +1231,6 @@ generateSubscriptions() {
                 fp=$(echo "$tlsSettings" | jq -r '.fingerprint // "chrome"')
                 sni=$(echo "$tlsSettings" | jq -r '.serverName // "'"$SUB_DOMAIN"'"')
                 alpn=$(echo "$inbound" | jq -r '.tls.alpn // "http/1.1"')
-
                 # 如果 alpn 是数组，则将其转换为逗号分隔的字符串
                 if [[ "$alpn" == \[*\] ]]; then
                     alpn=$(echo "$alpn" | jq -r 'join(",")')
@@ -1276,15 +1274,13 @@ generateSubscriptions() {
                 esac
 
                 if [[ -n "$SUB_LINK" ]]; then           
-                    echoContent green "\n生成 Xray $protocol 订阅链接: $SUB_LINK"
+                    echoContent green "\n生成 Xray $protocol 订阅链接:\n $SUB_LINK"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null       
                     fi
                 fi
             done
-        done
-
-      
+        done    
     else
         echoContent red "Xray 配置文件 ${XRAY_CONF} 不存在."
     fi
@@ -1299,7 +1295,6 @@ generateSubscriptions() {
             port=$(echo "$inbound" | jq -r '.listen_port // "443"')
             transport=$(echo "$inbound" | jq -r '.transport.type // "tcp"')
             tls_enabled=$(echo "$inbound" | jq -r '.tls.enabled // false')
-
             # 构造传输参数
             params="type=$transport"
             case "$transport" in
@@ -1344,11 +1339,8 @@ generateSubscriptions() {
             if [[ "$tls_enabled" == "true" ]]; then
                 reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
                 if [[ "$reality_enabled" == "true" ]]; then
-                    short_id=$(echo "$inbound" | jq -r '.tls.reality.short_id[0] // empty')
-                    private_key=$(echo "$inbound" | jq -r '.tls.reality.private_key // empty')
+                    short_id=$(echo "$inbound" | jq -r '.tls.reality.short_id[0] // empty')    
                     public_key=$(echo "$inbound" | jq -r '.tls.reality.public_key // empty')
-                    if [[ -z "$public_key" ]]; then
-                    public_key=$(sing-box generate reality-keypair | jq -r '.public_key') fi 
                     params="$params&security=reality&pbk=$public_key&sid=$short_id&fp=chrome&sni=$SUB_DOMAIN"
                 else
                     fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
