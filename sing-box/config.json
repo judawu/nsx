@@ -8,7 +8,7 @@
   "inbounds": [
     {
       "type": "direct",
-      "tag": "direct-in",
+      "tag": "singbox-direct-in",
       "listen": "::",
       "listen_port": 8070,
       "network": "udp",
@@ -17,13 +17,13 @@
     },
     {
       "type": "mixed",
-      "tag": "mixed-in",
+      "tag": "singbox-mixed-in",
       "listen": "::",
       "listen_port": 8071
     },
     {
       "type": "socks",
-      "tag": "socks-in",
+      "tag": "singbox-socks-in",
       "listen": "::",
       "listen_port": 8072,
       "users": [
@@ -35,7 +35,7 @@
     },
     {
       "type": "http",
-      "tag": "http-in",
+      "tag": "singbox-http-in",
       "listen": "::",
       "listen_port": 8073,
       "users": [
@@ -51,8 +51,8 @@
     },
     {
       "type": "vmess",
-      "tag": "vmess-in",
-      "listen": "127.0.0.1",
+      "tag": "singbox-vmess-in",
+      "listen": "::",
       "listen_port": 8074,
       "users": [
         {
@@ -76,6 +76,7 @@
     },
     {
       "type": "trojan",
+      "tag": "singbox-trojan-in",
       "listen": "::",
       "listen_port": 8080,
       "users": [
@@ -97,6 +98,7 @@
     },
     {
       "type": "hysteria2",
+      "tag": "singbox-hysteria2-in",
       "listen": "::",
       "listen_port": 8081,
       "up_mbps": 100,
@@ -143,8 +145,8 @@
     },
     {
       "type": "naive",
-      "listen": "::",
       "tag": "singbox-naive-in",
+      "listen": "::",
       "listen_port": 8083,
       "users": [
         {
@@ -161,9 +163,9 @@
     },
     {
       "type": "shadowsocks",
+      "tag": "singbox-ss-in",
       "listen": "::",
       "listen_port": 8084,
-      "tag": "singbox-shadowsocks-in",
       "network": [
         "tcp",
         "udp"
@@ -182,7 +184,7 @@
     },
     {
       "type": "shadowtls",
-      "tag": "st-in",
+      "tag": "singbox-shadowtls-in",
       "listen": "::",
       "listen_port": 8085,
       "version": 3,
@@ -202,6 +204,7 @@
     },
     {
       "type": "vless",
+      "tag": "singbox-VLESSRealityGRPC",
       "listen": "::",
       "listen_port": 8088,
       "users": [
@@ -210,7 +213,7 @@
           "name": "VLESS_Reality_gPRC"
         }
       ],
-      "tag": "VLESSRealityGRPC",
+      
       "tls": {
         "enabled": true,
         "server_name": "yourdomain",
@@ -235,9 +238,9 @@
     },
     {
       "type": "vless",
+      "tag": "singbox-VLESSReality",
       "listen": "::",
       "listen_port": 8089,
-      "tag": "VLESSReality",
       "users": [
         {
           "uuid": "a5a18127-d8a9-488a-b371-cb5db958b78a",
@@ -265,9 +268,10 @@
     },
     {
       "type": "vless",
+      "tag": "singbox-VLESSTCP",
       "listen": "::",
       "listen_port": 8090,
-      "tag": "VLESSTCP",
+      
       "users": [
         {
           "uuid": "d3eb8a70-3b3c-4b71-97c2-f63ef2e951d5",
