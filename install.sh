@@ -1059,6 +1059,7 @@ configNginx() {
 }
 # Manage configurations
 manageConfigurations() {
+    echoContent green "配置nsx服务 只适用本地安装\n如果通过docker ，可以用nano编辑\n usr/local/nsx/nginx.conf\nusr/local/nsx/xray/config.json\nusr/local/nsx/sing-box/config.json"
     echoContent skyblue "\n配置管理菜单"
     echoContent yellow "1. 配置nsx服务"
     echoContent yellow "2. 修改 nginx.conf"
@@ -1723,6 +1724,12 @@ dockerInstall() {
 
     # Set permissions for log files
     find "$SHM_DIR"  -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    if [ $? -eq 0 ]; then
+        echoContent yellow "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
+    else
+        echoContent red "Error: Failed to change permissions for some or all socket files."
+        exit 1
+    fi
     find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
 
     echoContent green "Docker 容器启动成功."
@@ -1861,9 +1868,9 @@ startServices() {
     find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
-        echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
+        echoContent yellow "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
     else
-        echo "Error: Failed to change permissions for some or all socket files."
+        echoContent red "Error: Failed to change permissions for some or all socket files."
         exit 1
     fi
 }
@@ -1884,9 +1891,9 @@ restartServices() {
     find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
     # Check if the find command was successful
     if [ $? -eq 0 ]; then
-        echo "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
+        echoContent yellow "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
     else
-        echo "Error: Failed to change permissions for some or all socket files."
+        echoContent red "Error: Failed to change permissions for some or all socket files."
         exit 1
     fi
     # 检查服务状态
