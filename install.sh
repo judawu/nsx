@@ -2042,10 +2042,11 @@ configNSX() {
     createSystemdServices
 
     echoContent skyblue "开始启动服务..."
-    echoContent yellow "清理/dev/shm/nsx/."
+    echoContent yellow "清理$SHM_DIR."
     sudo rm -rf "$SHM_DIR"/*
+    echoContent yellow "清理${LOG_DIR}."
+    sudo rm -rf "$LOG_DIR"/*
     startServices
-
     echoContent skyblue "进行xray的配置修改..."
     xray_config
 
