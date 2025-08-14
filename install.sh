@@ -1123,8 +1123,8 @@ generateSubscriptions() {
     echoContent skyblue "\n订阅生成..."
 
     # 检查变量
-    if [[ -z "$XRAY_CONF" || -z "$SINGBOX_CONF" || -z "$SUBSCRIBE_DIR" || -z "$COMPOSE_FILE" ]]; then
-        echoContent red "Error: XRAY_CONF, SINGBOX_CONF, SUBSCRIBE_DIR, or COMPOSE_FILE is not set."
+    if [[ -z "$XRAY_CONF" || -z "$SINGBOX_CONF"  || -z "$COMPOSE_FILE" ]]; then
+        echoContent red "Error: XRAY_CONF, SINGBOX_CONF,  or COMPOSE_FILE is not set."
         return 1
     fi
 
@@ -1138,16 +1138,6 @@ generateSubscriptions() {
         QRENCODE_AVAILABLE=false
     else
         QRENCODE_AVAILABLE=true
-    fi
-
-    # 创建订阅目录
-    if [ ! -d "$SUBSCRIBE_DIR" ]; then
-        mkdir -p "$SUBSCRIBE_DIR" || {
-            echoContent red "Error: Failed to create directory $SUBSCRIBE_DIR"
-            return 1
-        }
-        chown nobody:nogroup "$SUBSCRIBE_DIR"
-        chmod 755 "$SUBSCRIBE_DIR"
     fi
 
     # 获取用户输入的域名
@@ -1285,14 +1275,10 @@ generateSubscriptions() {
                         ;;
                 esac
 
-                if [[ -n "$SUB_LINK" ]]; then
-                  
-                  
+                if [[ -n "$SUB_LINK" ]]; then           
                     echoContent green "\n生成 Xray $protocol 订阅链接: $SUB_LINK"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
-                        qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
-
-                       
+                        qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null       
                     fi
                 fi
             done
@@ -1305,10 +1291,7 @@ generateSubscriptions() {
 
     # Generate Sing-box subscription
     if [ -f "$SINGBOX_CONF" ]; then
-        echoContent yellow "生成 Sing-box 订阅..."
-        SINGBOX_SUB_FILE="${SUBSCRIBE_DIR}/singbox_sub.txt"
-        > "$SINGBOX_SUB_FILE"
-
+     
         # 提取所有 inbounds
         jq -c '.inbounds[] | select(.users)' "$SINGBOX_CONF" | while IFS= read -r inbound; do
             tag=$(echo "$inbound" | jq -r '.tag')
@@ -1455,12 +1438,9 @@ generateSubscriptions() {
                 esac
 
                 if [[ -n "$SUB_LINK" ]]; then
-                   
-                  
                     echoContent green "\n生成 Sing-box $type 订阅链接: $SUB_LINK"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
-                 
                     fi
                 fi
             done
@@ -1469,31 +1449,6 @@ generateSubscriptions() {
       
     else
         echoContent red "Sing-box 配置文件 ${SINGBOX_CONF} 不存在."
-    fi
-
-    # 重启服务
-    if [ -s "$XRAY_SUB_FILE" ] && command -v xray &> /dev/null; then
-        echoContent skyblue "正在重启 Xray 服务..."
-        systemctl restart xray || {
-            echoContent red "Error: Failed to restart Xray service."
-            return 1
-        }
-    fi
-    if [ -s "$SINGBOX_SUB_FILE" ] && command -v sing-box &> /dev/null; then
-        echoContent skyblue "正在重启 Sing-box 服务..."
-        systemctl restart sing-box || {
-            echoContent red "Error: Failed to restart Sing-box service."
-            return 1
-        }
-    fi
-
-    # Reload Nginx if running in Docker
-    if docker ps | grep -q nginx && [ -f "$COMPOSE_FILE" ]; then
-        docker compose -f "$COMPOSE_FILE" restart nginx || {
-            echoContent red "Error: Failed to restart Nginx."
-            return 1
-        }
-        echoContent green "Nginx 已重启以应用订阅文件."
     fi
 
     echoContent green "订阅生成完成，可通过 http://${SUB_DOMAIN}/subscribe/ 访问."
