@@ -687,7 +687,12 @@ xray_config(){
                 echo "$clients" | while IFS= read -r client; do
                     old_password=$(echo "$client" | jq -r '.password')
                     new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
+                    if [[ "$protocol" == "shadowsocks" ]]; then
+                        
+                     url="ss://2022-blake3-aes-128-gcm:$new_password@$YOURDOMAIN:$port$url#$tag"
+                    else
                     url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
+                    fi
                     echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password \n"
 
                     # 更新 password
@@ -920,10 +925,43 @@ singbox_config() {
             url="$url#$tag"
         fi
 
-     
+          if [[ "$type" == "tuic" ]]; then
+            echoContent green "\n处理uuid 替换,用sing-box generate uuid 生成uuid\n"
+            user_index=0
+            echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
+                old_uuid=$(echo "$user" | jq -r '.uuid')
+                old_password=$(echo "$user" | jq -r '.password')
+                new_uuid=$(sing-box generate uuid) || {
+                    echoContent red "Error: Failed to generate UUID."
+                    exit 1
+                }
+                new_password=$(openssl rand -base64 16)
+
+                echoContent yellow "\nReplacing UUID and passowrd for user $user_index in $tag: $old_uuid -> $new_uuid"
+
+                # 更新 uuid
+                jq --arg tag "$tag" --arg old_uuid "$old_uuid" --arg new_uuid "$new_uuid" --arg old_password "$old_password" --arg new_password "$new_password" \
+                   '(.inbounds[] | select(.tag == $tag) | .users[] | select(.uuid == $old_uuid)).uuid = $new_uuid | select(.password == $old_password)).password = $new_password' \
+                   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "Error: Failed to update UUID."
+                    exit 1
+                }
+
+                # 构造 URL
+                   url="$type://$new_uuid:new_password$@$SINGBOXDOMAIN:$port$url#$tag"
+                fi
+                echo "$url" >> "$SINGBOX_SUB_FILE"
+                echoContent skyblue "\n生成 $type 订阅链接: $url"
+                qrencode -t ANSIUTF8 "$url" 2>/dev/null
+                #qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null 
+               
+                ((user_index++))
+            done
+        fi
+
         # 处理 vmess、vless 和 tuic 的 uuid 替换
-        if [[ "$type" == "vmess" || "$type" == "vless" || "$type" == "tuic" ]]; then
-            echoContent green "\n处理 vmess、vless 和 tuic 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
+        if [[ "$type" == "vmess" || "$type" == "vless" ]]; then
+            echoContent green "\n处理 vmess、vless 的 uuid 替换,用sing-box generate uuid 生成uuid\n"
             user_index=0
             echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
                 old_uuid=$(echo "$user" | jq -r '.uuid')
@@ -942,8 +980,12 @@ singbox_config() {
                 }
 
                 # 构造 URL
-                flow=$(echo "$user" | jq -r '.flow')
-                url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url&flow=$flow#$tag"
+               if [[ "$type" == "vless" ]]; then
+                    flow=$(echo "$user" | jq -r '.flow')
+                    url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url&flow=$flow#$tag"
+                else 
+                   url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url#$tag"
+                fi
                 echo "$url" >> "$SINGBOX_SUB_FILE"
                 echoContent skyblue "\n生成 $type 订阅链接: $url"
                 qrencode -t ANSIUTF8 "$url" 2>/dev/null
@@ -954,12 +996,12 @@ singbox_config() {
         fi
 
         # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
-        if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" || "$type" == "naive" || "$type" == "tuic" ]]; then
+        if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" || "$type" == "naive" ]]; then
             echoContent green "\n处理 trojan、shadowsocks、shadowtls、naive 和 hysteria2 的 password 替换\n"
             user_index=0
             echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
                 old_password=$(echo "$user" | jq -r '.password')
-                if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "tuic" ]]; then
+                if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
                     new_password=$(openssl rand -base64 16)
                 else
                     new_password=$(sing-box generate uuid)
@@ -974,9 +1016,36 @@ singbox_config() {
                     exit 1
                 }
 
-                # 构造 URL
-                url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
-                  echo "$url" >> "$SINGBOX_SUB_FILE"
+                
+            # 更新 shadowsocks 或 shadowtls 的顶层 password
+                if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
+                    echoContent green "\n shadowsocks 或 shadowtls，更新顶层的 password 字段"
+                    top_password=$(echo "$inbound" | jq -r '.password // empty')
+                    if [[ -n "$top_password" ]]; then
+                        new_top_password=$(openssl rand -base64 16)
+                        echoContent yellow "Replacing top-level password in $tag: $top_password -> $new_top_password"
+                        jq --arg tag "$tag" --arg new_password "$new_top_password" \
+                        '(.inbounds[] | select(.tag == $tag)).password = $new_password' \
+                        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                            echoContent red "Error: Failed to update top-level password."
+                            exit 1
+                        }
+                    fi
+                fi
+
+                if  [[ "$type" == "shadowsocks" ]]; then
+                    method= $(echo "$inbound" | jq -r '.method')
+                    url="ss://$method:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                elif  [[ "$type" == "shadowtls" ]]; then
+                    url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:$port?plugin=shadow-tls&password=$new_password&version=3#$tag"
+                elif  [[ "$type" == "naive" ]]; then
+                   username=$(echo "$user" | jq -r '.username')
+                   url=naive+https://$username:$new_password@@$SINGBOXDOMAIN:$port$url#$tag"
+                else
+                   
+                    url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                if
+                echo "$url" >> "$SINGBOX_SUB_FILE"
                  echoContent skyblue "\n生成 $type 订阅链接: $url"
                  qrencode -t ANSIUTF8 "$url" 2>/dev/null
                 # qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null
@@ -984,21 +1053,6 @@ singbox_config() {
                 ((user_index++))
             done
 
-            # 更新 shadowsocks 或 shadowtls 的顶层 password
-            if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" ]]; then
-                echoContent green "\n shadowsocks 或 shadowtls，更新顶层的 password 字段"
-                top_password=$(echo "$inbound" | jq -r '.password // empty')
-                if [[ -n "$top_password" ]]; then
-                    new_top_password=$(openssl rand -base64 16)
-                    echoContent yellow "Replacing top-level password in $tag: $top_password -> $new_top_password"
-                    jq --arg tag "$tag" --arg new_password "$new_top_password" \
-                       '(.inbounds[] | select(.tag == $tag)).password = $new_password' \
-                       "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-                        echoContent red "Error: Failed to update top-level password."
-                        exit 1
-                    }
-                fi
-            fi
         fi
 
        

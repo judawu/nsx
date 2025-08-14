@@ -62,7 +62,10 @@
         }
       ],
       "tls": {
-        "enabled": false
+         "enabled": true,
+        "server_name": "yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/yourdomain.key"
       },
       "multiplex": {
         "enabled": true,
