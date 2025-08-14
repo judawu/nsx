@@ -897,9 +897,9 @@ singbox_config() {
                 echoContent yellow "\nGenerated new short_id: $new_short_ids"
 
                 # 更新 private_key, short_id
-                jq --arg tag "$tag" --arg private_key "$private_key" --arg private_key "$public_key" --argjson short_ids "$new_short_ids" \
+                jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" \
                    '(.inbounds[] | select(.tag == $tag) | .tls.reality) |=
-                    (.private_key = $private_key |.public_key = $public_key | .short_id = $short_ids)' \
+                    (.private_key = $private_key  |  .public_key = $public_key | .short_id = $short_ids)' \
                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                     echoContent red "Error: Failed to update reality settings."
                     exit 1
