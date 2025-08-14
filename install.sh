@@ -954,12 +954,12 @@ singbox_config() {
         fi
 
         # 处理 trojan、shadowsocks、shadowtls 和 hysteria2 的 password 替换
-        if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" || "$type" == "naive" || "$type" == "tuic"  ]]; then
+        if [[ "$type" == "trojan" || "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "hysteria2" || "$type" == "naive" || "$type" == "tuic" ]]; then
             echoContent green "\n处理 trojan、shadowsocks、shadowtls、naive 和 hysteria2 的 password 替换\n"
             user_index=0
             echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
                 old_password=$(echo "$user" | jq -r '.password')
-                if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "tuic"]]; then
+                if [[ "$type" == "shadowsocks" || "$type" == "shadowtls" || "$type" == "tuic" ]]; then
                     new_password=$(openssl rand -base64 16)
                 else
                     new_password=$(sing-box generate uuid)
