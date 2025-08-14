@@ -927,38 +927,46 @@ singbox_config() {
         fi
 
           if [[ "$type" == "tuic" ]]; then
-            echoContent green "\n处理uuid 替换,用sing-box generate uuid 生成uuid\n"
-            user_index=0
-            echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
-                old_uuid=$(echo "$user" | jq -r '.uuid')
-                old_password=$(echo "$user" | jq -r '.password')
-                new_uuid=$(sing-box generate uuid) || {
-                    echoContent red "Error: Failed to generate UUID."
-                    exit 1
-                }
-                new_password=$(openssl rand -base64 16)
+                echoContent green "\n处理uuid 替换,用sing-box generate uuid 生成uuid\n"
+                user_index=0
+                echo "$inbound" | jq -c '.users[]' | while IFS= read -r user; do
+                    old_uuid=$(echo "$user" | jq -r '.uuid')
+                    old_password=$(echo "$user" | jq -r '.password')
+                    new_uuid=$(sing-box generate uuid) || {
+                        echoContent red "Error: Failed to generate UUID."
+                        exit 1
+                    }
+                    new_password=$(openssl rand -base64 16)
 
-                echoContent yellow "\nReplacing UUID and passowrd for user $user_index in $tag: $old_uuid -> $new_uuid"
+                    echoContent yellow "\nReplacing UUID and password for user $user_index in $tag: $old_uuid -> $new_uuid"
 
-                # 更新 uuid
-                jq --arg tag "$tag" --arg old_uuid "$old_uuid" --arg new_uuid "$new_uuid" --arg old_password "$old_password" --arg new_password "$new_password" \
-                   '(.inbounds[] | select(.tag == $tag) | .users[] | select(.uuid == $old_uuid)).uuid = $new_uuid | select(.password == $old_password)).password = $new_password' \
-                   "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-                    echoContent red "Error: Failed to update UUID."
-                    exit 1
-                }
+                    # 更新 uuid 和 password
+                    jq --arg tag "$tag" \
+                    --arg old_uuid "$old_uuid" \
+                    --arg new_uuid "$new_uuid" \
+                    --arg old_password "$old_password" \
+                    --arg new_password "$new_password" \
+                    '(.inbounds[]
+                        | select(.tag == $tag)
+                        | .users[]
+                        | select(.uuid == $old_uuid and .password == $old_password))
+                        |= (.uuid = $new_uuid | .password = $new_password)' \
+                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                        echoContent red "Error: Failed to update UUID."
+                        exit 1
+                    }
 
-                # 构造 URL
-                url="tuic://$new_uuid:$new_password$@$SINGBOXDOMAIN:$port$url#$tag"
-               
-                echo "$url" >> "$SINGBOX_SUB_FILE"
-                echoContent skyblue "\n生成 $type 订阅链接: $url"
-                qrencode -t ANSIUTF8 "$url" 2>/dev/null
-                #qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null 
-               
-                ((user_index++))
-            done
-        fi
+                    # 构造 URL
+                    url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port#$tag"
+                
+                    echo "$url" >> "$SINGBOX_SUB_FILE"
+                    echoContent skyblue "\n生成 $type 订阅链接: $url"
+                    qrencode -t ANSIUTF8 "$url" 2>/dev/null
+                
+                    ((user_index++))
+                done
+            fi
+
 
         # 处理 vmess、vless 和 tuic 的 uuid 替换
         if [[ "$type" == "vmess" || "$type" == "vless" ]]; then
