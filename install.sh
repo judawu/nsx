@@ -687,10 +687,8 @@ xray_config(){
                 echo "$clients" | while IFS= read -r client; do
                     old_password=$(echo "$client" | jq -r '.password')
                     new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-                    if [[ "$protocol" == "shadowsocks" ]]; then
-                    method= $(echo "$inbound" | jq -r '.method')
-                    toppwd= $(echo "$inbound" | jq -r '.password')
-                     url="ss://$method:$toppwd:$new_password@$YOURDOMAIN:$port$url#$tag"
+                    if [[ "$protocol" == "shadowsocks" ]]; then                
+                     url="ss://2022-blake3-aes-128-gcm:QvofbfMIil7768oFAyTpyA==:$new_password@$YOURDOMAIN:$port$url#$tag"
                     else
                     url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
                     fi
