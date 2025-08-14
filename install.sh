@@ -103,7 +103,7 @@ checkSystem() {
 # 检查 SELinux
 checkCentosSELinux() {
     if [[ "$release" == "centos" ]] && [[ -f "/etc/selinux/config" ]] && ! grep -q "SELINUX=disabled" /etc/selinux/config; then
-        echoContent yellow "禁用 SELinux 以确保兼容性..."
+        echoContent skyblue "禁用 SELinux 以确保兼容性..."
         sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
         setenforce 0
     fi
@@ -136,7 +136,7 @@ installDocker() {
         systemctl enable docker
         systemctl start docker
     else
-        echoContent green "Docker 已安装."
+        echoContent yellow "Docker 已安装."
     fi
 
     # 检查 Docker Compose 插件
@@ -164,7 +164,7 @@ installDocker() {
             exit 1
         fi
     else
-        echoContent green "Docker Compose 插件已安装."
+        echoContent yellow "Docker Compose 插件已安装."
     fi
 
     # 验证 Docker Compose 版本
@@ -198,14 +198,14 @@ createDirectories() {
 # 安装 acme.sh
 installAcme() {
     if [[ ! -d "$HOME/.acme.sh" ]] || [[ -d "$HOME/.acme.sh" && -z $(find "$HOME/.acme.sh/acme.sh") ]]; then
-        echoContent skyblue "\n进度 4/${TOTAL_PROGRESS} : 安装证书程序 acme.sh..."
+        echoContent skyblue "\n安装证书程序 acme.sh..."
         curl https://get.acme.sh | sh
         if [[ $? -ne 0 ]]; then
             echoContent red "安装 acme.sh 失败，请参考 https://github.com/acmesh-official/acme.sh."
             exit 1
         fi
     else
-        echoContent green "acme.sh 已安装."
+        echoContent yellow "acme.sh 已安装."
     fi
 }
 # 管理证书
@@ -239,7 +239,7 @@ manageCertificates() {
             else
                 sslType="letsencrypt"
             fi
-            echoContent skyblue " SSL 类型为 $sslType."
+            echoContent yellow " SSL 类型为 $sslType."
             read -r -p "请输入证书域名 (例如: yourdomain.com 或 *.yourdomain.com，多个域名用逗号隔开): " DOMAIN
             if [[ -z "$DOMAIN" ]]; then
                 echoContent red "请输入域名"
@@ -247,14 +247,14 @@ manageCertificates() {
             fi
             # 提取第一个域名用于证书命名
             FIRST_DOMAIN=$(echo "$DOMAIN" | cut -d',' -f1 | xargs)
-            echoContent skyblue " 证书域名为 $DOMAIN (使用 $FIRST_DOMAIN 作为证书文件名)."
+            echoContent yellow " 证书域名为 $DOMAIN (使用 $FIRST_DOMAIN 作为证书文件名)."
             read -r -p "请输入DNS提供商: 0.Cloudflare, 1.阿里云, 2.手动DNS, 3.独立: " DNS_VENDOR
 
             if [[ "$cert_option" == "1" ]]; then
                 # 清除此域名的先前凭据
                 grep -v "^${FIRST_DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
             fi
-            echoContent skyblue " DNS提供商选择 $DNS_VENDOR."
+            echoContent yellow " DNS提供商选择 $DNS_VENDOR."
             if [[ "$DNS_VENDOR" == "0" ]]; then
  
                 if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" ]] && grep -q "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE"; then
@@ -283,7 +283,7 @@ manageCertificates() {
                         echo "${FIRST_DOMAIN}:Cloudflare:key:${cfAPIEmail}:${cfAPIKey}" >> "$CREDENTIALS_FILE"
                     fi
                 fi
-                echoContent green " Cloudflare DNS API ${action##--}证书中"
+                echoContent yellow " Cloudflare DNS API ${action##--}证书中"
                 if [[ -n "$cfAPIToken" ]]; then
                     if ! sudo CF_Token="${cfAPIToken}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_cf -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                        sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
@@ -314,7 +314,7 @@ manageCertificates() {
                     echoContent green "保存阿里云 Key 和 Secret"
                     echo "${FIRST_DOMAIN}:Alibaba:${aliKey}:${aliSecret}" >> "$CREDENTIALS_FILE"
                 fi
-                echoContent green " 阿里云 DNS API ${action##--}证书中"
+                echoContent yellow " 阿里云 DNS API ${action##--}证书中"
                 if ! sudo Ali_Key="${aliKey}" Ali_Secret="${aliSecret}" "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns dns_ali -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                     echoContent red "证书签发失败，清理残留数据并退出"
                     sudo rm -rf "$HOME/.acme.sh/${FIRST_DOMAIN}_ecc"
@@ -351,7 +351,7 @@ manageCertificates() {
                     fi
                 fi
             elif [[ "$DNS_VENDOR" == "3" ]]; then
-                echoContent green " ---> 独立模式 ${action##--}证书中"
+                echoContent yellow " ---> 独立模式 ${action##--}证书中"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --standalone -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                     echoContent red "命令失败，请检查 $ACME_LOG 日志"
                     exit 1
@@ -460,12 +460,12 @@ EOF
 url_encode() {
     local input="$1"
     if ! command -v jq &> /dev/null; then
-        echo "Error: jq is not installed" >&2
+        echoContent red "Error: jq is not installed" >&2
         return 1
     fi
     local encoded
     encoded=$(printf '%s' "$input" | jq -nr --arg v "$input" '$v | @uri' | sed 's/%23/#/' 2>/dev/null) || {
-        echo "Error: URL encoding failed" >&2
+        echoContent red "Error: URL encoding failed" >&2
         return 1
     }
     printf '%s' "$encoded"
@@ -502,12 +502,12 @@ xray_config(){
 
         # Generate Xray subscription
         if [ -f "$XRAY_CONF" ]; then
-                echoContent yellow "生成 Xray 订阅..."
+                echoContent green "创建 Xray 订阅文件于${SUBSCRIBE_DIR}..."
                 XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
                 > "$XRAY_SUB_FILE"
         fi
         # 获取用户输入的域名
-        echoContent skyblue "请手动输入域名\n"
+        echoContent yellow "请手动输入域名\n"
         read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
         if [[ -z "$YOURDOMAIN" ]]; then
             echoContent red "Error: 域名不能为空."
@@ -542,7 +542,7 @@ xray_config(){
 
 
 
-        echoContent green  "提取所有 inbounds\n"
+        echoContent yellow  "提取所有 inbounds\n"
         # 提取所有 inbounds
         inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE")
         #echoContent green "$inbounds"
@@ -557,7 +557,7 @@ xray_config(){
             if [[ "$port" == "null" || -z "$port" ]]; then
             port="443"
             fi
-            echoContent skyblue "\n处理 inbound tag: $tag, protocol: $protocol"
+            echoContent yellow "\n处理 inbound tag: $tag, protocol: $protocol"
             network=$(echo "$inbound" | jq -r '.streamSettings.network // "tcp"')
             url="$url?type=$network"
             case "$network" in
@@ -787,12 +787,12 @@ singbox_config() {
     fi
 
     # 生成订阅文件
-    echoContent yellow "生成 Sing-box 订阅..."
+    echoContent green "创建 Sing-box 订阅文件于${SUBSCRIBE_DIR}..."
     SINGBOX_SUB_FILE="${SUBSCRIBE_DIR}/singbox_sub.txt"
     > "$SINGBOX_SUB_FILE"
 
     # 获取用户输入的域名
-    echoContent skyblue "请手动输入域名\n"
+    echoContent yellow "请手动输入域名\n"
     read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " SINGBOXDOMAIN
     if [[ -z "$SINGBOXDOMAIN" ]]; then
         echoContent red "Error: Domain cannot be empty."
@@ -834,7 +834,7 @@ singbox_config() {
         tag=$(echo "$inbound" | jq -r '.tag')
         type=$(echo "$inbound" | jq -r '.type')
         port=$(echo "$inbound" | jq -r '.listen_port // "443"')
-        echoContent skyblue "\nProcessing inbound with tag: $tag, type: $type, port: $port"
+        echoContent yellow "\nProcessing inbound with tag: $tag, type: $type, port: $port"
          # 添加传输协议参数
         transport=$(echo "$inbound" | jq -r '.transport.type // "tcp"')
         url="?type=$transport"
@@ -1118,7 +1118,7 @@ manageConfigurations() {
     esac
 }
 generateSubscriptions() {
-    echoContent skyblue "\n生成订阅..."
+    echoContent skyblue "\n订阅生成..."
 
     # 检查变量
     if [[ -z "$XRAY_CONF" || -z "$SINGBOX_CONF" || -z "$SUBSCRIBE_DIR" || -z "$COMPOSE_FILE" ]]; then
@@ -1605,12 +1605,12 @@ updateConfig() {
             exit 1
         }
 
-        echoContent green "配置文件更新成功."
+        echoContent yellow "配置文件更新成功."
 
 }
 
 updateNSX() {
-    echoContent skyblue "\n进度 5/${TOTAL_PROGRESS} : 更新 NSX 脚本..."
+    echoContent skyblue "\n更新 NSX 脚本..."
     # Check if git is installed
     if ! command -v git &> /dev/null; then
         echoContent yellow "安装 git..."
@@ -1675,7 +1675,7 @@ updateNSX() {
 # Docker installation
 dockerInstall() {
     installTools
-    echoContent skyblue "\n进度 4/${TOTAL_PROGRESS} : Docker 安装..."
+    echoContent skyblue "\nDocker 安装..."
     installDocker
     createDirectories
     installAcme
@@ -1910,7 +1910,7 @@ restartServices() {
 # Local installation
 localInstall() {
    
-    echoContent skyblue "\n进度 4/${TOTAL_PROGRESS} : 本地安装..."
+    echoContent skyblue "\n本地安装..."
     installTools
     checkCentosSELinux
     
@@ -2041,11 +2041,13 @@ configNSX() {
     # Start services
     createSystemdServices
 
-    echoContent skyblue "开始启动服务..."
+    echoContent skyblue "清理log文件和遗留sock文件..."
     echoContent yellow "清理$SHM_DIR."
     sudo rm -rf "$SHM_DIR"/*
     echoContent yellow "清理${LOG_DIR}."
     sudo rm -rf "$LOG_DIR"/*
+    echoContent skyblue "开始启动服务..."
+   
     startServices
     echoContent skyblue "进行xray的配置修改..."
     xray_config
@@ -2279,7 +2281,7 @@ menu() {
     echoContent red "\n=============================================================="
     echoContent green "NSX 安装管理脚本"
     echoContent green "作者: JudaWu"
-    echoContent green "版本: v0.0.2"
+    echoContent green "版本: v0.0.3"
     echoContent green "Github: https://github.com/judawu/nsx"
     echoContent green "描述: 一个集成 Nginx、Sing-box 和 Xray 的代理环境"
     echoContent red "\n=============================================================="
