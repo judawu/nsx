@@ -1977,6 +1977,7 @@ EOF
    
     version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
     echoContent green " Xray-core版本:${version}"
+    echoContent green "\n 安装目录/usr/local/nsx/xray/，下载中..."
     if [[ "${release}" == "alpine" ]]; then
         wget -c -q -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
     else
@@ -2000,7 +2001,7 @@ EOF
     version=$(curl -s "https://api.github.com/repos/SagerNet/sing-box/releases?per_page=20" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
 
     echoContent green " sing-box版本:${version}"
-
+    echoContent green "\n 安装目录/usr/local/nsx/sing-box/，下载中..."
     if [[ "${release}" == "alpine" ]]; then
         wget -c -q -P /usr/local/nsx/sing-box/ "https://github.com/SagerNet/sing-box/releases/download/${version}/sing-box-${version/v/}${singBoxCoreCPUVendor}.tar.gz"
     else
