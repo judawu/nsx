@@ -1119,8 +1119,6 @@ manageConfigurations() {
 generateSubscriptions() {
     echoContent skyblue "\n生成订阅..."
 
-
-
     # 检查变量
     if [[ -z "$XRAY_CONF" || -z "$SINGBOX_CONF" || -z "$SUBSCRIBE_DIR" || -z "$COMPOSE_FILE" ]]; then
         echoContent red "Error: XRAY_CONF, SINGBOX_CONF, SUBSCRIBE_DIR, or COMPOSE_FILE is not set."
