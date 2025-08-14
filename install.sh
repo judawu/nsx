@@ -1159,9 +1159,7 @@ generateSubscriptions() {
 
     # Generate Xray subscription
     if [ -f "$XRAY_CONF" ]; then
-        echoContent yellow "生成 Xray 订阅..."
-        XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
-        > "$XRAY_SUB_FILE"
+    
 
         # 提取所有 inbounds
         jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF" | while IFS= read -r inbound; do
@@ -1230,7 +1228,12 @@ generateSubscriptions() {
             # 处理安全设置
             if [[ "$security" == "reality" ]]; then
                 realitySettings=$(echo "$inbound" | jq -r '.streamSettings.realitySettings')
+                private_key=$(echo "$realitySettings" | jq -r '.privateKey // empty')
                 pbk=$(echo "$realitySettings" | jq -r '.password // empty')
+                # 使用 xray 命令生成公钥
+                if [[ -z "$pbk" ]]; then
+                    pbk=$(xray x25519 -i "$private_key" | grep "Public key" | awk '{print $3}')
+                fi 
                 sid=$(echo "$realitySettings" | jq -r '.shortIds[0] // empty')
                 pqv=$(echo "$realitySettings" | jq -r '.mldsa65Verify // empty')
                 params="$params&security=reality&pbk=$pbk&sid=$sid&pqv=$pqv&fp=chrome&sni=$SUB_DOMAIN"
@@ -1284,26 +1287,18 @@ generateSubscriptions() {
 
                 if [[ -n "$SUB_LINK" ]]; then
                   
-                    echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
+                  
                     echoContent green "\n生成 Xray $protocol 订阅链接: $SUB_LINK"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
-                        qrencode -o "${SUBSCRIBE_DIR}/${protocol}_${email//[@\/]/_}_${tag//[@\/]/_}.png" "$SUB_LINK" 2>/dev/null || {
-                            echoContent red "生成二维码失败: $SUB_LINK"
-                        }
+
+                       
                     fi
                 fi
             done
         done
 
-        if [ -s "$XRAY_SUB_FILE" ]; then
-            echo "$(cat "$XRAY_SUB_FILE" | base64 -w 0)" > "$XRAY_SUB_FILE"
-            chown nobody:nogroup "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
-            chmod 644 "$XRAY_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
-            echoContent green "Xray 订阅已保存至 ${XRAY_SUB_FILE}，二维码已生成."
-        else
-            echoContent red "未生成任何 Xray 订阅链接."
-        fi
+      
     else
         echoContent red "Xray 配置文件 ${XRAY_CONF} 不存在."
     fi
@@ -1367,7 +1362,10 @@ generateSubscriptions() {
                 reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
                 if [[ "$reality_enabled" == "true" ]]; then
                     short_id=$(echo "$inbound" | jq -r '.tls.reality.short_id[0] // empty')
+                    private_key=$(echo "$inbound" | jq -r '.tls.reality.private_key // empty')
                     public_key=$(echo "$inbound" | jq -r '.tls.reality.public_key // empty')
+                    if [[ -z "$public_key" ]]; then
+                    public_key=$(sing-box generate reality-keypair | jq -r '.public_key') fi 
                     params="$params&security=reality&pbk=$public_key&sid=$short_id&fp=chrome&sni=$SUB_DOMAIN"
                 else
                     fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
@@ -1458,26 +1456,17 @@ generateSubscriptions() {
 
                 if [[ -n "$SUB_LINK" ]]; then
                    
-                    echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
+                  
                     echoContent green "\n生成 Sing-box $type 订阅链接: $SUB_LINK"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
-                        qrencode -o "${SUBSCRIBE_DIR}/${type}_${name//[@\/]/_}_${tag//[@\/]/_}.png" "$SUB_LINK" 2>/dev/null || {
-                            echoContent red "生成二维码失败: $SUB_LINK"
-                        }
+                 
                     fi
                 fi
             done
         done
 
-        if [ -s "$SINGBOX_SUB_FILE" ]; then
-            echo "$(cat "$SINGBOX_SUB_FILE" | base64 -w 0)" > "$SINGBOX_SUB_FILE"
-            chown nobody:nogroup "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
-            chmod 644 "$SINGBOX_SUB_FILE" "${SUBSCRIBE_DIR}"/*.png 2>/dev/null
-            echoContent green "Sing-box 订阅已保存至 ${SINGBOX_SUB_FILE}，二维码已生成."
-        else
-            echoContent red "未生成任何 Sing-box 订阅链接."
-        fi
+      
     else
         echoContent red "Sing-box 配置文件 ${SINGBOX_CONF} 不存在."
     fi
