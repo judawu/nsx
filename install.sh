@@ -630,7 +630,7 @@ xray_config(){
                     exit 1
                     }
                 short_id=$(echo "$new_short_ids" | jq -r '.[0]') # 取第一个 short_id
-                url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id&pqv=$mldsa65_verify#$tag"
+                url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id&pqv=$mldsa65_verify"
             
             elif [[ "$security" == "tls" ]]; then
                         tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
@@ -643,7 +643,7 @@ xray_config(){
                             alpn=$(echo "$alpn" | jq -r 'join(",")')
                         fi
                       
-                        url="$url&security=tls&fp=$fp&sni=$YOURDOMAIN&alpn=$alpn#$tag"
+                        url="$url&security=tls&fp=$fp&sni=$YOURDOMAIN&alpn=$alpn"
             else
                 url="$url#$tag"
             
@@ -660,7 +660,8 @@ xray_config(){
                     echoContent red "Error: Failed to generate UUID."
                     exit 1
                     }
-                url="$protocol://$new_id@$YOURDOMAIN:$port$url"
+                flow=$(echo "$client" | jq -r '.flow')
+                url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow#$tag"
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id \n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -687,7 +688,7 @@ xray_config(){
                 echo "$clients" | while IFS= read -r client; do
                     old_password=$(echo "$client" | jq -r '.password')
                     new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-                    url="$protocol://$new_password@$YOURDOMAIN:$port$url"
+                    url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
                     echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password \n"
 
                     # 更新 password
@@ -904,7 +905,7 @@ singbox_config() {
                     exit 1
                 }
 
-                url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$SINGBOXDOMAIN&sid=$short_id#$tag"
+                url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$SINGBOXDOMAIN&sid=$short_id"
             else
                 fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
                 sni=$(echo "$inbound" | jq -r '.tls.server_name // "'"$SINGBOXDOMAIN"'"')
@@ -914,7 +915,7 @@ singbox_config() {
                 if [[ "$alpn" == \[*\] ]]; then
                     alpn=$(echo "$alpn" | jq -r 'join(",")')
                 fi
-                url="$url&security=tls&fp=$fp&sni=$sni&alpn=$alpn#$tag"
+                url="$url&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
             fi
         else
             url="$url#$tag"
@@ -942,7 +943,8 @@ singbox_config() {
                 }
 
                 # 构造 URL
-                url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url"
+                flow=$(echo "$user" | jq -r '.flow')
+                url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url&flow=$flow#$tag"
                 echo "$url" >> "$SINGBOX_SUB_FILE"
                 echoContent skyblue "\n生成 $type 订阅链接: $url"
                 qrencode -t ANSIUTF8 "$url" 2>/dev/null
@@ -975,7 +977,7 @@ singbox_config() {
                 }
 
                 # 构造 URL
-                url="$type://$new_password@$SINGBOXDOMAIN:$port$url"
+                url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                   echo "$url" >> "$SINGBOX_SUB_FILE"
                  echoContent skyblue "\n生成 $type 订阅链接: $url"
                  qrencode -t ANSIUTF8 "$url" 2>/dev/null
@@ -1258,7 +1260,7 @@ generateSubscriptions() {
                         if [[ -n "$flow" ]]; then
                             params="$params&flow=$flow"
                         fi
-                        SUB_LINK="vless://$id@$SUB_DOMAIN:$port?$params#$tag"
+                        SUB_LINK="vless://$id@$SUB_DOMAIN:$port?$params&flow=$flow#$tag"
                         ;;
                     "trojan")
                         password=$(echo "$client" | jq -r '.password')
