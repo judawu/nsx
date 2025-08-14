@@ -948,8 +948,8 @@ singbox_config() {
                 }
 
                 # 构造 URL
-                   url="$type://$new_uuid:new_password$@$SINGBOXDOMAIN:$port$url#$tag"
-                fi
+                url="$type://$new_uuid:$new_password$@$SINGBOXDOMAIN:$port$url#$tag"
+               
                 echo "$url" >> "$SINGBOX_SUB_FILE"
                 echoContent skyblue "\n生成 $type 订阅链接: $url"
                 qrencode -t ANSIUTF8 "$url" 2>/dev/null
@@ -1040,11 +1040,11 @@ singbox_config() {
                     url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:$port?plugin=shadow-tls&password=$new_password&version=3#$tag"
                 elif  [[ "$type" == "naive" ]]; then
                    username=$(echo "$user" | jq -r '.username')
-                   url=naive+https://$username:$new_password@@$SINGBOXDOMAIN:$port$url#$tag"
+                   url="naive+https://$username:$new_password@@$SINGBOXDOMAIN:$port$url#$tag"
                 else
                    
                     url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
-                if
+                fi
                 echo "$url" >> "$SINGBOX_SUB_FILE"
                  echoContent skyblue "\n生成 $type 订阅链接: $url"
                  qrencode -t ANSIUTF8 "$url" 2>/dev/null
