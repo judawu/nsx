@@ -1044,13 +1044,13 @@ singbox_config() {
 
                 if  [[ "$type" == "shadowsocks" ]]; then
                     method= $(echo "$inbound" | jq -r '.method')
-                    url="ss://$method:$ew_top_password:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                    url="ss://$method:$new_top_password:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 elif  [[ "$type" == "shadowtls" ]]; then
                     
                     url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:443?plugin=shadow-tls&host=$SINGBOXDOMAIN&port=$port&password=$new_password&version=3#$tag"
                 elif  [[ "$type" == "naive" ]]; then
                    username=$(echo "$user" | jq -r '.username')
-                   url="naive://$username:$new_password@@$SINGBOXDOMAIN:$port$url#$tag"
+                   url="naive://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 else
                    
                     url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
