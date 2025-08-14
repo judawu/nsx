@@ -688,8 +688,9 @@ xray_config(){
                     old_password=$(echo "$client" | jq -r '.password')
                     new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
                     if [[ "$protocol" == "shadowsocks" ]]; then
-                        
-                     url="ss://2022-blake3-aes-128-gcm:$new_password@$YOURDOMAIN:$port$url#$tag"
+                    method= $(echo "$inbound" | jq -r '.method')
+                    toppwd= $(echo "$inbound" | jq -r '.password')
+                     url="ss://$method:$toppwd:$new_password@$YOURDOMAIN:$port$url#$tag"
                     else
                     url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
                     fi
@@ -922,7 +923,7 @@ singbox_config() {
                 url="$url&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
             fi
         else
-            url="$url#$tag"
+            url="$url"
         fi
 
           if [[ "$type" == "tuic" ]]; then
@@ -1035,9 +1036,10 @@ singbox_config() {
 
                 if  [[ "$type" == "shadowsocks" ]]; then
                     method= $(echo "$inbound" | jq -r '.method')
-                    url="ss://$method:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                    url="ss://$method:$ew_top_password:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 elif  [[ "$type" == "shadowtls" ]]; then
-                    url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:$port?plugin=shadow-tls&password=$new_password&version=3#$tag"
+                    
+                    url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:443?plugin=shadow-tls&host=$SINGBOXDOMAIN&port=$port&password=$new_password&version=3#$tag"
                 elif  [[ "$type" == "naive" ]]; then
                    username=$(echo "$user" | jq -r '.username')
                    url="naive+https://$username:$new_password@@$SINGBOXDOMAIN:$port$url#$tag"
