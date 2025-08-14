@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Links</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        h2 {
+            color: #444;
+            margin-top: 30px;
+        }
+        .subscription {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .subscription p {
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .qrcode {
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Subscription Links</h1>
+
+    <h2>Xray Subscriptions</h2>
+    <div id="xray-subscriptions"></div>
+
+    <h2>Sing-box Subscriptions</h2>
+    <div id="singbox-subscriptions"></div>
+
+    <script>
+        async function loadSubscriptions(file, containerId) {
+            const container = document.getElementById(containerId);
+            try {
+                const response = await fetch(file);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${file}`);
+                }
+                const text = await response.text();
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+
+                if (lines.length === 0) {
+                    container.innerHTML = '<p>No subscriptions found in the file.</p>';
+                    return;
+                }
+
+                lines.forEach((line, index) => {
+                    const subscriptionDiv = document.createElement('div');
+                    subscriptionDiv.className = 'subscription';
+                    subscriptionDiv.innerHTML = `<p><strong>Link ${index + 1}:</strong> ${line}</p>`;
+
+                    const qrDiv = document.createElement('div');
+                    qrDiv.className = 'qrcode';
+                    subscriptionDiv.appendChild(qrDiv);
+
+                    container.appendChild(subscriptionDiv);
+
+                    // Generate QR code
+                    QRCode.toCanvas(line, { 
+                        width: 200,
+                        margin: 2
+                    }, (error, canvas) => {
+                        if (error) {
+                            console.error('QR code generation failed:', error);
+                            qrDiv.innerHTML = '<p class="error">Failed to generate QR code</p>';
+                        } else {
+                            qrDiv.appendChild(canvas);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<p class="error">Error loading ${file}: ${error.message}</p>`;
+            }
+        }
+
+        // Load both subscription files
+        loadSubscriptions('xray_sub.txt', 'xray-subscriptions');
+        loadSubscriptions('singbox_sub.txt', 'singbox-subscriptions');
+    </script>
+</body>
+</html>

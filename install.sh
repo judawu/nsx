@@ -897,9 +897,9 @@ singbox_config() {
                 echoContent yellow "\nGenerated new short_id: $new_short_ids"
 
                 # 更新 private_key, short_id
-                jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" \
+                jq --arg tag "$tag" --arg private_key "$private_key"  --argjson short_ids "$new_short_ids" \
                    '(.inbounds[] | select(.tag == $tag) | .tls.reality) |=
-                    (.private_key = $private_key  |  .public_key = $public_key | .short_id = $short_ids)' \
+                    (.private_key = $private_key  | .short_id = $short_ids)' \
                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                     echoContent red "Error: Failed to update reality settings."
                     exit 1
@@ -1139,7 +1139,36 @@ generateSubscriptions() {
     else
         QRENCODE_AVAILABLE=true
     fi
+      # 检查并读取订阅文件
+    if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" ]]; then
+        echoContent skyblue "\n读取 Xray 订阅文件..."
+        while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+                echoContent green "\nXray 订阅链接: $line"
+                if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
+                    qrencode -t ANSIUTF8 "$line" 2>/dev/null
+                fi
+            fi
+        done < "${SUBSCRIBE_DIR}/xray_sub.txt"
+    fi
 
+    if [[ -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
+        echoContent skyblue "\n读取 Sing-box 订阅文件..."
+        while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+                echoContent green "\nSing-box 订阅链接: $line"
+                if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
+                    qrencode -t ANSIUTF8 "$line" 2>/dev/null
+                fi
+            fi
+        done < "${SUBSCRIBE_DIR}/singbox_sub.txt"
+    fi
+
+    # 如果订阅文件存在，则不再执行后续生成逻辑
+    if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" && -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
+        echoContent green "订阅文件已存在并处理完成，可通过 http://${SUB_DOMAIN}/subscribe/ 访问."
+        return 0
+    fi
     # 获取用户输入的域名
     read -r -p "请输入订阅域名 (例如: sing.yourdomain): " SUB_DOMAIN
     if [[ -z "$SUB_DOMAIN" ]]; then
@@ -1340,7 +1369,7 @@ generateSubscriptions() {
                 reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
                 if [[ "$reality_enabled" == "true" ]]; then
                     short_id=$(echo "$inbound" | jq -r '.tls.reality.short_id[0] // empty')    
-                    public_key=$(echo "$inbound" | jq -r '.tls.reality.public_key // empty')
+                    public_key=$(echo "$inbound" | jq -r '.tls.reality.private_key // empty')
                     params="$params&security=reality&pbk=$public_key&sid=$short_id&fp=chrome&sni=$SUB_DOMAIN"
                 else
                     fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
