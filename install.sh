@@ -1238,7 +1238,12 @@ generateSubscriptions() {
                 tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
                 fp=$(echo "$tlsSettings" | jq -r '.fingerprint // "chrome"')
                 sni=$(echo "$tlsSettings" | jq -r '.serverName // "'"$SUB_DOMAIN"'"')
-                alpn=$(echo "$tlsSettings" | jq -r '.alpn | join(",") // "http/1.1"')
+                alpn=$(echo "$inbound" | jq -r '.tls.alpn // "http/1.1"')
+
+                # 如果 alpn 是数组，则将其转换为逗号分隔的字符串
+                if [[ "$alpn" == \[*\] ]]; then
+                    alpn=$(echo "$alpn" | jq -r 'join(",")')
+                fi
                 params="$params&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
             fi
 
@@ -1367,7 +1372,12 @@ generateSubscriptions() {
                 else
                     fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
                     sni=$(echo "$inbound" | jq -r '.tls.server_name // "'"$SUB_DOMAIN"'"')
-                    alpn=$(echo "$inbound" | jq -r '.tls.alpn | join(",") // "http/1.1"')
+                    alpn=$(echo "$inbound" | jq -r '.tls.alpn // "http/1.1"')
+
+                    # 如果 alpn 是数组，则将其转换为逗号分隔的字符串
+                    if [[ "$alpn" == \[*\] ]]; then
+                        alpn=$(echo "$alpn" | jq -r 'join(",")')
+                    fi
                     params="$params&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
                 fi
             fi
@@ -1380,11 +1390,12 @@ generateSubscriptions() {
                 case "$type" in
                     "vless")
                         uuid=$(echo "$user" | jq -r '.uuid')
+                        flow=$(echo "$user" | jq -r '.flow')
                         if [[ -z "$uuid" || -z "$name" ]]; then
                             echoContent red "跳过无效 VLESS 配置: UUID 或 name 为空 (tag: $tag)"
                             continue
                         fi
-                        SUB_LINK="vless://$uuid@$SUB_DOMAIN:$port?$params#$name"
+                        SUB_LINK="vless://$uuid@$SUB_DOMAIN:$port?$params&flow=$flow#$name"
                         ;;
                     "vmess")
                         uuid=$(echo "$user" | jq -r '.uuid')
