@@ -673,8 +673,7 @@ xray_config(){
                 echo "$url" >> "$XRAY_SUB_FILE"
                 echoContent skyblue "\n生成 $protocol 订阅链接: $url" 
                 qrencode -t ANSIUTF8 "$url"
-              #  qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url"
-                
+              #qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url" 
                 ((client_index++))
                 done
                 
@@ -948,9 +947,8 @@ singbox_config() {
                 echo "$url" >> "$SINGBOX_SUB_FILE"
                 echoContent skyblue "\n生成 $type 订阅链接: $url"
                 qrencode -t ANSIUTF8 "$url" 2>/dev/null
-                #qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null || {
-                echoContent red "生成二维码失败: $url"
-                }
+                #qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null 
+               
                 ((user_index++))
             done
         fi
@@ -981,9 +979,8 @@ singbox_config() {
                   echo "$url" >> "$SINGBOX_SUB_FILE"
                  echoContent skyblue "\n生成 $type 订阅链接: $url"
                  qrencode -t ANSIUTF8 "$url" 2>/dev/null
-                # qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null || {
-                    echoContent red "生成二维码失败: $url"
-                }
+                # qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null
+             
                 ((user_index++))
             done
 
