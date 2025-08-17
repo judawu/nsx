@@ -112,7 +112,8 @@ sudo bash install.sh
 - **支持协议**：VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, Naive。
 - **访问**：通过 `http://<sub_domain>/subscribe/` 访问订阅文件。
 - **注意**：如果订阅文件已存在，直接读取并显示。
-
+![安装](png/Subcrible 1.png)
+![安装](png/Subcrible 2.png)
 ## 日志管理
 
 查看或清除日志文件。
@@ -133,7 +134,7 @@ sudo bash install.sh
 ### 更新脚本
 - **菜单选项**：7
 - **步骤**：克隆 GitHub 仓库，替换 install.sh，可选择更新配置文件，重启服务。
-
+![更新](png/updatescript.png)
 ### 停止 Docker
 - **菜单选项**：8
 - **步骤**：停止容器，清理 `/dev/shm/nsx`。
