@@ -662,7 +662,7 @@ xray_config(){
                         alpn=$(url_encode "$alpn")
                         url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
             else
-                if [[ "$protocol" == "vless" && -n "$reality_url" ]]; then
+                if [[ "$network" == "xhttp" && -n "$reality_url" ]]; then
                     url="$url$reality_url"
                 else
                     url="$url&security=tls&fp=${fp:-chrome}&sni=${YOURDOMAIN:-example.com}"
