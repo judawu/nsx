@@ -663,7 +663,7 @@ xray_config(){
                         url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
             else
                 if [[ "$protocol" == "vless" && -n "$reality_url" ]]; then
-                    url="$reality_url"
+                    url="$url$reality_url"
                 else
                     url="$url&security=tls&fp=${fp:-chrome}&sni=${YOURDOMAIN:-example.com}"
                 fi
