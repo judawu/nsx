@@ -546,7 +546,7 @@ xray_config(){
         # 提取所有 inbounds
         inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE")
         #echoContent green "$inbounds"
-        reality_url=""
+       
 
         # 遍历每个 inbound
         jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
@@ -644,11 +644,11 @@ xray_config(){
 
             # 更新 URL，仅当 mldsa65Seed 存在时添加 pqv 参数
             short_id=$(echo "$new_short_ids" | jq -r '.[0]') # 取第一个 short_id
-            url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id"
+            reality_url="&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id"
+            url=$url$reality_url
             if [[ -n "$mldsa65_seed" ]]; then
                 url="$url&pqv=$mldsa65_verify"
             fi
-            reality_url=$url
             elif [[ "$security" == "tls" ]]; then
                         tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
                         
