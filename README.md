@@ -27,7 +27,7 @@ NSX 安装管理脚本是一个用于部署和管理集成 Nginx、Sing-box 和 
 
 运行脚本前，确保以 root 权限执行：
 ```bash
-https://github.com/judawu/nsx.git
+git clone https://github.com/judawu/nsx.git
 sudo bash install.sh
 ```
 ![安装](png/nsx_install.png)
