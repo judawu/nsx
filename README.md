@@ -30,7 +30,7 @@ NSX 安装管理脚本是一个用于部署和管理集成 Nginx、Sing-box 和 
 https://github.com/judawu/nsx.git
 sudo bash install.sh
 ```
-
+![安装](png/nsx_install.png)
 ### 1. 使用 Docker 安装 NSX
 脚本会安装 Docker 和 Docker Compose，创建目录，申请证书，配置 Nginx，并启动容器。
 
