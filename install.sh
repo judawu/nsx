@@ -546,12 +546,12 @@ xray_config(){
         # 提取所有 inbounds
         inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE")
         #echoContent green "$inbounds"
-
+        relity_url=""
 
         # 遍历每个 inbound
         jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
             declare -g url=""
-            relity_url=""
+           
             tag=$(echo "$inbound" | jq -r '.tag')
             protocol=$(echo "$inbound" | jq -r '.protocol')
             port=$(echo "$inbound" | jq -r '.port')
