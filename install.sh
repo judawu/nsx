@@ -958,7 +958,7 @@ singbox_config() {
                     }
 
                     # 构造 URL
-                    new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port?alpn=h3&congestion_control=bbr&udp_relay_mode=native#$tag"
+                    new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port$url&congestion_control=bbr#$tag"
                 
                     echo "$new_url" >> "$SINGBOX_SUB_FILE"
                     echoContent skyblue "\n生成 $type 订阅链接: $new_url"
@@ -1049,8 +1049,8 @@ singbox_config() {
                     url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:443?plugin=shadow-tls&host=$SINGBOXDOMAIN&port=$port&password=$new_password&version=3#$tag"
                 elif  [[ "$type" == "naive" ]]; then
                    username=$(echo "$user" | jq -r '.username')
-                   new_url="naive+https://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
-                  # url="naive+quic://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                   #new_url="naive+https://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                   new_url="naive+quic://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 else
                     new_url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 fi

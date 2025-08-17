@@ -167,7 +167,74 @@
       "sniffing": null
     },
 
-
+     {
+      "tag": "VLESS-VISION-REALITY-MID",
+      "listen": "0.0.0.0",
+      "port":3443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@xtls.reality",
+            "id": "1d65ca0b-7d07-4955-8e83-67f0f72910e5",
+            "flow": "xtls-rprx-vision",
+         
+            "level": 0
+          }
+        ],
+        "decryption": "none" ,
+        "fallbacks": [
+           
+           {
+            "dest": "/dev/shm/nsx/xray_reality_proxy.sock",
+            "xver": 0
+           }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "target": "cloudflare.com:443",
+          "xver": 0,
+          "serverNames": [
+            "youdomain"    
+          ],
+          "privateKey": "mP2txgrkwLevCxhE4hY3V6gjmeNfyPI1zNRkP2-S1Fw",   
+          "password": "w9CN51rFdzGGvBU8x7s6bj-DGYVRXIbd5l1DK6ehjiQ",
+          "maxTimeDiff": 0,
+          "shortIds": [
+             "",
+            "af660aa6",
+            "1bc0a22dbe5bfbf1"
+          ],
+          "mldsa65Seed": "", 
+          "mldsa65Verify": "",
+          "limitFallbackUpload": {
+                        "afterBytes": 0,
+                        "bytesPerSec": 0,
+                        "burstBytesPerSec": 0 
+                    },
+          "limitFallbackDownload": {
+                        "afterBytes": 0, 
+                        "bytesPerSec": 0, 
+                        "burstBytesPerSec": 0 
+                    }
+        },
+         "rawSettings": {
+          "acceptProxyProtocol": false 
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
    
     {
       "tag": "VLESS-VISION-REALITY",
@@ -231,19 +298,7 @@
              "",
             "af660aa6",
             "1bc0a22dbe5bfbf1"
-          ],
-           "mldsa65Seed": "", 
-           "mldsa65Verify": "",
-                 "limitFallbackUpload": {
-                        "afterBytes": 0,
-                        "bytesPerSec": 0,
-                        "burstBytesPerSec": 0 
-                    },
-                    "limitFallbackDownload": {
-                        "afterBytes": 0, 
-                        "bytesPerSec": 0, 
-                        "burstBytesPerSec": 0 
-                    }
+          ]
         },
          "rawSettings": {
           "acceptProxyProtocol": false 
@@ -449,7 +504,7 @@
 		]
 	  },
 	  "streamSettings": {
-		"network": "raw",
+		"network": "tcp",
 		"security": "none",
     "rawSettings": {
           "acceptProxyProtocol": false
