@@ -600,53 +600,53 @@ xray_config(){
             # 检查 streamSettings.security 是否为 reality
             security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
            if [[ "$security" == "reality" ]]; then
-                echoContent green "\n检查 streamSettings:  reality security for $tag, updating keys and settings..."
+            echoContent green "\n检查 streamSettings:  reality security for $tag, updating keys and settings..."
 
-                # 生成公私密钥对
-                echoContent green "\n用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds"
-                key_pair=$(xray x25519)
-                private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
-                public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
-                new_short_ids=$(generate_short_ids)
-                echoContent yellow "\nGenerated new privateKey: $private_key"
-                echoContent yellow "\nGenerated new publicKey: $public_key"
-                echoContent yellow "\nGenerated new shortIds: $new_short_ids"
-                # 检查 JSON 中是否存在 mldsa65Seed
-                if jq -e "(.inbounds[] | select(.tag == \"$tag\") | .streamSettings.realitySettings | has(\"mldsa65Seed\"))" "$TEMP_FILE" > /dev/null; then
-                    echoContent green "\n用xray mldsa65生成mldsa65 seed和verify"
-                    new_mldsa65_key_pair=$(xray mldsa65) || {
-                        echoContent red "Error: Failed to generate mldsa65 key pair."
-                        exit 1
-                    }
-                    mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
-                    mldsa65_verify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
-                    echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_seed"
-                    echoContent yellow "\nGenerated new mldsa65Verify: $mldsa65_verify"
-                else
-                    mldsa65_seed=""
-                    mldsa65_verify=""
-                    echoContent yellow "\nmldsa65Seed not found in JSON, skipping ML-DSA65 key generation."
-                fi
+            # 生成公私密钥对
+            echoContent green "\n用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds"
+            key_pair=$(xray x25519)
+            private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
+            public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
+            new_short_ids=$(generate_short_ids)
+            echoContent yellow "\nGenerated new privateKey: $private_key"
+            echoContent yellow "\nGenerated new publicKey: $public_key"
+            echoContent yellow "\nGenerated new shortIds: $new_short_ids"
+            # 检查 JSON 中是否存在 mldsa65Seed
+            if jq -e "(.inbounds[] | select(.tag == \"$tag\") | .streamSettings.realitySettings | has(\"mldsa65Seed\"))" "$TEMP_FILE" > /dev/null; then
+                echoContent green "\n用xray mldsa65生成mldsa65 seed和verify"
+                new_mldsa65_key_pair=$(xray mldsa65) || {
+                    echoContent red "Error: Failed to generate mldsa65 key pair."
+                    exit 1
+                }
+                mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
+                mldsa65_verify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
+                echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_seed"
+                echoContent yellow "\nGenerated new mldsa65Verify: $mldsa65_verify"
+            else
+                mldsa65_seed=""
+                mldsa65_verify=""
+                echoContent yellow "\nmldsa65Seed not found in JSON, skipping ML-DSA65 key generation."
+            fi
 
-            
+        
 
-                # 更新 privateKey, publicKey, shortIds, 仅当 mldsa65Seed 存在时更新 mldsa65Seed 和 mldsa65Verify
-                jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed" --arg mldsa65_verify "$mldsa65_verify" \
-                    '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
-                        (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids
-                        | if has("mldsa65Seed") then .mldsa65Seed = $mldsa65_seed else . end
-                        | if has("mldsa65Seed") then .mldsa65Verify = $mldsa65_verify else . end)' \
-                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-                        echoContent red "Error: Failed to update reality settings."
-                        exit 1
-                    }
+            # 更新 privateKey, publicKey, shortIds, 仅当 mldsa65Seed 存在时更新 mldsa65Seed 和 mldsa65Verify
+            jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed" --arg mldsa65_verify "$mldsa65_verify" \
+                '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
+                    (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids
+                    | if has("mldsa65Seed") then .mldsa65Seed = $mldsa65_seed else . end
+                    | if has("mldsa65Seed") then .mldsa65Verify = $mldsa65_verify else . end)' \
+                "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "Error: Failed to update reality settings."
+                    exit 1
+                }
 
-                # 更新 URL，仅当 mldsa65Seed 存在时添加 pqv 参数
-                short_id=$(echo "$new_short_ids" | jq -r '.[0]') # 取第一个 short_id
-                url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id"
-                if [[ -n "$mldsa65_seed" ]]; then
-                    url="$url&pqv=$mldsa65_verify"
-                fi
+            # 更新 URL，仅当 mldsa65Seed 存在时添加 pqv 参数
+            short_id=$(echo "$new_short_ids" | jq -r '.[0]') # 取第一个 short_id
+            url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id"
+            if [[ -n "$mldsa65_seed" ]]; then
+                url="$url&pqv=$mldsa65_verify"
+            fi
 
             elif [[ "$security" == "tls" ]]; then
                         tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
@@ -974,7 +974,7 @@ singbox_config() {
                     }
 
                     # 构造 URL
-                    new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port$url&congestion_control=bbr#$tag"
+                    new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port?&congestion_control=bbr&sni=$SINGBOXDOMAIN#$tag"
                 
                     echo "$new_url" >> "$SINGBOX_SUB_FILE"
                     echoContent skyblue "\n生成 $type 订阅链接: $new_url"
@@ -1065,8 +1065,8 @@ singbox_config() {
                     url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:443?plugin=shadow-tls&host=$SINGBOXDOMAIN&port=$port&password=$new_password&version=3#$tag"
                 elif  [[ "$type" == "naive" ]]; then
                    username=$(echo "$user" | jq -r '.username')
-                   #new_url="naive+https://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
-                   new_url="naive+quic://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                   new_url="naive+HTTP2://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                   #new_url="naive+quic://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 else
                     new_url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 fi
