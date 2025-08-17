@@ -199,7 +199,8 @@
           "target": "cloudflare.com:443",
           "xver": 0,
           "serverNames": [
-            "yourdomain"    
+            "yourdomain", 
+             "reality.yourdomain" 
           ],
           "privateKey": "mP2txgrkwLevCxhE4hY3V6gjmeNfyPI1zNRkP2-S1Fw",   
           "password": "w9CN51rFdzGGvBU8x7s6bj-DGYVRXIbd5l1DK6ehjiQ",
@@ -288,7 +289,9 @@
  
           "xver": 0,
           "serverNames": [
-            "yourdomain"
+             "yourdomain", 
+             "reality.yourdomain" 
+           
             
           ],
           "privateKey": "mP2txgrkwLevCxhE4hY3V6gjmeNfyPI1zNRkP2-S1Fw",   
