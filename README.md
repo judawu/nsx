@@ -112,8 +112,8 @@ sudo bash install.sh
 - **支持协议**：VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, Naive。
 - **访问**：通过 `http://<sub_domain>/subscribe/` 访问订阅文件。
 - **注意**：如果订阅文件已存在，直接读取并显示。
-![安装](png/Subcrible 1.png)
-![安装](png/Subcrible 2.png)
+![安装](png/sub1.png)
+![安装](png/sub2.png)
 ## 日志管理
 
 查看或清除日志文件。
