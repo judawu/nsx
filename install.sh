@@ -551,6 +551,7 @@ xray_config(){
         # 遍历每个 inbound
         jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
             declare -g url=""
+            relity_url=""
             tag=$(echo "$inbound" | jq -r '.tag')
             protocol=$(echo "$inbound" | jq -r '.protocol')
             port=$(echo "$inbound" | jq -r '.port')
@@ -591,7 +592,7 @@ xray_config(){
                         ;;
                         "kcp")
                         seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed')
-                        seed=$(url_encode "$seed")
+                        #seed=$(url_encode "$seed")
                         url="$url&seed=$seed"
                         ;;
                         *) 
@@ -647,7 +648,7 @@ xray_config(){
             if [[ -n "$mldsa65_seed" ]]; then
                 url="$url&pqv=$mldsa65_verify"
             fi
-
+            relity_url=$url
             elif [[ "$security" == "tls" ]]; then
                         tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
                         
@@ -661,8 +662,11 @@ xray_config(){
                         alpn=$(url_encode "$alpn")
                         url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
             else
+               if [[ "$protocol" == "vless" && relity_url !="" ]] ;then
+                url=$relity_url
+               else
                 url="$url&security=tls&fp=$fp&sni=$YOURDOMAIN"
-            
+               fi
             fi
 
             # 处理 vless 和 vmess 的 id 替换
@@ -1064,7 +1068,7 @@ singbox_config() {
                 if  [[ "$type" == "shadowsocks" ]]; then
                     new_url="ss://2022-blake3-aes-128-gcm:$new_top_password:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 elif  [[ "$type" == "shadowtls" ]]; then
-                    url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:443?plugin=shadow-tls&host=$SINGBOXDOMAIN&port=$port&password=$new_password&version=3#$tag"
+                    new_url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:443?plugin=shadow-tls&host=$SINGBOXDOMAIN&port=$port&password=$new_password&version=3#$tag"
                 elif  [[ "$type" == "naive" ]]; then
                    username=$(echo "$user" | jq -r '.username')
                    new_url="HTTP2+naive://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
