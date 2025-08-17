@@ -546,7 +546,7 @@ xray_config(){
         # 提取所有 inbounds
         inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE")
         #echoContent green "$inbounds"
-        relity_url=""
+        reality_url=""
 
         # 遍历每个 inbound
         jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
@@ -648,7 +648,7 @@ xray_config(){
             if [[ -n "$mldsa65_seed" ]]; then
                 url="$url&pqv=$mldsa65_verify"
             fi
-            relity_url=$url
+            reality_url=$url
             elif [[ "$security" == "tls" ]]; then
                         tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
                         
