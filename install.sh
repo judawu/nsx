@@ -662,11 +662,11 @@ xray_config(){
                         alpn=$(url_encode "$alpn")
                         url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
             else
-               if [[ "$protocol" == "vless" && relity_url !="" ]] ;then
-                url=$relity_url
-               else
-                url="$url&security=tls&fp=$fp&sni=$YOURDOMAIN"
-               fi
+                if [[ "$protocol" == "vless" && -n "$reality_url" ]]; then
+                    url="$reality_url"
+                else
+                    url="$url&security=tls&fp=${fp:-chrome}&sni=${YOURDOMAIN:-example.com}"
+                fi
             fi
 
             # 处理 vless 和 vmess 的 id 替换
