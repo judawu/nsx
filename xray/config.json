@@ -177,7 +177,7 @@
         "clients": [
           {
             "email": "vless@xtls.reality",
-            "id": "3fcbdbe3-5ba2-4e37-8415-c27ced775cab",
+            "id": "f98968ca-3da5-4aca-a632-11b6293a63ff",
             "flow": "xtls-rprx-vision",
          
             "level": 0
@@ -224,15 +224,15 @@
             "youdomain"
             
           ],
-          "privateKey": "LfkzLDajizcdQLBj2S6KPzVPo7lshGwPGsj-cry1AG0",   
-          "password": "",
+          "privateKey": "mP2txgrkwLevCxhE4hY3V6gjmeNfyPI1zNRkP2-S1Fw",   
+          "password": "w9CN51rFdzGGvBU8x7s6bj-DGYVRXIbd5l1DK6ehjiQ",
           "maxTimeDiff": 0,
           "shortIds": [
              "",
-            "50202bc2",
-            "785f5de52704cf43"
+            "af660aa6",
+            "1bc0a22dbe5bfbf1"
           ],
-           "mldsa65Seed": "XVNxIGfzCtIXIKdxbtb_ntfdENa66nJvaucKyzouRN8", 
+           "mldsa65Seed": "", 
            "mldsa65Verify": "",
                  "limitFallbackUpload": {
                         "afterBytes": 0,
@@ -267,21 +267,21 @@
             
           {
             "email": "vless@xhttp.reality",
-            "id": "8470a2d6-819a-4295-8ad3-ce5791ac9a7a",
+            "id": "8ce89b55-3e00-4cfb-a070-25fe740acf08",
             "level": 0
           },
           {
-                "id": "ffc553b5-8200-4d8c-bf41-4b4b5d630dc2",             
+                "id": "0d8b2c13-9cd2-40d2-bde1-3f569262d74d",             
                 "email": "vps@v1",
                 "level": 0
           },
           {
-                "id": "719db0d5-fb0f-419b-8982-1f99c6e33576", 
+                "id": "71267ff0-5434-4a0e-96f4-e8fa034cfacd", 
                 "email": "vps@v2",
                 "level": 0
           },
           {
-                "id": "9be9a0e8-81d1-4c17-a8c1-861948a7177b", 
+                "id": "1c978496-fb79-4c09-bf28-bde7f5edb130", 
                 "email": "vps@v3",
                 "level": 0
           }
@@ -326,7 +326,7 @@
         "clients": [
           {
             "email": "trojan@xhttp.reality",
-            "password": "ffc553b5-8200-4d8c-bf41-4b4b5d630dc2",
+            "password": "aWHLEL0z5tMMJv1xD5AXjQ==",
             "level": 0
           }
         ],
@@ -358,7 +358,7 @@
         "clients": [
           {
             "email": "vless@tls",
-            "id": "219db0d5-fb0f-409a-8982-1f99c6e33577",
+            "id": "ad78b05c-3cc8-4e50-b931-2467de3b576c",
             "flow": "xtls-rprx-vision",
             "level": 0
           }
@@ -437,7 +437,7 @@
 	  "settings": {
 		"clients": [
   {
-    "password": "5a3325c6-184e-4482-927b-dacfb2da4bfb",
+    "password": "PAqpQXQ0dbD+IpVBVZROaQ==",
      "email": "trojan@TCP.TLS.Vision"
   }
 ],
@@ -464,7 +464,7 @@
                 "clients": [
                     {
                            "email": "VLESS@splithttp",
-                           "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb",      
+                           "id": "f4518d4e-7805-46ac-9e8d-bbe213da88a1",      
                           "level": 0                     
                     }
                 ],
@@ -493,7 +493,7 @@
             "settings": {
                 "clients": [
                     {
-                        "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb" 
+                        "id": "44c03f7d-1e83-458e-bfa5-ef7fac40a1aa" 
                     }
                 ],
                 "decryption": "none"
@@ -521,7 +521,7 @@
             "settings": {
                 "clients": [
                     {
-                        "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb" ,
+                        "id": "8f969c5f-20b8-4e38-b575-05fa22ab5446" ,
                         "level": 0,
                         "email": "ws@vmess"
                     }
@@ -550,7 +550,7 @@
             "settings": {
                 "clients": [
                     {
-                        "id": "5a3325c6-184e-4482-927b-dacfb2da4bfb"          }
+                        "id": "45186f02-1662-497c-abd8-ee66eae8e402"          }
                 ],
                 "decryption": "none"
             },
@@ -577,7 +577,7 @@
       "settings": {
         "clients": [
         {
-          "id": "8e2e5730-ccf8-4ea1-b3e2-b9a512d0f992",
+          "id": "026f91f9-ba9f-44e7-b38c-d8c1314200ca",
           "email": "vless@grpc",
           "level": 0
         }
@@ -613,7 +613,7 @@
         "clients": [
           {
             "email": "vless@xtls.mkcp",
-            "id": "18a421eb-9248-4fed-8035-db540937fba2",
+            "id": "e82d9903-c3d1-4524-a154-b8e6ba1ddf7f",
             "level": 0
           }
         ],
@@ -646,7 +646,7 @@
           "readBufferSize": 1,
           "writeBufferSize": 1,
         
-         "seed": "1yqE9B/cU2IiFSFNNRXzOw=="
+         "seed": "QvofbfMIil7768oFAyTpyA=="
         }
       },
       "sniffing": {
@@ -671,7 +671,7 @@
         "password": "QvofbfMIil7768oFAyTpyA==",
         "clients": [
           {
-            "password": "7oXO/suBqek8LDR9aYGDXg==",
+            "password": "XddSeZtDyCkncy3bYnB6qA==",
             "email": "ss@udp"
           }
         ],

@@ -645,7 +645,7 @@ xray_config(){
                       
                         url="$url&security=tls&fp=$fp&sni=$YOURDOMAIN&alpn=$alpn"
             else
-                url="$url#$tag"
+                url="$url&security=tls&fp=$fp&sni=$YOURDOMAIN"
             
             fi
 
@@ -655,13 +655,14 @@ xray_config(){
                 clients=$(echo "$inbound" | jq -c '.settings.clients[]')
                 client_index=0
                 echo "$clients" | while IFS= read -r client; do
+
                     old_id=$(echo "$client" | jq -r '.id')
                     new_id=$(xray uuid) || {
                     echoContent red "Error: Failed to generate UUID."
                     exit 1
                     }
-                flow=$(echo "$client" | jq -r '.flow')
-                url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow#$tag"
+                flow=$(echo "$client" | jq -r '.flow // empty')
+                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow#$tag"
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id \n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -670,9 +671,9 @@ xray_config(){
                         echoContent red "Error: Failed to update UUID."
                         exit 1
                         }
-                echo "$url" >> "$XRAY_SUB_FILE"
-                echoContent skyblue "\n生成 $protocol 订阅链接: $url" 
-                qrencode -t ANSIUTF8 "$url"
+                echo "$new_url" >> "$XRAY_SUB_FILE"
+                echoContent skyblue "\n生成 $protocol 订阅链接: $new_url" 
+                qrencode -t ANSIUTF8 "$new_url"
               #qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url" 
                 ((client_index++))
                 done
@@ -687,10 +688,12 @@ xray_config(){
                 echo "$clients" | while IFS= read -r client; do
                     old_password=$(echo "$client" | jq -r '.password')
                     new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-                    if [[ "$protocol" == "shadowsocks" ]]; then                
-                     url="ss://2022-blake3-aes-128-gcm:QvofbfMIil7768oFAyTpyA==:$new_password@$YOURDOMAIN:$port$url#$tag"
+                    if [[ "$protocol" == "shadowsocks" ]]; then   
+                           
+                     new_url="ss://2022-blake3-aes-128-gcm:QvofbfMIil7768oFAyTpyA==:$new_password@$YOURDOMAIN:$port$url#$tag"
                     else
-                    url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
+                   
+                    new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
                     fi
                     echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password \n"
 
@@ -701,9 +704,9 @@ xray_config(){
                         echoContent red "Error: Failed to update password."
                         exit 1
                         }
-                    echo "$url" >> "$XRAY_SUB_FILE"
-                    echoContent skyblue "\n生成 $protocol 订阅链接: $url" 
-                    qrencode -t ANSIUTF8 "$url"
+                    echo "$new_url" >> "$XRAY_SUB_FILE"
+                    echoContent skyblue "\n生成 $protocol 订阅链接: $new_url" 
+                    qrencode -t ANSIUTF8 "$new_url"
                   #  qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url"
                  
                     ((client_index++))        
@@ -955,11 +958,11 @@ singbox_config() {
                     }
 
                     # 构造 URL
-                    url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port#$tag"
+                    new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port?alpn=h3&congestion_control=bbr&udp_relay_mode=native#$tag"
                 
-                    echo "$url" >> "$SINGBOX_SUB_FILE"
-                    echoContent skyblue "\n生成 $type 订阅链接: $url"
-                    qrencode -t ANSIUTF8 "$url" 2>/dev/null
+                    echo "$new_url" >> "$SINGBOX_SUB_FILE"
+                    echoContent skyblue "\n生成 $type 订阅链接: $new_url"
+                    qrencode -t ANSIUTF8 "$new_url" 2>/dev/null
                 
                     ((user_index++))
                 done
@@ -988,14 +991,14 @@ singbox_config() {
 
                 # 构造 URL
                if [[ "$type" == "vless" ]]; then
-                    flow=$(echo "$user" | jq -r '.flow')
-                    url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url&flow=$flow#$tag"
+                    flow=$(echo "$user" | jq -r '.flow // empty')
+                    new_url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url&flow=$flow#$tag"
                 else 
-                   url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url#$tag"
+                   new_url="$type://$new_uuid@$SINGBOXDOMAIN:$port$url#$tag"
                 fi
-                echo "$url" >> "$SINGBOX_SUB_FILE"
-                echoContent skyblue "\n生成 $type 订阅链接: $url"
-                qrencode -t ANSIUTF8 "$url" 2>/dev/null
+                echo "$new_url" >> "$SINGBOX_SUB_FILE"
+                echoContent skyblue "\n生成 $type 订阅链接: $new_url"
+                qrencode -t ANSIUTF8 "$new_url" 2>/dev/null
                 #qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null 
                
                 ((user_index++))
@@ -1041,21 +1044,19 @@ singbox_config() {
                 fi
 
                 if  [[ "$type" == "shadowsocks" ]]; then
-                    
-                    url="ss://2022-blake3-aes-128-gcm:$new_top_password:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                    new_url="ss://2022-blake3-aes-128-gcm:$new_top_password:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 elif  [[ "$type" == "shadowtls" ]]; then
-                    
                     url="ss://2022-blake3-aes-256-gcm:$new_password@$SINGBOXDOMAIN:443?plugin=shadow-tls&host=$SINGBOXDOMAIN&port=$port&password=$new_password&version=3#$tag"
                 elif  [[ "$type" == "naive" ]]; then
                    username=$(echo "$user" | jq -r '.username')
-                   url="naive://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                   new_url="naive+https://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                  # url="naive+quic://$username:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 else
-                   
-                    url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
+                    new_url="$type://$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 fi
-                echo "$url" >> "$SINGBOX_SUB_FILE"
-                 echoContent skyblue "\n生成 $type 订阅链接: $url"
-                 qrencode -t ANSIUTF8 "$url" 2>/dev/null
+                echo "$new_url" >> "$SINGBOX_SUB_FILE"
+                 echoContent skyblue "\n生成 $type 订阅链接: $new_url"
+                 qrencode -t ANSIUTF8 "$new_url" 2>/dev/null
                 # qrencode -o "${SUBSCRIBE_DIR}/${type}_${tag//[@\/]/_}.png" "$url" 2>/dev/null
              
                 ((user_index++))
@@ -1324,6 +1325,8 @@ generateSubscriptions() {
                     alpn=$(echo "$alpn" | jq -r 'join(",")')
                 fi
                 params="$params&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
+            else
+                params="$params&security=tls&fp=chrome&sni=$SUB_DOMAIN"
             fi
 
             # 处理 clients
@@ -1500,7 +1503,7 @@ generateSubscriptions() {
                             echoContent red "跳过无效 TUIC 配置: UUID, password 或 name 为空 (tag: $tag)"
                             continue
                         fi
-                        SUB_LINK="tuic://$uuid:$password@$SUB_DOMAIN:$port?alpn=h3&congestion_control=bbr&$params#$name"
+                        SUB_LINK="tuic://$uuid:$password@$SUB_DOMAIN:$port?alpn=h3&congestion_control=bbr&udp_relay_mode=native$params#$name"
                         ;;
                     "naive")
                         username=$(echo "$user" | jq -r '.username')

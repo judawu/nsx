@@ -57,7 +57,7 @@
       "users": [
         {
           "name": "vmess@singbox",
-          "uuid": "4cceb232-b5f4-4f00-bd24-b3a59abbd256",
+          "uuid": "1c003065-fe88-420c-978d-b7044cdac210",
           "alterId": 0
         }
       ],
@@ -84,7 +84,7 @@
       "listen_port": 8080,
       "users": [
         {
-          "password": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "password": "7900fd89-75d2-462c-8fa4-f2c59ce7d5dd",
           "name": "sinbox@Trojan_TCP"
         }
       ],
@@ -109,7 +109,7 @@
       "users": [
         {
           "name": "singbox_hysteria2",
-          "password": "9c3bbf02-db78-44d0-8996-675e8532c555"
+          "password": "3716e683-50ab-4800-bce8-796892a7fe1a"
         }
       ],
       "tls": {
@@ -130,8 +130,8 @@
       "users": [
         {
           "name": "juda-singbox_tuic",
-          "uuid": "73a9bd83-954b-45d3-9625-4ea36cfbe2fe",
-          "password": "QvofbfMIil7768oFAyTpyA=="
+          "uuid": "d9dbb6bf-09ed-499a-a6f8-610eada2ec21",
+          "password": "GXk8ItiNjpT8TtuoHTt7Kg=="
         }
       ],
       "congestion_control": "bbr",
@@ -153,7 +153,7 @@
       "listen_port": 8083,
       "users": [
         {
-          "password": "9c3bbf02-db78-44d0-8996-675e8532c555",
+          "password": "0bd569de-ed93-4e08-9307-8aaea681ce0c",
           "username": "singbox_naive"
         }
       ],
@@ -174,11 +174,11 @@
         "udp"
       ],
       "method": "2022-blake3-aes-128-gcm",
-      "password": "c7+ipPfGTBjvIiXaEm3Vew==",
+      "password": "ozYr0jdzvW5fJ4ZXmwKOaA==",
       "users": [
         {
           "name": "ss@singbox",
-          "password": "kYtIQvS1hnPsxSauQezlbw=="
+          "password": "CNJO+qUcTS46sIhhCZWi4Q=="
         }
       ],
       "multiplex": {
@@ -191,11 +191,11 @@
       "listen": "::",
       "listen_port": 8085,
       "version": 3,
-      "password": "MIFlwNt4fWmJvavrvtFciw==",
+      "password": "K6GYKG127NCqd+hLAMIsuA==",
       "users": [
         {
           "name": "shadowtls@singbox",
-          "password": "EPtoNA05vqUSKxAIsRYVcg=="
+          "password": "vKeWj2DLKX2gSK9weY4aEA=="
         }
       ],
       "handshake": {
@@ -212,7 +212,7 @@
       "listen_port": 8088,
       "users": [
         {
-          "uuid": "82c588fa-267e-4831-8395-77978da435ba",
+          "uuid": "928431ee-43bf-46d7-a307-47ea69e6e71a",
           "name": "VLESS_Reality_gPRC"
         }
       ],
@@ -226,10 +226,10 @@
             "server": "www.apple.com",
             "server_port": 443
           },
-          "private_key": "YHaKjrRRJPEOCIjh8S5f2kdX0aYb1MgxbSKzN_pwQVM",
+          "private_key": "oG5p5VrRkKIicXHJ6UBesuAdTl4s_-lL-vEaj3H7W0w",
           "short_id": [
             "",
-            "b1603eeab8001d0e"
+            "25f6c55d8e048364"
           ]
           
         }
@@ -246,7 +246,7 @@
       "listen_port": 8089,
       "users": [
         {
-          "uuid": "a5a18127-d8a9-488a-b371-cb5db958b78a",
+          "uuid": "cfb7eeaa-129b-4b2c-a1d7-76538f0d4863",
           "flow": "xtls-rprx-vision",
           "name": "VLESS_Reality_Vision"
         }
@@ -260,7 +260,7 @@
             "server": "www.apple.com",
             "server_port": 443
           },
-          "private_key": "kNrc1JryvPFAfRAIRvLnMpPyePEassPeh2QzL5Rq2kg",
+          "private_key": "AGi1ynHqWppQClEVuPvrPc8Zt-faA1A_rAdBZtY2v0o",
           "short_id": [
             "",
             "9e18ed250258f29f"
@@ -277,7 +277,7 @@
       
       "users": [
         {
-          "uuid": "d3eb8a70-3b3c-4b71-97c2-f63ef2e951d5",
+          "uuid": "76fb0575-5e74-4df6-a603-31f516098bb0",
           "flow": "xtls-rprx-vision",
           "name": "VLESS_TCP/TLS_Vision"
         }
