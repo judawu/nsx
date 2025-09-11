@@ -1771,7 +1771,7 @@ dockerInstall() {
     configNginx
     # Check Nginx configuration
     echoContent yellow "检查 Nginx 配置语法..."
-    docker run --rm -v "${NGINX_CONF}:/etc/nginx/nginx.conf:ro" -v "${CERT_DIR}:/etc/nginx/certs:ro" -v "${SHM_DIR}:/dev/shm/nsx" nginx:alpine nginx -t
+    docker run --rm -v "${NGINX_CONF}:/etc/nginx/nginx.conf:ro" -v "${CERT_DIR}:/usr/local/nsx/certs/:ro" -v "${SHM_DIR}:/dev/shm/nsx" nginx:alpine nginx -t
     if [ $? -ne 0 ]; then
         echoContent red "错误：Nginx 配置语法检查失败！"
         exit 1
