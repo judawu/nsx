@@ -1223,34 +1223,37 @@ generateSubscriptions() {
         QRENCODE_AVAILABLE=true
     fi
       # 检查并读取订阅文件
-    if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" ]]; then
-        echoContent skyblue "\n读取 Xray 订阅文件..."
-        while IFS= read -r line; do
-            if [[ -n "$line" ]]; then
-                echoContent green "\nXray 订阅链接: $line"
-                if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
-                    qrencode -t ANSIUTF8 "$line" 2>/dev/null
+    if [[ -f "/etc/systemd/system/xray.service" ]]; then
+        if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" ]]; then
+            echoContent skyblue "\n读取 Xray 订阅文件..."
+            while IFS= read -r line; do
+                if [[ -n "$line" ]]; then
+                    echoContent green "\nXray 订阅链接: $line"
+                    if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
+                        qrencode -t ANSIUTF8 "$line" 2>/dev/null
+                    fi
                 fi
-            fi
-        done < "${SUBSCRIBE_DIR}/xray_sub.txt"
-    fi
+            done < "${SUBSCRIBE_DIR}/xray_sub.txt"
+        fi
 
-    if [[ -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
-        echoContent skyblue "\n读取 Sing-box 订阅文件..."
-        while IFS= read -r line; do
-            if [[ -n "$line" ]]; then
-                echoContent green "\nSing-box 订阅链接: $line"
-                if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
-                    qrencode -t ANSIUTF8 "$line" 2>/dev/null
+        if [[ -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
+            echoContent skyblue "\n读取 Sing-box 订阅文件..."
+            while IFS= read -r line; do
+                if [[ -n "$line" ]]; then
+                    echoContent green "\nSing-box 订阅链接: $line"
+                    if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
+                        qrencode -t ANSIUTF8 "$line" 2>/dev/null
+                    fi
                 fi
-            fi
-        done < "${SUBSCRIBE_DIR}/singbox_sub.txt"
-    fi
+            done < "${SUBSCRIBE_DIR}/singbox_sub.txt"
+        fi
 
     # 如果订阅文件存在，则不再执行后续生成逻辑
-    if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" && -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
-        echoContent green "订阅文件已存在并处理完成，可通过 http://${SUB_DOMAIN}/subscribe/ 访问."
-        return 0
+  
+        if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" && -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
+            echoContent green "订阅文件已存在并处理完成，可通过 http://yourdomain/subscribe/ 访问."
+            return 0
+        fi
     fi
     # 获取用户输入的域名
     read -r -p "请输入订阅域名 (例如: sing.yourdomain): " SUB_DOMAIN
@@ -1261,7 +1264,19 @@ generateSubscriptions() {
 
     # Generate Xray subscription
     if [ -f "$XRAY_CONF" ]; then
+          if [ ! -d "$SUBSCRIBE_DIR" ]; then
+                    mkdir -p "$SUBSCRIBE_DIR" || {
+                        echoContent red "Error: Failed to create directory $SUBSCRIBE_DIR"
+                        exit 1
+                    }
+                    chown nobody:nogroup "$SUBSCRIBE_DIR"
+                    chmod 755 "$SUBSCRIBE_DIR"
+            fi
 
+                # 生成订阅文件
+                echoContent green "创建 xray 订阅文件于${SUBSCRIBE_DIR}..."
+                XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
+                > "$XRAY_SUB_FILE"
         # 提取所有 inbounds
         jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF" | while IFS= read -r inbound; do
             tag=$(echo "$inbound" | jq -r '.tag')
@@ -1332,9 +1347,9 @@ generateSubscriptions() {
                 private_key=$(echo "$realitySettings" | jq -r '.privateKey // empty')
                 pbk=$(echo "$realitySettings" | jq -r '.password // empty')
                 # 使用 xray 命令生成公钥
-                if [[ -z "$pbk" ]]; then
-                    pbk=$(xray x25519 -i "$private_key" | grep "Public key" | awk '{print $3}')
-                fi 
+                # if [[ -z "$pbk" ]]; then
+                #     pbk=$(xray x25519 -i "$private_key" | grep "Public key" | awk '{print $3}')
+                # fi 
                 sid=$(echo "$realitySettings" | jq -r '.shortIds[0] // empty')
                 pqv=$(echo "$realitySettings" | jq -r '.mldsa65Verify // empty')
                 params="$params&security=reality&pbk=$pbk&sid=$sid&pqv=$pqv&fp=chrome&sni=$SUB_DOMAIN"
@@ -1389,6 +1404,7 @@ generateSubscriptions() {
 
                 if [[ -n "$SUB_LINK" ]]; then           
                     echoContent green "\n生成 Xray $protocol 订阅链接:\n $SUB_LINK"
+                    echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null       
                     fi
@@ -1401,7 +1417,21 @@ generateSubscriptions() {
 
     # Generate Sing-box subscription
     if [ -f "$SINGBOX_CONF" ]; then
-     
+         
+
+            if [ ! -d "$SUBSCRIBE_DIR" ]; then
+                    mkdir -p "$SUBSCRIBE_DIR" || {
+                        echoContent red "Error: Failed to create directory $SUBSCRIBE_DIR"
+                        exit 1
+                    }
+                    chown nobody:nogroup "$SUBSCRIBE_DIR"
+                    chmod 755 "$SUBSCRIBE_DIR"
+            fi
+
+                # 生成订阅文件
+                echoContent green "创建 Sing-box 订阅文件于${SUBSCRIBE_DIR}..."
+                SINGBOX_SUB_FILE="${SUBSCRIBE_DIR}/singbox_sub.txt"
+                > "$SINGBOX_SUB_FILE"
         # 提取所有 inbounds
         jq -c '.inbounds[] | select(.users)' "$SINGBOX_CONF" | while IFS= read -r inbound; do
             tag=$(echo "$inbound" | jq -r '.tag')
@@ -1545,9 +1575,14 @@ generateSubscriptions() {
 
                 if [[ -n "$SUB_LINK" ]]; then
                     echoContent green "\n生成 Sing-box $type 订阅链接: $SUB_LINK"
+                    echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
                     fi
+
+                     # 创建订阅目录
+   
+
                 fi
             done
         done
