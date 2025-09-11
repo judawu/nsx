@@ -23,6 +23,7 @@ services:
       - /usr/local/nsx/nginx/conf.d/:/etc/nginx/conf.d/:ro
       - /usr/local/nsx/www/wwwroot/:/usr/local/nsx/www/wwwroot/:ro # 网站路径
       - /usr/local/nsx/log/:/usr/local/nsx/log/:rw  #日志文件
+      - /usr/local/nsx/log/:/var/cache/nginx/:rw # cache
       - /dev/shm/nsx:/dev/shm/nsx
     networks:
       - nsx-network
