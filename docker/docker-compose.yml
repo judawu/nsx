@@ -1,6 +1,5 @@
 services:
   nginx:
-    user: nobody:nogroup
     image: nginx:alpine
     container_name: nginx
     ports:
