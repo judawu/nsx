@@ -1806,6 +1806,7 @@ dockerInstall() {
         manageCertificates
     fi
     configNginx
+    
     # Check Nginx configuration
     echoContent yellow "检查 Nginx 配置语法..."
     docker run --rm -v "${NGINX_CONF}:/etc/nginx/nginx.conf:ro" -v "${CERT_DIR}:/usr/local/nsx/certs/:ro" -v "${LOG_DIR}:/usr/local/nsx/log/:rw" -v "${SHM_DIR}:/dev/shm/nsx" nginx:alpine nginx -t
@@ -1813,7 +1814,7 @@ dockerInstall() {
         echoContent red "错误：Nginx 配置语法检查失败！"
         exit 1
     fi
-    generateSubscriptions
+    
     # Start Docker Compose
     echoContent yellow "启动 Docker 容器..."
     docker compose -f "$COMPOSE_FILE" up -d
@@ -2162,8 +2163,35 @@ configNSX() {
 
 
 }
+
+restartNSXdocker() {
+   stopNSXdocker
+   echoContent yellow "启动 Docker 容器..."
+    docker compose -f "$COMPOSE_FILE" up -d
+    if [ $? -ne 0 ]; then
+        echoContent red "启动 Docker Compose 失败，请检查配置或日志."
+        exit 1
+    fi
+
+    # Set permissions for log files
+    find "$SHM_DIR"  -name "*.sock" -exec chown nobody:nogroup {} \; -exec chmod 666 {} \;
+    if [ $? -eq 0 ]; then
+        echoContent yellow "Successfully changed permissions to 666 for all socket files in $SHM_DIR"
+    else
+        echoContent red "Error: Failed to change permissions for some or all socket files."
+        exit 1
+    fi
+    find "$LOG_DIR"  -type f -name "*.log" -exec chown nobody:nogroup {} \; -exec chmod 644 {} \;
+
+    echoContent green "Docker 容器启动成功."
+
+    # Check container status
+    echoContent yellow "检查容器状态..."
+    docker ps -f name=nginx-stream -f name=xray -f name=sing-box
+}
 # Stop NSX
-stopNSX() {
+
+stopNSXdocker() {
     echoContent skyblue "停止 NSX 容器并清理..."
     # Check if Docker and docker-compose.yml exist
     if ! command -v docker &> /dev/null || [ ! -f "$COMPOSE_FILE" ]; then
@@ -2394,10 +2422,11 @@ menu() {
     echoContent yellow "5. 配置管理"
     echoContent yellow "6. 日志管理"
     echoContent yellow "7. 更新脚本"
-    echoContent yellow "8. 停止 Docker"
+    echoContent yellow "8. 停止 NSX Docker"
     echoContent yellow "9. 生成订阅"
     echoContent yellow "10. 卸载nsx"
-    echoContent yellow "11. 退出"
+    echoContent yellow "11. 重启 NSX Docker "
+    echoContent yellow "12. 退出"
     read -r -p "请选择一个选项 [1-9]: " option
 
     case $option in
@@ -2410,10 +2439,11 @@ menu() {
         5) manageConfigurations ;;
         6) manageLogs ;;
         7) updateNSX ;;
-        8) stopNSX ;;
+        8) stopNSXdocker ;;
         9) generateSubscriptions ;;
         10)uninstallNSX ;;
-        11) exit 0 ;;
+        11)restartNSXdocker ;;
+        12) exit 0 ;;
         *) echoContent red "无效选项." ; menu ;;
     esac
 }
