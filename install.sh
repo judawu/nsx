@@ -1404,6 +1404,7 @@ generateSubscriptions() {
 
                 if [[ -n "$SUB_LINK" ]]; then           
                     echoContent green "\n生成 Xray $protocol 订阅链接:\n $SUB_LINK"
+                    echoContent green "\n写入$XRAY_SUB_FILE"
                     echo "$SUB_LINK" >> "$XRAY_SUB_FILE"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null       
@@ -1575,6 +1576,7 @@ generateSubscriptions() {
 
                 if [[ -n "$SUB_LINK" ]]; then
                     echoContent green "\n生成 Sing-box $type 订阅链接: $SUB_LINK"
+                    echoContent green "\n写入$SINGBOX_SUB_FILE"
                     echo "$SUB_LINK" >> "$SINGBOX_SUB_FILE"
                     if [[ "$QRENCODE_AVAILABLE" == "true" ]]; then
                         qrencode -t ANSIUTF8 "$SUB_LINK" 2>/dev/null
@@ -1811,7 +1813,7 @@ dockerInstall() {
         echoContent red "错误：Nginx 配置语法检查失败！"
         exit 1
     fi
-
+    generateSubscriptions
     # Start Docker Compose
     echoContent yellow "启动 Docker 容器..."
     docker compose -f "$COMPOSE_FILE" up -d
