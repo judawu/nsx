@@ -2237,7 +2237,7 @@ uninstallNSX() {
 
     # Stop NSX containers
     if command -v docker &>/dev/null && [[ -f "$COMPOSE_FILE" ]]; then
-        stopNSX
+        stopNSXdocker
     fi
 
     # Uninstall Xray
