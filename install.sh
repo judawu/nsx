@@ -1774,6 +1774,7 @@ updateNSX() {
 
 # Docker installation
 dockerInstall() {
+
     installTools
     echoContent skyblue "\nDocker 安装..."
     installDocker
@@ -2012,7 +2013,12 @@ restartServices() {
 localInstall() {
    
     echoContent skyblue "\n本地安装..."
-    installTools
+    read -r -p "是否安装工具包？500M 内存VPS 建议手动安装(y/n): " if_tools
+    if [[ "$if_tools"=="y" ]]; then
+       installTools
+    else
+      echoContent yellow "工具包没有安装，请手动安装curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode..."
+    fi
     checkCentosSELinux
     
     createDirectories
@@ -2121,7 +2127,7 @@ EOF
         ln -sf /usr/local/nsx/sing-box/sing-box /usr/bin/sing-box
         echoContent green "singbox安装成功"
     fi
-    read -r -p "本地安装已经完成，是否继续配置？(y/n): " config_nsx
+    read -r -p "本地安装已经完成，是否继续配置？500M VPS 建议手动配置 (y/n): " config_nsx
       if [[ "$config_nsx"=="y" ]]; then
         configNSX
       else 
