@@ -1687,6 +1687,8 @@ updateConfig() {
             exit 1
         fi
 
+        
+
         # Set permissions
         chmod 644 "$COMPOSE_FILE" || {
             echoContent red "无法设置 $COMPOSE_FILE 权限."
@@ -1758,6 +1760,21 @@ updateNSX() {
     else
         echoContent green "保留现有配置文件，不进行更新."
     fi
+    
+    read -r -p "是否用 GitHub 仓库网站替换当前网站？(y/n): " keep_webpage
+    if [[ "$keep_webpage" == "n" ]]; then
+        echoContent green "保留现有网站，不进行更新."
+    elif [[ "$keep_webpage" == "y" ]]; then
+        if ! cp -r "$TEMP_DIR/www/" "$WWW_DIR"; then
+            echoContent red "无法复制仓库网站 到 $WWW_DIR."
+            exit 1
+        fi
+    else
+        echoContent green "保留现有配置文件，不进行更新."
+    fi
+    
+
+
 
     # Call aliasInstall (assuming it's defined elsewhere)
     if type aliasInstall >/dev/null 2>&1; then
