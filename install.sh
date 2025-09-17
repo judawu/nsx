@@ -1292,14 +1292,14 @@ generateSubscriptions() {
                 "grpc")
                     serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName // empty')
                     if [[ -n "$serviceName" ]]; then
-                        serviceName=$(url_encode "$serviceName")
+                       # serviceName=$(url_encode "$serviceName")
                         params="$params&serviceName=$serviceName"
                     fi
                     ;;
                 "ws")
                     path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path // empty')
                     if [[ -n "$path" ]]; then
-                        path=$(url_encode "$path")
+                       # path=$(url_encode "$path")
                         params="$params&path=$path"
                     fi
                     ;;
@@ -1308,32 +1308,32 @@ generateSubscriptions() {
                     host=$(echo "$xhttpSettings" | jq -r '.host // empty')
                     path=$(echo "$xhttpSettings" | jq -r '.path // empty')
                     if [[ -n "$host" ]]; then
-                        host=$(url_encode "$host")
+                       # host=$(url_encode "$host")
                         params="$params&host=$host"
                     fi
                     if [[ -n "$path" ]]; then
-                        path=$(url_encode "$path")
+                       # path=$(url_encode "$path")
                         params="$params&path=$path"
                     fi
                     ;;
                 "splithttp")
                     path=$(echo "$inbound" | jq -r '.streamSettings.splithttpSettings.path // empty')
                     if [[ -n "$path" ]]; then
-                        path=$(url_encode "$path")
+                      #  path=$(url_encode "$path")
                         params="$params&path=$path"
                     fi
                     ;;
                 "httpupgrade")
                     path=$(echo "$inbound" | jq -r '.streamSettings.httpupgradeSettings.path // empty')
                     if [[ -n "$path" ]]; then
-                        path=$(url_encode "$path")
+                       # path=$(url_encode "$path")
                         params="$params&path=$path"
                     fi
                     ;;
                 "kcp")
                     seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed // empty')
                     if [[ -n "$seed" ]]; then
-                        seed=$(url_encode "$seed")
+                       # seed=$(url_encode "$seed")
                         params="$params&seed=$seed"
                     fi
                     ;;
@@ -1382,9 +1382,7 @@ generateSubscriptions() {
                     "vless")
                         id=$(echo "$client" | jq -r '.id')
                         flow=$(echo "$client" | jq -r '.flow // empty')
-                        if [[ -n "$flow" ]]; then
-                            params="$params&flow=$flow"
-                        fi
+                       
                         SUB_LINK="vless://$id@$SUB_DOMAIN:$port?$params&flow=$flow#$tag"
                         ;;
                     "trojan")
@@ -1485,7 +1483,7 @@ generateSubscriptions() {
                 reality_enabled=$(echo "$inbound" | jq -r '.tls.reality.enabled // false')
                 if [[ "$reality_enabled" == "true" ]]; then
                     short_id=$(echo "$inbound" | jq -r '.tls.reality.short_id[0] // empty')    
-                    public_key=$(echo "$inbound" | jq -r '.tls.reality.private_key // empty')
+                    public_key=$(echo "$inbound" | jq -r '.tls.reality.password // empty')
                     params="$params&security=reality&pbk=$public_key&sid=$short_id&fp=chrome&sni=$SUB_DOMAIN"
                 else
                     fp=$(echo "$inbound" | jq -r '.tls.fingerprint // "chrome"')
