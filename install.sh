@@ -606,8 +606,8 @@ xray_config(){
             # 生成公私密钥对
             echoContent green "\n用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds"
             key_pair=$(xray x25519)
-            private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $3}')
-            public_key=$(echo "$key_pair" | grep "Password" | awk '{print $3}')
+            private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
+            public_key=$(echo "$key_pair" | grep "Password" | awk '{print $2}')
             new_short_ids=$(generate_short_ids)
             echoContent yellow "\nGenerated new privateKey: $private_key"
             echoContent yellow "\nGenerated new publicKey: $public_key"
