@@ -114,7 +114,9 @@ sudo bash install.sh
 - **注意**：如果订阅文件已存在，直接读取并显示。
 ![安装](png/sub1.png)
 ![安装](png/sub2.png)
- **手动修改客户端订阅**。
+
+ ## 手动修改客户端订阅
+ 
   通过 `http://<sub_domain>/sub/` 访问订阅文件后如果发现订阅链接不对，可以手动修改进行代理访问
 
   先看一下nginx的stream分流：
