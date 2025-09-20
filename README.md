@@ -322,6 +322,7 @@ http2+naive://singbox_naive:16d65f45-82eb-41ca-93b2-158cb840b420@xtls.juda.dpdns
       }
     },
   ```
+Naive在有些区域比如HK会被GFW拦截,在客户端需要启用padding
 
 ## 日志管理
 
