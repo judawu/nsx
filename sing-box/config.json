@@ -166,7 +166,7 @@
     },
     {
       "type": "shadowsocks",
-      "tag": "singbox-ss-in",
+      "tag": "singbox-shadowsocks-in",
       "listen": "::",
       "listen_port": 8084,
       "network": [
