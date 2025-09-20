@@ -294,7 +294,7 @@ vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&ho
 ```
  需要改成
  ```
-  vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p3.juda.dpdns.org&flow=#Vless_grpc
+  vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1&security=tls&fp=chrome&sni=p3.juda.dpdns.org&flow=#Vless_grpc
  ```
 ## 日志管理
 
