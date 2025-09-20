@@ -136,7 +136,8 @@ sudo bash install.sh
   *例1 VLESS-XHTTP-REALITY*：
 
   服务端配置如下：
-    ```
+  
+  ```
       {
       "tag": "VLESS-VISION-REALITY",
       "listen": "/dev/shm/nsx/xray_reality_proxy.sock,0666",
@@ -210,21 +211,23 @@ sudo bash install.sh
         ]
       }
     }
-    ```
+  ```
   客户端订阅地址如下
+ 
   ```
   vless://uuid@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p1.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
   ```
   其中sni=p1.juda.dpdns.org表示为你的分流域名，在nginx。conf的stream模块中，定义了不同域名分流到不同的sock进行代理服务，p1.juda.dpdns.org可能表示我的xray_tls_proxy代理，而p1.juda.dpdns.org表示xray_reality_proxy代理，上面的vless分享链接启用了reality，所以需要手动更改sni指向p2.juda.dpdns.org
   
   也就是：
-  ```
+```
 vless://uuid@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
-  ```
+```
   *例2 TROJAN-XHTTP-REALITY*：
   
   xray服务端配置如下
-    ```
+  
+  ```
   {
       "tag": "TROJAN-XHTTP-REALITY",
       "listen": "/dev/shm/nsx/trojan_xhttp_reality.sock,0666",
@@ -254,13 +257,15 @@ vless://uuid@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&secu
         ]
       }
     }
-    ```
+  ```
+ 客户端链接：
+ 
   ```
   trojan://password@p1.juda.dpdns.org:443?type=tcp&security=tls&fp=chrome&sni=p1.juda.dpdns.org#TROJAN-XHTTP-REALITY
   ```
   这条链接采用trojan协议，但是因为室通过fallback访问，所以分享链接需要改成和上面的vless类似，也就是：
-  ```
-   trojan://password@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#TROJAN-XHTTP-REALITY
+```
+trojan://password@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#TROJAN-XHTTP-REALITY
 ```
 客户端配置如下：
   ```
@@ -297,7 +302,8 @@ vless://uuid@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&secu
   ```
  *例3 NGINX-VLESS-GRPC*：
 xray服务器配置：
-  ```
+
+ ```
   {
       "tag": "Vless_grpc",
       "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
@@ -329,9 +335,10 @@ xray服务器配置：
         ]
       }
     }
-   ```
+ ```
  下面的grpc可以通过通过tuic的方式传送，而在nignx中p3.juda.dpdns.org通过prextls.sock在nginx中进行server模块的path /reality/grpc/h1进行分流
-  ```
+
+```
   server {
         listen unix:/dev/shm/nsx/prextls.sock ssl;
         http2   on; 
@@ -470,13 +477,16 @@ xray服务器配置：
  vless://id@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p1.juda.dpdns.org&flow=#Vless_grpc
 ```
  需要改成
+ 
  ```
   vless://id@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1&security=tls&fp=chrome&sni=p3.juda.dpdns.org&flow=#Vless_grpc
  ```
+
  *例4 naive*：
-  ```
+ 
+```
 http+naive://singbox_naive:16d65f45-82eb-41ca-93b2-158cb840b420@xtls.juda.dpdns.org:8083?type=tcp&security=tls&fp=chrome&sni=xtls.juda.dpdns.org&alpn=http%2F1.1#singbox-naive-in
-  ```
+```
 
 在singbox的config中，
   ```
@@ -498,7 +508,7 @@ http+naive://singbox_naive:16d65f45-82eb-41ca-93b2-158cb840b420@xtls.juda.dpdns.
         "key_path": "/usr/local/nsx/certs/xtls.juda.dpdns.org.key"
       }
     },
-  ```
+```
 Naive在有些区域比如HK会被GFW拦截,在客户端需要启用padding
 
  *例5 tuic*：
@@ -534,11 +544,12 @@ singbox服务器配置：
     }
   ```
  *例6 tuic*：
-  ```
+ 
+```
 hysteria2://passowrd@xtls.juda.dpdns.org:8081?type=tcp&security=tls&fp=chrome&sni=xtls.juda.dpdns.org&alpn=h3#singbox-hysteria2-in
- ```
+```
 singbox服务器配置：
- ```
+```
 {
       "type": "hysteria2",
       "tag": "singbox-hysteria2-in",
@@ -564,6 +575,58 @@ singbox服务器配置：
     },
 
  ```
+
+naive，tuic,hysteria2 采用UDP，会被Qos
+
+ *例8 shadowtls*：
+服务器配置，shadowtls+shadowsocks
+  ```
+{
+      "type": "shadowsocks",
+      "tag": "singbox-ss-in",
+      "listen": "::",
+      "listen_port": 8084,
+      "network": [
+        "tcp",
+        "udp"
+      ],
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "p1",
+      "users": [
+        {
+          "name": "ss@singbox",
+          "password": "p2"
+        }
+      ],
+      "multiplex": {
+        "enabled": true
+      }
+    },
+    {
+      "type": "shadowtls",
+      "tag": "singbox-shadowtls-in",
+      "listen": "::",
+      "listen_port": 8085,
+      "version": 3,
+      "password": "p1",
+      "users": [
+        {
+          "name": "shadowtls@singbox",
+          "password": "p2"
+        }
+      ],
+      "handshake": {
+        "server": "cloudflare.com",
+        "server_port": 443
+      },
+      "strict_mode": true,
+      "detour": "singbox-shadowsocks-in"
+    }
+ ```
+shadowtls是一个插件，客户端需要配置ss并启用插件
+
+ 服务器配置：
+ 
 ## 日志管理
 
 查看或清除日志文件。
