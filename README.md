@@ -134,25 +134,202 @@ sudo bash install.sh
 
   
   *例1 VLESS-XHTTP-REALITY*：
+
+  服务端配置如下：
+    ```
+      {
+      "tag": "VLESS-VISION-REALITY",
+      "listen": "/dev/shm/nsx/xray_reality_proxy.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@xtls.reality",
+            "id": "uuid",
+            "flow": "xtls-rprx-vision",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "path": "/vlesssplithttp",
+            "dest": "/dev/shm/nsx/vlesssplithttp.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vlesshttpupgrade",
+            "dest": "/dev/shm/nsx/vlesshttpupgrade.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vlessws",
+            "dest": "/dev/shm/nsx/vlessws.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vmessws",
+            "dest": "/dev/shm/nsx/vmessws.sock",
+            "xver": 0
+          },
+          {
+            "dest": "/dev/shm/nsx/vless_xhttp_reality.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "target": "/dev/shm/nsx/xray_tls_proxy.sock",
+          "xver": 0,
+          "serverNames": [
+            "p1.juda.dpdns.org",
+            "p2.juda.dpdns.org"
+          ],
+          "privateKey": "wDV1NTPFhJ0uOsin7iMZaczZgLXPecwtrX6j0nVuhX4",
+          "password": "dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg",
+          "maxTimeDiff": 0,
+          "shortIds": [
+            "af3dd995",
+            "0c53779c5e0ed16b"
+          ]
+        },
+        "rawSettings": {
+          "acceptProxyProtocol": false
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    }
+    ```
+  客户端订阅地址如下
   ```
-  vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p1.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
+  vless://uuid@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p1.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
   ```
   其中sni=p1.juda.dpdns.org表示为你的分流域名，在nginx。conf的stream模块中，定义了不同域名分流到不同的sock进行代理服务，p1.juda.dpdns.org可能表示我的xray_tls_proxy代理，而p1.juda.dpdns.org表示xray_reality_proxy代理，上面的vless分享链接启用了reality，所以需要手动更改sni指向p2.juda.dpdns.org
   
   也就是：
   ```
-vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
+vless://uuid@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
   ```
   *例2 TROJAN-XHTTP-REALITY*：
+  
+  xray服务端配置如下
+    ```
+  {
+      "tag": "TROJAN-XHTTP-REALITY",
+      "listen": "/dev/shm/nsx/trojan_xhttp_reality.sock,0666",
+      "protocol": "trojan",
+      "settings": {
+        "clients": [
+          {
+            "email": "trojan@xhttp.reality",
+            "password": "password",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "dest": "/dev/shm/nsx/xray_tls_proxy.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    }
+    ```
   ```
-  trojan://FLmu1Q9yx59XtENJnmR6yw==@p1.juda.dpdns.org:443?type=tcp&security=tls&fp=chrome&sni=p1.juda.dpdns.org#TROJAN-XHTTP-REALITY
+  trojan://password@p1.juda.dpdns.org:443?type=tcp&security=tls&fp=chrome&sni=p1.juda.dpdns.org#TROJAN-XHTTP-REALITY
   ```
   这条链接采用trojan协议，但是因为室通过fallback访问，所以分享链接需要改成和上面的vless类似，也就是：
   ```
-   trojan://FLmu1Q9yx59XtENJnmR6yw==@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#TROJAN-XHTTP-REALITY
+   trojan://password@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#TROJAN-XHTTP-REALITY
 ```
+客户端配置如下：
+  ```
+  {
+      "tag": "proxy_xhttp_trojan",
+      "protocol": "trojan",
+       "settings": {
+        "servers": [
+          {
+            "address": "p1.juda.dpdns.org",
+            "port": 443,
+            "password": "password"
+          }
+        ]
+      },
+       "streamSettings": {
+                 "network": "xhttp",
+                  "xhttpSettings": {
+                    "host": "",
+                    "path": "/reality/xhttp",
+                    "mode": "auto"
+                  },
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                    "fingerprint": "chrome", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                    "serverName": "proxy.juda.autos", // 服务端 serverNames 之一
+                    "publicKey": "dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg", // 服务端私钥对应的公钥
+                    "shortId": "0c53779c5e0ed16b", // 服务端 shortIds 之一
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+            }
+    },
+  ```
  *例3 NGINX-VLESS-GRPC*：
- 
+xray服务器配置：
+  ```
+  {
+      "tag": "Vless_grpc",
+      "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "",
+            "email": "vless@grpc",
+            "level": 0
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "security": "none",
+        "grpcSettings": {
+          "serviceName": "/reality/grpc/h1|h2",
+          "multiMode": true
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    }
+   ```
  下面的grpc可以通过通过tuic的方式传送，而在nignx中p3.juda.dpdns.org通过prextls.sock在nginx中进行server模块的path /reality/grpc/h1进行分流
   ```
   server {
@@ -290,15 +467,15 @@ vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&ho
  ```
  所以： 
  ```
- vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p1.juda.dpdns.org&flow=#Vless_grpc
+ vless://id@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p1.juda.dpdns.org&flow=#Vless_grpc
 ```
  需要改成
  ```
-  vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1&security=tls&fp=chrome&sni=p3.juda.dpdns.org&flow=#Vless_grpc
+  vless://id@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1&security=tls&fp=chrome&sni=p3.juda.dpdns.org&flow=#Vless_grpc
  ```
  *例4 naive*：
   ```
-http2+naive://singbox_naive:16d65f45-82eb-41ca-93b2-158cb840b420@xtls.juda.dpdns.org:8083?type=tcp&security=tls&fp=chrome&sni=xtls.juda.dpdns.org&alpn=http%2F1.1#singbox-naive-in
+http+naive://singbox_naive:16d65f45-82eb-41ca-93b2-158cb840b420@xtls.juda.dpdns.org:8083?type=tcp&security=tls&fp=chrome&sni=xtls.juda.dpdns.org&alpn=http%2F1.1#singbox-naive-in
   ```
 
 在singbox的config中，
@@ -324,6 +501,69 @@ http2+naive://singbox_naive:16d65f45-82eb-41ca-93b2-158cb840b420@xtls.juda.dpdns
   ```
 Naive在有些区域比如HK会被GFW拦截,在客户端需要启用padding
 
+ *例5 tuic*：
+  ```
+tuic://90675eb8-759e-4efb-b119-0b8a7f435b6b:password@xtls.juda.dpdns.org:8082??type=tcp&security=tls&fp=chrome&sni=xtls.juda.dpdns.org&alpn=h3#singbox-tuic-in
+  ```
+
+singbox服务器配置：
+   ```
+  {
+      "type": "tuic",
+      "tag": "singbox-tuic-in",
+      "listen": "::",
+      "listen_port": 8082,
+      "users": [
+        {
+          "name": "juda-singbox_tuic",
+          "uuid": "90675eb8-759e-4efb-b119-0b8a7f435b6b",
+          "password": "password"
+        }
+      ],
+      "congestion_control": "bbr",
+      "auth_timeout": "5s",
+      "zero_rtt_handshake": false,
+      "heartbeat": "10s",
+      "tls": {
+        "enabled": true,
+        "server_name": "xtls.juda.dpdns.org",
+        "alpn": "h3",
+        "certificate_path": "/usr/local/nsx/certs/xtls.juda.dpdns.org.pem",
+        "key_path": "/usr/local/nsx/certs/xtls.juda.dpdns.org.key"
+      }
+    }
+  ```
+ *例6 tuic*：
+  ```
+hysteria2://passowrd@xtls.juda.dpdns.org:8081?type=tcp&security=tls&fp=chrome&sni=xtls.juda.dpdns.org&alpn=h3#singbox-hysteria2-in
+ ```
+singbox服务器配置：
+ ```
+{
+      "type": "hysteria2",
+      "tag": "singbox-hysteria2-in",
+      "listen": "::",
+      "listen_port": 8081,
+      "up_mbps": 100,
+      "down_mbps": 50,
+      "users": [
+        {
+          "name": "singbox_hysteria2",
+          "password": "passowrd"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "xtls.juda.dpdns.org",
+        "alpn": "h3",
+        "certificate_path": "/usr/local/nsx/certs/xtls.juda.dpdns.org.pem",
+        "key_path": "/usr/local/nsx/certs/xtls.juda.dpdns.org.key"
+      },
+      "masquerade": "https://cloudflare.com",
+      "brutal_debug": true
+    },
+
+ ```
 ## 日志管理
 
 查看或清除日志文件。
