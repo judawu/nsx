@@ -114,7 +114,7 @@ sudo bash install.sh
 - **注意**：如果订阅文件已存在，直接读取并显示。
 ![安装](png/sub1.png)
 ![安装](png/sub2.png)
- **手动修改订阅**。
+ **手动修改客户端订阅**。
   通过 `http://<sub_domain>/sub/` 访问订阅文件后如果发现订阅链接不对，可以手动修改进行代理访问
 
   先看一下nginx的stream分流：
@@ -133,7 +133,7 @@ sudo bash install.sh
   这里通过域名进行分流，例如：
 
   
-  *例1*：
+  *例1 VLESS-XHTTP-REALITY*：
   ```
   vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p1.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
   ```
@@ -143,7 +143,7 @@ sudo bash install.sh
   ```
 vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
   ```
-  *例2*：
+  *例2 TROJAN-XHTTP-REALITY*：
   ```
   trojan://FLmu1Q9yx59XtENJnmR6yw==@p1.juda.dpdns.org:443?type=tcp&security=tls&fp=chrome&sni=p1.juda.dpdns.org#TROJAN-XHTTP-REALITY
   ```
@@ -151,7 +151,7 @@ vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&ho
   ```
    trojan://FLmu1Q9yx59XtENJnmR6yw==@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#TROJAN-XHTTP-REALITY
 ```
- *例3*：
+ *例3 NGINX-VLESS-GRPC*：
  
  下面的grpc可以通过通过tuic的方式传送，而在nignx中p3.juda.dpdns.org通过prextls.sock在nginx中进行server模块的path /reality/grpc/h1进行分流
   ```
@@ -296,6 +296,33 @@ vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&ho
  ```
   vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1&security=tls&fp=chrome&sni=p3.juda.dpdns.org&flow=#Vless_grpc
  ```
+ *例4 naive*：
+  ```
+http2+naive://singbox_naive:16d65f45-82eb-41ca-93b2-158cb840b420@xtls.juda.dpdns.org:8083?type=tcp&security=tls&fp=chrome&sni=xtls.juda.dpdns.org&alpn=http%2F1.1#singbox-naive-in
+  ```
+
+在singbox的config中，
+  ```
+   {
+      "type": "naive",
+      "tag": "singbox-naive-in",
+      "listen": "::",
+      "listen_port": 8083,
+      "users": [
+        {
+          "password": "16d65f45-82eb-41ca-93b2-158cb840b420",
+          "username": "singbox_naive"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "xtls.juda.dpdns.org",
+        "certificate_path": "/usr/local/nsx/certs/xtls.juda.dpdns.org.pem",
+        "key_path": "/usr/local/nsx/certs/xtls.juda.dpdns.org.key"
+      }
+    },
+  ```
+
 ## 日志管理
 
 查看或清除日志文件。
