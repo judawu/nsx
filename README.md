@@ -118,7 +118,7 @@ sudo bash install.sh
   通过 `http://<sub_domain>/sub/` 访问订阅文件后如果发现订阅链接不对，可以手动修改进行代理访问
 
   先看一下nginx的stream分流：
-  、、、
+ ```
      map $ssl_preread_server_name $layer4jail {
         p1.juda.dpdns.org           xray_tls_proxy;   
         p2.juda.dpdns.org       xray_reality_proxy;  
@@ -128,35 +128,41 @@ sudo bash install.sh
         m.baidu.com              www.google.com:443;
         default                  unix:/dev/shm/nsx/nginxproxy.sock;
         }
-、、、
+```
 
   这里通过域名进行分流，例如：
 
   
   *例1*：
+  ```
   vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p1.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
-  
+  ```
   其中sni=p1.juda.dpdns.org表示为你的分流域名，在nginx。conf的stream模块中，定义了不同域名分流到不同的sock进行代理服务，p1.juda.dpdns.org可能表示我的xray_tls_proxy代理，而p1.juda.dpdns.org表示xray_reality_proxy代理，上面的vless分享链接启用了reality，所以需要手动更改sni指向p2.juda.dpdns.org
   
-  也就是： vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
-  
+  也就是：
+  ```
+vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#VLESS-XHTTP-REALITY
+  ```
   *例2*：
-  
+  ```
   trojan://FLmu1Q9yx59XtENJnmR6yw==@p1.juda.dpdns.org:443?type=tcp&security=tls&fp=chrome&sni=p1.juda.dpdns.org#TROJAN-XHTTP-REALITY
-  
+  ```
   这条链接采用trojan协议，但是因为室通过fallback访问，所以分享链接需要改成和上面的vless类似，也就是：
-  
+  ```
    trojan://FLmu1Q9yx59XtENJnmR6yw==@p1.juda.dpdns.org:443?type=xhttp&host=&path=%2Freality%2Fxhttp&security=reality&pbk=dWrPthWzzXjYkzgbK40T-R51uI56vulNt0sXLMgdLWg&fp=chrome&sni=p2.juda.dpdns.org&sid=af3dd995&flow=#TROJAN-XHTTP-REALITY
-
+```
  *例2*：
  
  下面的grpc可以通过通过tuic的方式传送，而在nignx中p3.juda.dpdns.org通过prextls.sock在nginx中进行server模块的path /reality/grpc/h1进行分流
  
- 所以： vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p1.juda.dpdns.org&flow=#Vless_grpc
-
+ 所以： 
+ ```
+ vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p1.juda.dpdns.org&flow=#Vless_grpc
+```
  需要改成
+ ```
   vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p3.juda.dpdns.org&flow=#Vless_grpc
-  
+ ```
 ## 日志管理
 
 查看或清除日志文件。
