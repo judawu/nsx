@@ -154,7 +154,140 @@ vless://41a83310-1a69-4031-88b8-c21a7eba0e2a@p1.juda.dpdns.org:443?type=xhttp&ho
  *例3*：
  
  下面的grpc可以通过通过tuic的方式传送，而在nignx中p3.juda.dpdns.org通过prextls.sock在nginx中进行server模块的path /reality/grpc/h1进行分流
- 
+  ```
+  server {
+        listen unix:/dev/shm/nsx/prextls.sock ssl;
+        http2   on; 
+      
+        ssl_protocols TLSv1.2 TLSv1.3;
+       
+        ssl_certificate     /usr/local/nsx/certs/p1.juda.dpdns.org.pem;
+        ssl_certificate_key /usr/local/nsx/certs/p1.juda.dpdns.org.key;
+        ssl_ciphers    TLS13_AES_128_GCM_SHA256:TLS13_AES_256_GCM_SHA384:TLS13_CHACHA20_POLY1305_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305;
+        ssl_prefer_server_ciphers  on;
+        client_header_buffer_size  8k;
+        error_log /dev/null;
+        access_log /usr/local/nsx/log/nginx_prextls_access.log;
+         if ($http_user_agent ~* "zgrab|bot|spider|crawler") {
+            return 444;
+        }
+        if ($http_user_agent = "") {
+        return 403;
+        }
+        if ($args ~* "(shell|wget|rm+-rf|\.env|phpMyAdmin|setup\.php)") {
+            return 403;
+        }
+        if ($request_method !~ ^(GET|POST|HEAD)$) {
+        return 405;
+         }
+         if ($request_method = CONNECT) {
+        return 403;
+         }
+        location ~* \.(env|env-.*|secrets|key\.pem|ini\.bak|yml|log|dist|py|sh|json|dev|prod|test|crt|key|aws|old|1|2)$ {
+        deny all;
+        return 403;
+        }
+        location ~* ^/(ab2g|ab2h|download/powershell) {
+        return 403;
+        }
+         location ~* (wordpress|cgi-bin|product|wp-admin|wp-content|wp-includes|phpinfo|wlwmanifest|phpMyAdmin|xmlrpc|dbadmin|pma|phpma|sqlmanager|scripts|setup|admin|_phpMyAdmin|sqlweb|mysql-admin|webadmin|myadmin|www|web|wwwroot|PHPMYADMIN|phpmyadmin|admin|releases|test|upload|statisch|src|stg|server|spring|qa|previous|tmp|demo|internal|keys|lara|live) {
+            return 444;
+        }
+         location / {
+            sub_filter                            $proxy_host $host;
+            sub_filter_once                       off;
+            set $website                          p4.juda.dpdns.org;
+            proxy_pass                            https://$website;
+            resolver                              1.1.1.1;
+            proxy_set_header Host                 $proxy_host;
+            proxy_http_version                    1.1;
+            proxy_cache_bypass                    $http_upgrade;
+            proxy_ssl_server_name                 on;
+            proxy_set_header Upgrade              $http_upgrade;
+            proxy_set_header Connection           $connection_upgrade;
+            proxy_set_header X-Real-IP            $remote_addr;
+            proxy_set_header Forwarded            $proxy_add_forwarded;
+            proxy_set_header X-Forwarded-For      $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto    $scheme;
+            proxy_set_header X-Forwarded-Host     $host;
+            proxy_set_header X-Forwarded-Port     $server_port;
+            proxy_connect_timeout                 60s;
+            proxy_send_timeout                    60s;
+            proxy_read_timeout                    60s;
+        }
+        location /vlesssplithttp {
+            proxy_pass                          http://unix:/dev/shm/nsx/vlesssplithttp.sock;
+            proxy_http_version                  1.1;
+            proxy_request_buffering             off;
+            proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
+            proxy_redirect                      off;
+        }
+         location  /vlessws {
+            if ($http_upgrade != "websocket") {
+                return 404;
+            }
+            proxy_pass                          http://unix:/dev/shm/nsx/vlessws.sock;
+            proxy_http_version                  1.1;
+            proxy_set_header Upgrade            $http_upgrade;
+            proxy_set_header Connection         "upgrade";
+            proxy_set_header X-Real-IP          $remote_addr;
+            proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
+            proxy_set_header Host               $host;
+            proxy_redirect                      off;
+        }
+
+         location  /vlesshttpupgrade {
+            if ($http_upgrade != "websocket") {
+                return 404;
+            }
+            proxy_pass                          http://unix:/dev/shm/nsx/vlesshttpupgrade.sock;
+            proxy_http_version                  1.1;
+            proxy_set_header Upgrade            $http_upgrade;
+            proxy_set_header Connection         "upgrade";
+            proxy_set_header X-Real-IP          $remote_addr;
+            proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
+            proxy_set_header Host               $host;
+            proxy_redirect                      off;
+        }
+        location /reality/grpc/h1 {
+            if ($content_type !~ "application/grpc") {
+                return 404;
+            }
+            grpc_pass                    unix:/dev/shm/nsx/nginx_grpc_vless.sock;
+            grpc_read_timeout            1h;
+            grpc_send_timeout            1h;
+            grpc_set_header X-Real-IP    $remote_addr;
+            grpc_socket_keepalive        on;
+
+            client_body_buffer_size      1m;
+            client_body_timeout          1h;
+            client_max_body_size         0;
+        }
+       location /reality/grpc/h2 {
+
+            if ($content_type !~ "application/grpc") {
+                return 404;
+            }
+            grpc_pass grpc://unix:/dev/shm/nsx/nginx_grpc_vless.sock;
+            grpc_set_header Host $http_host;
+            client_max_body_size 0;
+            grpc_buffer_size 128k;
+            grpc_socket_keepalive on;
+
+            # gRPC headers
+            #grpc_set_header Connection        "";
+            grpc_set_header X-Real-IP $remote_addr;
+            grpc_set_header Forwarded $proxy_add_forwarded;
+            grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            grpc_set_header X-Forwarded-Proto $scheme;
+            grpc_set_header X-Forwarded-Host $host;
+            grpc_set_header X-Forwarded-Port $server_port;
+            grpc_send_timeout 1h;
+            grpc_read_timeout 1h;
+            grpc_set_header Early-Data on;
+        }   
+    }
+ ```
  所以： 
  ```
  vless://e5eef0e4-6a06-4281-aeba-63d8cc31869b@p1.juda.dpdns.org:443?type=grpc&serviceName=%2Freality%2Fgrpc%2Fh1%7Ch2&security=tls&fp=chrome&sni=p1.juda.dpdns.org&flow=#Vless_grpc
