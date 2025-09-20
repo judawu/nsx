@@ -118,7 +118,7 @@ sudo bash install.sh
   通过 `http://<sub_domain>/sub/` 访问订阅文件后如果发现订阅链接不对，可以手动修改进行代理访问
 
   先看一下nginx的stream分流：
-  ···
+  、、、
      map $ssl_preread_server_name $layer4jail {
         p1.juda.dpdns.org           xray_tls_proxy;   
         p2.juda.dpdns.org       xray_reality_proxy;  
@@ -128,7 +128,7 @@ sudo bash install.sh
         m.baidu.com              www.google.com:443;
         default                  unix:/dev/shm/nsx/nginxproxy.sock;
         }
- ···
+、、、
 
   这里通过域名进行分流，例如：
 
