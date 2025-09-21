@@ -2190,22 +2190,22 @@ configNSX() {
 
 }
 configufw(){
-    systemctl enable ufw
-    ufw allow 80
-    ufw allow 443
-    ufw allow 53
-    ufw allow 853
-    ufw allow 5353
-    ufw allow 6753
-    ufw allow 8071,8072,8073,8074,8075,8076,8077,8078,8079,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090/tcp
-    ufw allow 8071,8072,8073,8074,8075,8076,8077,8078,8079,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090/udp
-    ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810/tcp
-    ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810/udp
-    ufw allow 3344,3443,4443,4434,8443,4433/tcp
-    ufw allow 3344,3443,4443,4434,8443,4433/udp
-    systemctl start ufw
-    ufw enable
-    ufw status
+    sudo systemctl enable ufw
+    sudo ufw allow 80
+    sudo ufw allow 443
+    sudo ufw allow 53
+    sudo ufw allow 853
+    sudo ufw allow 5353
+    sudo ufw allow 6753
+    sudo ufw allow 8071,8072,8073,8074,8075,8076,8077,8078,8079,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090/tcp
+    sudo ufw allow 8071,8072,8073,8074,8075,8076,8077,8078,8079,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090/udp
+    sudo ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810/tcp
+    sudo ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810/udp
+    sudo ufw allow 3344,3443,4443,4434,8443,4433/tcp
+    sudo ufw allow 3344,3443,4443,4434,8443,4433/udp
+    sudo systemctl start ufw
+    sudo ufw enable
+    sudo ufw status
     
 }
 restartNSXdocker() {
@@ -2232,6 +2232,20 @@ restartNSXdocker() {
     # Check container status
     echoContent yellow "检查容器状态..."
     docker ps -f name=nginx-stream -f name=xray -f name=sing-box
+}
+
+restartNSXlocal() {
+    restartServices
+    echoContent yellow "清理logs ..."
+    echo > "${LOG_DIR}/nginx_access.log"
+    echo > "${LOG_DIR}/nginx_error.log"
+    echo > "${LOG_DIR}/nginx_stream_access.log"
+    echo > "${LOG_DIR}/nginx_stream_error.log"
+    echo > "${LOG_DIR}/xray_access.log"
+    echo > "${LOG_DIR}/xray_error.log"
+    echo > "${LOG_DIR}/singbox.log"
+    echoContent yellow "重启nsx本地服务..."
+   
 }
 # Stop NSX
 
@@ -2469,8 +2483,9 @@ menu() {
     echoContent yellow "8. 停止 NSX Docker"
     echoContent yellow "9. 生成订阅"
     echoContent yellow "10. 卸载nsx"
-    echoContent yellow "11. 重启 NSX Docker "
-    echoContent yellow "12. 退出"
+    echoContent yellow "11. 重启 NSX Docker"
+    echoContent yellow "12. 重启 NSX 本地"
+    echoContent yellow "13. 退出"
     read -r -p "请选择一个选项 [1-9]: " option
 
     case $option in
@@ -2487,7 +2502,8 @@ menu() {
         9) generateSubscriptions ;;
         10)uninstallNSX ;;
         11)restartNSXdocker ;;
-        12) exit 0 ;;
+        12)restartNSXlocal ;;
+        13) exit 0 ;;
         *) echoContent red "无效选项." ; menu ;;
     esac
 }
