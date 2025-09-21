@@ -2035,7 +2035,6 @@ localInstall() {
       echoContent yellow "工具包没有安装，请手动安装curl wget git sudo lsof unzip ufw socat jq iputils-ping dnsutils qrencode..."
     fi
     checkCentosSELinux
-    
     createDirectories
     installAcme
 
@@ -2142,13 +2141,12 @@ EOF
         ln -sf /usr/local/nsx/sing-box/sing-box /usr/bin/sing-box
         echoContent green "singbox安装成功"
     fi
-    read -r -p "本地安装已经完成，是否继续配置？500M VPS 建议手动配置 (y/n): " config_nsx
-      if [[ "$config_nsx"=="y" ]]; then
+    read -r -p "本地安装已经完成，是否继续配置？500M VPS 建议手动配置 (y/n):"  nsx_config
+    if [[ "$nsx_config"=="y" ]]; then
         configNSX
-      else 
+    else 
         echoContent green "nginx，xray singbox安装完成，请手动配置"
-      fi
-   
+    fi  
 }
 configNSX() {
     updateNSX
