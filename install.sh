@@ -510,13 +510,7 @@ xray_config() {
         > "$XRAY_SUB_FILE"
     fi
 
-    # 获取用户输入的域名
-    echoContent yellow "请手动输入域名\n"
-    read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
-    if [[ -z "$YOURDOMAIN" ]]; then
-        echoContent red "错误: 域名不能为空"
-        exit 1
-    fi
+  
 
     # 备份原始文件
     cp "$XRAY_CONF" "${XRAY_CONF}.bak" || {
@@ -538,13 +532,20 @@ xray_config() {
     }
 
     # 替换 yourdomain 为用户输入的域名
+    # 获取用户输入的域名
+    echoContent yellow "请手动输入fallback 域名(订阅域名）\n"
+    read -p "请输入域名替换文件中 'www.harvard.edu' (e.g., yourdomain.com): " YOURDOMAIN
+    if [[ -z "$YOURDOMAIN" ]]; then
+        YOURDOMAIN=$LOCAL_IP
+        echoContent green "订阅链接地址为：$YOURDOMAIN "
+    
     jq --arg domain "$YOURDOMAIN" \
-        'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
+        'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
         "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
         echoContent red "错误: 无法更新域名"
         exit 1
     }
-
+    fi
     echoContent yellow "提取所有 inbounds\n"
     # 遍历每个 inbound
     jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
@@ -870,21 +871,15 @@ singbox_config() {
     SINGBOX_SUB_FILE="${SUBSCRIBE_DIR}/singbox_sub.txt"
     > "$SINGBOX_SUB_FILE"
 
-    # 获取用户输入的域名
-    echoContent yellow "请手动输入域名\n"
-    read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " SINGBOXDOMAIN
-    if [[ -z "$SINGBOXDOMAIN" ]]; then
-        echoContent red "Error: Domain cannot be empty."
-        exit 1
-    fi
-
+   
+   
     # 备份原始文件
     cp "$SINGBOX_CONF" "${SINGBOX_CONF}.bak" || {
         echoContent red "Error: Failed to create backup ${SINGBOX_CONF}.bak"
         exit 1
     }
     echoContent green "Backup created: ${SINGBOX_CONF}.bak"
-
+  
    generate_short_ids() {
     short_id=$(openssl rand -hex 8)  # 16 字节
     echo "[\"\", \"$short_id\"]"
@@ -896,14 +891,19 @@ singbox_config() {
         exit 1
     }
 
-    # 替换 yourdomain 为用户输入的域名
+    echoContent yellow "请手动输入订阅域名\n"
+    read -p "请输入订阅域名替换文件中 'www.harvard.edu' (e.g., yourdomain.com): " SINGBOXDOMAIN
+    if [[ -z "$SINGBOXDOMAIN" ]]; then
+        SINGBOXDOMAIN=$LOCAL_IP
+        echoContent green "订阅链接地址为：$SINGBOXDOMAIN "
+    else
     jq --arg domain "$SINGBOXDOMAIN" \
-       'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
-       "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-        echoContent red "Error: Failed to update domain."
+        'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
+        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+        echoContent red "错误: 无法更新域名"
         exit 1
     }
-
+    fi
     # 提取所有 inbounds
     echoContent skyblue "\n提取所有 inbounds里的users\n"
     jq -c '.inbounds[] | select(.users)' "$TEMP_FILE" | while IFS= read -r inbound; do
@@ -1194,60 +1194,45 @@ configNginx() {
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
-            echoContent skyblue "nginx.conf 更新成功."        
+            echoContent skyblue "nsx 配置文件$NGINX_CONF $XRAY_CONF $SINGBOX_CONF更新域名成功."        
 }
 # Manage configurations
 manageConfigurations() {
     echoContent green "配置nsx服务 只适用本地安装\n如果通过docker ，可以用nano编辑\n usr/local/nsx/nginx.conf\nusr/local/nsx/xray/config.json\nusr/local/nsx/sing-box/config.json"
     echoContent skyblue "\n配置管理菜单"
-    echoContent yellow "1. 配置nsx服务"
-    echoContent yellow "2. 修改 nginx.conf"
-    echoContent yellow "3. 修改 xray config.json"
-    echoContent yellow "4. 修改 sing-box config.json"
-    echoContent yellow "5. 退出"
-    read -r -p "请选择一个选项 [1-4]: " config_option
+    echoContent yellow "1. 复杂配置nsx服务（修改uuid，password和生成订阅等，适合本地）"
+    echoContent yellow "2. 简单配置nsx服务(只修改域名，适合Docker)"
+    echoContent yellow "3. 退出"
+    read -r -p "请选择一个选项 [1-3]: " config_option
 
     case $config_option in
-       1)
-            
+       1)   
             configNSX
             ;;
        2)
             configNginx
             # Reload Nginx if running
-            if pgrep nginx > /dev/null; then
+            if  pgrep nginx > /dev/null; then
                 nginx -s reload
                 echoContent green "Nginx 已重载以应用新配置."
-            elif docker ps | grep -q nginx; then
-                docker compose -f "$COMPOSE_FILE" restart
-                echoContent green "Docker Compose 已重启以应用新配置."
             fi
-            ;;
-        3)
-            xray_config
-            echoContent green "xray config.json 更新成功."
-            # Restart Xray if running
             if systemctl is-active --quiet xray; then
                 systemctl restart xray
                 echoContent green "Xray 已重启以应用新配置."
-            elif docker ps | grep -q xray; then
-                docker compose -f "$COMPOSE_FILE" restart
-                echoContent green "Docker Compose 已重启以应用新配置."
             fi
-            ;;
-        4)
-            singbox_config
-            echoContent green "sing-box config.json 更新成功."
-            # Restart Sing-box if running
             if systemctl is-active --quiet sing-box; then
                 systemctl restart sing-box
                 echoContent green "Sing-box 已重启以应用新配置."
-            elif docker ps | grep -q sing-box; then
+           
+            fi
+            if docker ps | grep -q xray; then
                 docker compose -f "$COMPOSE_FILE" restart
                 echoContent green "Docker Compose 已重启以应用新配置."
             fi
             ;;
-        5)
+       
+    
+        3)
             return
             ;;
         *)
@@ -2274,8 +2259,8 @@ configufw(){
     sudo ufw allow 6753
     sudo ufw allow 8071,8072,8073,8074,8075,8076,8077,8078,8079,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090/tcp
     sudo ufw allow 8071,8072,8073,8074,8075,8076,8077,8078,8079,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090/udp
-    sudo ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810/tcp
-    sudo ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810/udp
+    sudo ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810,10830,10831,10832,10833,10834,10835,10836,10837,10838,10839,10840/tcp
+    sudo ufw allow 10801,10802,10803,10804,10805,10806,10807,10808,10809,10810,10830,10831,10832,10833,10834,10835,10836,10837,10838,10839,10840/udp
     sudo ufw allow 3344,3443,4443,4434,8443,4433/tcp
     sudo ufw allow 3344,3443,4443,4434,8443,4433/udp
     sudo systemctl start ufw
