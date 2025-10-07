@@ -2587,7 +2587,7 @@ menu() {
         10)uninstallNSX ;;
         11)restartNSXdocker ;;
         12)restartNSXlocal ;;
-        13) echoContent green "修改ssh文件: nano /etc/ssh/sshd_config \nufw启动端口命令：sudo ufw allow 9753/tcp \n重启ssh命令： systemctl restart ssh\n添加vpsadmin账号: adduser vpsadmin\n设置sudo权限:visudo 在 User Privilege Specification 下加入一行 vpsadmin ALL=(ALL) NOPASSWD: ALL\nssh禁用root远程登录: PermitRootLogin:yes"
+        13) echoContent green "修改ssh文件: nano /etc/ssh/sshd_config \nufw启动端口命令：sudo ufw allow port/tcp \n重启ssh命令： systemctl restart ssh\n添加vpsadmin账号: adduser vpsadmin\n设置sudo权限:visudo 在 User Privilege Specification 下加入一行 vpsadmin ALL=(ALL) NOPASSWD: ALL\nssh禁用root远程登录: PermitRootLogin:yes"
       ;;
         14) exit 0 ;;
         *) echoContent red "无效选项." ; menu ;;
