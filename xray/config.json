@@ -617,14 +617,14 @@
 	"decryption": "mlkem768x25519plus.native.600s.aCF82eKiK6g0DIbv0_nsjbHC4RyKCc9NRjl-X9lyi0k",
 	"clients": [
 	{
-	"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4", // for establishing reverse connection
+	"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
 						"flow": "xtls-rprx-vision",
 						"reverse": {
 							"tag": "simple-reverse-out"
 						}
 					},
 					{
-						"id": "e8758aff-d830-4d08-a59e-271df65b995a", // for user
+						"id": "e8758aff-d830-4d08-a59e-271df65b995a", 
 						"flow": "xtls-rprx-vision",
 						"email": "reverse@vless.xtls.reality"
 					}
