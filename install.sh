@@ -538,13 +538,13 @@ xray_config() {
     if [[ -z "$YOURDOMAIN" ]]; then
         YOURDOMAIN=$LOCAL_IP
         echoContent green "订阅链接地址为：$YOURDOMAIN "
-    
-    jq --arg domain "$YOURDOMAIN" \
-        'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
-        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-        echoContent red "错误: 无法更新域名"
-        exit 1
-    }
+    else
+        jq --arg domain "$YOURDOMAIN" \
+            'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
+            "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+            echoContent red "错误: 无法更新域名"
+            exit 1
+        }
     fi
     echoContent yellow "提取所有 inbounds\n"
     # 遍历每个 inbound
@@ -656,8 +656,13 @@ xray_config() {
                 alpn=$(echo "$alpn" | jq -r 'join(",")')
             fi
             alpn=$(url_encode "$alpn")
-            read -r -p "是否启用 Encrypted Client Hello？(y/n): " tls_ech
-            if [[ "$tls_ech" == "y" ]]; then
+            read -p "是否启用 Encrypted Client Hello？: " tls_ech
+            if [[ -z "$tls_ech"]]; then
+                echoContent green "\n不启用 Encrypted Client Hello"
+                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
+              
+            else
+              
                 echServerKeys_Config=$(xray tls ech --serverName "$sni" 2>/dev/null) || {
                     echoContent red "错误: 无法生成 ECH 配置"
                     exit 1
@@ -672,11 +677,7 @@ xray_config() {
                     exit 1
                 }
                 url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"
-            else
-              
-
-                echoContent green "\n不启用 Encrypted Client Hello"
-                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
+                
             
             fi
         else
@@ -903,12 +904,12 @@ singbox_config() {
         SINGBOXDOMAIN=$LOCAL_IP
         echoContent green "订阅链接地址为：$SINGBOXDOMAIN "
     else
-    jq --arg domain "$SINGBOXDOMAIN" \
-        'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
-        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-        echoContent red "错误: 无法更新域名"
-        exit 1
-    }
+        jq --arg domain "$SINGBOXDOMAIN" \
+            'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
+            "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+            echoContent red "错误: 无法更新域名"
+            exit 1
+        }
     fi
     # 提取所有 inbounds
     echoContent skyblue "\n提取所有 inbounds里的users\n"
