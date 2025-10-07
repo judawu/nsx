@@ -678,7 +678,7 @@ xray_config() {
                 echoContent green "\n不启用 Encrypted Client Hello"
                 url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
             
-           
+            fi
         else
             if [[ "$network" == "xhttp" && -n "$reality_url" ]]; then
                     url="$url$reality_url"
