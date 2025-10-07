@@ -534,7 +534,7 @@ xray_config() {
     # 替换 yourdomain 为用户输入的域名
     # 获取用户输入的域名
     echoContent yellow "请手动输入fallback 域名(订阅域名）\n"
-    read -p "请输入域名替换文件中 'www.harvard.edu' (e.g., yourdomain.com): " YOURDOMAIN
+    read -p "请输入域名替换文件中 'www.harvard.edu' (e.g., yourdomain.com): " YOURDOMAIN < /dev/tty
     if [[ -z "$YOURDOMAIN" ]]; then
         YOURDOMAIN=$LOCAL_IP
         echoContent green "订阅链接地址为：$YOURDOMAIN "
@@ -546,6 +546,8 @@ xray_config() {
             exit 1
         }
     fi
+    
+  
     echoContent yellow "提取所有 inbounds\n"
     # 遍历每个 inbound
     jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
@@ -656,8 +658,8 @@ xray_config() {
                 alpn=$(echo "$alpn" | jq -r 'join(",")')
             fi
             alpn=$(url_encode "$alpn")
-            read -p "是否启用 Encrypted Client Hello？: " tls_ech
-            if [[ -z "$tls_ech" ]]; then
+            read -p "是否开启tls Encrypted Client Hello？: " tls_ech < /dev/tty
+            if [[  "$tls_ech" =="y" ]]; then
                 echoContent green "\n不启用 Encrypted Client Hello"
                 url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
               
@@ -667,8 +669,8 @@ xray_config() {
                     echoContent red "错误: 无法生成 ECH 配置"
                     exit 1
                 }
-                echServerKeys=$(echo "$echServerKeys_Config" | grep "ECH config list" | awk '{print $3}')
-                echConfigList=$(echo "$echServerKeys_Config" | grep "ECH server keys" | awk '{print $3}')
+                echServerKeys=$(echo "$echServerKeys_Config" | grep "ECH config list" | awk '{print $2}')
+                echConfigList=$(echo "$echServerKeys_Config" | grep "ECH server keys" | awk '{print $2}')
                 # 更新 echServerKeys
                 jq --arg tag "$tag" --arg echServerKeys "$echServerKeys" \
                     '(.inbounds[] | select(.tag == $tag) | .streamSettings.tlsSettings).echServerKeys = $echServerKeys' \
@@ -693,7 +695,7 @@ xray_config() {
             vless_decryption=$(echo "$inbound" | jq -r '.settings.decryption // "none"')
             if [[ "$vless_decryption" != "none" ]]; then
                 echoContent green "\nvless 已加密，进行替换"
-                read -p "选择流量外观 (1=native, 2=xorpub, 3=random): " vless_flowview
+                read -p "选择流量外观 (1=native, 2=xorpub, 3=random): " vless_flowview < /dev/tty
                 case "$vless_flowview" in
                     1)
                         new_vless_decryption="mlkem768x25519plus.native.600s."
@@ -708,7 +710,7 @@ xray_config() {
                         new_vless_encryption="mlkem768x25519plus.random.0rtt."
                         ;;
                 esac
-                read -p "选择加密方式 (mlkem768/x25519): " vless_Authentication
+                read -p "选择加密方式 (mlkem768/x25519): " vless_Authentication < /dev/tty
                 if [[ -z "$vless_Authentication" || "$vless_Authentication" == "x25519" ]]; then
                     echoContent green "选择了 x25519"
                     x25519_key_pair=$(xray x25519 2>/dev/null) || {
