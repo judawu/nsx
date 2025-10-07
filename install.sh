@@ -474,8 +474,7 @@ xray_config() {
     echoContent skyblue "\nxray配置文件修改"
 
     # 定义文件路径
-    XRAY_CONF="/usr/local/etc/xray/config.json"
-    SUBSCRIBE_DIR="/usr/local/etc/xray/subscribe"
+  
     TEMP_FILE="/tmp/xray_config_temp.json"
 
     # 检查 jq 和 xray 是否已安装
