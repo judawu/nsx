@@ -667,8 +667,10 @@ xray_config() {
                     exit 1
                 }
             else
+              
+
                 echoContent green "\n不启用 Encrypted Client Hello"
-                echConfigList=""
+                echConfigList="none"
             fi
 
             # 处理 alpn
@@ -678,6 +680,9 @@ xray_config() {
             alpn=$(url_encode "$alpn")
             url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"
         else
+              if [[ "$network" == "xhhtp" ]]; then
+               url="$url&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id"
+              fi
             url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN"
         fi
 
@@ -740,7 +745,7 @@ xray_config() {
                     echoContent red "错误: 无法生成 UUID"
                     exit 1
                 }
-                flow=$(echo "$client" | jq -r '.flow // ""')
+                flow=$(echo "$client" | jq -r '.flow // "none"')
                 new_url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id\n"
                 # 更新 id
