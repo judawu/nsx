@@ -1,7 +1,7 @@
 {
   "log": {
     "disabled": false,
-    "level": "debug",
+    "level": "error",
     "output": "/usr/local/nsx/log/singbox.log",
     "timestamp": true
   },
@@ -57,15 +57,15 @@
       "users": [
         {
           "name": "vmess@singbox",
-          "uuid": "1c003065-fe88-420c-978d-b7044cdac210",
+          "uuid": "e008fcaf-d821-4b07-8ff9-91b237160858",
           "alterId": 0
         }
       ],
       "tls": {
          "enabled": true,
-        "server_name": "yourdomain",
-        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
-        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+        "server_name": "sing.yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/sing.yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/sing.yourdomain.key"
       },
       "multiplex": {
         "enabled": true,
@@ -84,15 +84,15 @@
       "listen_port": 8080,
       "users": [
         {
-          "password": "7900fd89-75d2-462c-8fa4-f2c59ce7d5dd",
+          "password": "d06faadf-63e5-48c8-8718-9aca0c8984f6",
           "name": "sinbox@Trojan_TCP"
         }
       ],
       "tls": {
         "enabled": true,
-        "server_name": "yourdomain",
-        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
-        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+        "server_name": "sing.yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/sing.yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/sing.yourdomain.key"
       },
       "fallback": {
         "server": "google.com",
@@ -109,15 +109,15 @@
       "users": [
         {
           "name": "singbox_hysteria2",
-          "password": "3716e683-50ab-4800-bce8-796892a7fe1a"
+          "password": "a5bf0035-5f18-472e-801e-96d858b6b115"
         }
       ],
       "tls": {
         "enabled": true,
-        "server_name": "yourdomain",
+        "server_name": "sing.yourdomain",
         "alpn": "h3",
-        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
-        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+        "certificate_path": "/usr/local/nsx/certs/sing.yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/sing.yourdomain.key"
       },
       "masquerade": "https://cloudflare.com",
       "brutal_debug": true
@@ -130,8 +130,8 @@
       "users": [
         {
           "name": "juda-singbox_tuic",
-          "uuid": "d9dbb6bf-09ed-499a-a6f8-610eada2ec21",
-          "password": "GXk8ItiNjpT8TtuoHTt7Kg=="
+          "uuid": "90675eb8-759e-4efb-b119-0b8a7f435b6b",
+          "password": "FreX6mi0OH3IgCMwIklVMw=="
         }
       ],
       "congestion_control": "bbr",
@@ -140,10 +140,10 @@
       "heartbeat": "10s",
       "tls": {
         "enabled": true,
-        "server_name": "yourdomain",
+        "server_name": "sing.yourdomain",
         "alpn": "h3",
-        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
-        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+        "certificate_path": "/usr/local/nsx/certs/sing.yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/sing.yourdomain.key"
       }
     },
     {
@@ -153,15 +153,15 @@
       "listen_port": 8083,
       "users": [
         {
-          "password": "0bd569de-ed93-4e08-9307-8aaea681ce0c",
+          "password": "16d65f45-82eb-41ca-93b2-158cb840b420",
           "username": "singbox_naive"
         }
       ],
       "tls": {
         "enabled": true,
-        "server_name": "yourdomain",
-        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
-        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+        "server_name": "sing.yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/sing.yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/sing.yourdomain.key"
       }
     },
     {
@@ -174,11 +174,11 @@
         "udp"
       ],
       "method": "2022-blake3-aes-128-gcm",
-      "password": "ozYr0jdzvW5fJ4ZXmwKOaA==",
+      "password": "3rw7Ym5jQJCKVpXpXC4D0Q==",
       "users": [
         {
           "name": "ss@singbox",
-          "password": "CNJO+qUcTS46sIhhCZWi4Q=="
+          "password": "CB5PY26QcnngjUGLAC0Jxg=="
         }
       ],
       "multiplex": {
@@ -191,11 +191,11 @@
       "listen": "::",
       "listen_port": 8085,
       "version": 3,
-      "password": "K6GYKG127NCqd+hLAMIsuA==",
+      "password": "1auwjtwvc39QJV3EDX+ggg==",
       "users": [
         {
           "name": "shadowtls@singbox",
-          "password": "vKeWj2DLKX2gSK9weY4aEA=="
+          "password": "1auwjtwvc39QJV3EDX+ggg=="
         }
       ],
       "handshake": {
@@ -212,14 +212,14 @@
       "listen_port": 8088,
       "users": [
         {
-          "uuid": "928431ee-43bf-46d7-a307-47ea69e6e71a",
+          "uuid": "e15420f9-8afa-4d77-bd8f-7791a90490bd",
           "name": "VLESS_Reality_gPRC"
         }
       ],
       
       "tls": {
         "enabled": true,
-        "server_name": "yourdomain",
+        "server_name": "sing.yourdomain",
         "reality": {
           "enabled": true,
           "handshake": {
@@ -246,14 +246,14 @@
       "listen_port": 8089,
       "users": [
         {
-          "uuid": "cfb7eeaa-129b-4b2c-a1d7-76538f0d4863",
+          "uuid": "fc26da40-83d5-495a-87bc-c85a8a9282a2",
           "flow": "xtls-rprx-vision",
           "name": "VLESS_Reality_Vision"
         }
       ],
       "tls": {
         "enabled": true,
-        "server_name": "yourdomain",
+        "server_name": "sing.yourdomain",
         "reality": {
           "enabled": true,
           "handshake": {
@@ -277,16 +277,16 @@
       
       "users": [
         {
-          "uuid": "76fb0575-5e74-4df6-a603-31f516098bb0",
+          "uuid": "85041fec-83d1-4ba6-b4c5-af4cc08e8fa3",
           "flow": "xtls-rprx-vision",
           "name": "VLESS_TCP/TLS_Vision"
         }
       ],
       "tls": {
         "enabled": true,
-        "server_name": "yourdomain",
-        "certificate_path": "/usr/local/nsx/certs/yourdomain.pem",
-        "key_path": "/usr/local/nsx/certs/yourdomain.key"
+        "server_name": "sing.yourdomain",
+        "certificate_path": "/usr/local/nsx/certs/sing.yourdomain.pem",
+        "key_path": "/usr/local/nsx/certs/sing.yourdomain.key"
       }
     }
   ]

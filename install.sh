@@ -248,14 +248,14 @@ manageCertificates() {
             # 提取第一个域名用于证书命名
             FIRST_DOMAIN=$(echo "$DOMAIN" | cut -d',' -f1 | xargs)
             echoContent yellow " 证书域名为 $DOMAIN (使用 $FIRST_DOMAIN 作为证书文件名)."
-            read -r -p "请输入DNS提供商: 0.Cloudflare, 1.阿里云, 2.手动DNS, 3.独立: " DNS_VENDOR
+            read -r -p "请输入DNS提供商: 1.Cloudflare, 2.阿里云, 3.手动DNS, 4.独立: " DNS_VENDOR
 
             if [[ "$cert_option" == "1" ]]; then
                 # 清除此域名的先前凭据
                 grep -v "^${FIRST_DOMAIN}:" "$CREDENTIALS_FILE" > "${CREDENTIALS_FILE}.tmp" && mv "${CREDENTIALS_FILE}.tmp" "$CREDENTIALS_FILE"
             fi
             echoContent yellow " DNS提供商选择 $DNS_VENDOR."
-            if [[ "$DNS_VENDOR" == "0" ]]; then
+            if [[ "$DNS_VENDOR" == "1" ]]; then
  
                 if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" ]] && grep -q "^${FIRST_DOMAIN}:Cloudflare:" "$CREDENTIALS_FILE"; then
                     # 为续订加载保存的 Cloudflare 凭据
@@ -299,7 +299,7 @@ manageCertificates() {
                     fi
                     unset CF_Email CF_Key
                 fi
-            elif [[ "$DNS_VENDOR" == "1" ]]; then
+            elif [[ "$DNS_VENDOR" == "2" ]]; then
                 if [[ "$cert_option" == "2" && -s "$CREDENTIALS_FILE" ]] && grep -q "^${FIRST_DOMAIN}:Alibaba:" "$CREDENTIALS_FILE"; then
                     # 为续订加载保存的 Alibaba 凭据
                     IFS=':' read -r _ _ aliKey aliSecret < <(grep "^${FIRST_DOMAIN}:Alibaba:" "$CREDENTIALS_FILE")
@@ -322,7 +322,7 @@ manageCertificates() {
                     exit 1
                 fi
                 unset Ali_Key Ali_Secret
-            elif [[ "$DNS_VENDOR" == "2" ]]; then
+            elif [[ "$DNS_VENDOR" == "3" ]]; then
                 echoContent yellow "手动 DNS 模式，请添加 TXT 记录:（例如在cloudware中在DNS下手动建立TXT文件，将下面的字符串输入）"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                     echoContent red "证书签发失败，清理残留数据并退出"
@@ -350,7 +350,7 @@ manageCertificates() {
                         fi
                     fi
                 fi
-            elif [[ "$DNS_VENDOR" == "3" ]]; then
+            elif [[ "$DNS_VENDOR" == "4" ]]; then
                 echoContent yellow " ---> 独立模式 ${action##--}证书中"
                 if ! sudo "$HOME/.acme.sh/acme.sh" $action -d "${DOMAIN}" --standalone -k ec-256 --server "${sslType}" 2>&1 | tee -a "$ACME_LOG"; then
                     echoContent red "命令失败，请检查 $ACME_LOG 日志"
@@ -470,293 +470,346 @@ url_encode() {
     }
     printf '%s' "$encoded"
 }
-xray_config(){
-        echoContent skyblue "\nxray配置文件修改"
-   
-        # 检查 jq 和 xray 是否已安装
-        if ! command -v jq &> /dev/null; then
-            echoContent red "jq 没有安装，请先安装jq" 
-            exit 1
-        fi
+xray_config() {
+    echoContent skyblue "\nxray配置文件修改"
 
-        if ! command -v xray &> /dev/null; then
-            echoContent red "xray 没有安装或者没有进行软链接，请先安装xray或者使用 ln -sf /usr/local/nsx/xray/xray /usr/bin/xray生产软连接" 
-            exit 1
-        fi
+    # 定义文件路径
+    XRAY_CONF="/usr/local/etc/xray/config.json"
+    SUBSCRIBE_DIR="/usr/local/etc/xray/subscribe"
+    TEMP_FILE="/tmp/xray_config_temp.json"
 
-        # JSON 文件路径
-
-        TEMP_FILE="/tmp/xray_config_temp.json"
-        echoContent green "临时文件位置$TEMP_FILE"
-        # 检查 config.json 是否存在
-        if [[ ! -f "$XRAY_CONF" ]]; then
-            echoContent red "$XRAY_CONF 不存在"
-            exit 1
-        fi
-        # Create subscription directory if not exists
-        if [ ! -d "$SUBSCRIBE_DIR" ]; then
-                mkdir -p "$SUBSCRIBE_DIR"
-                chown nobody:nogroup "$SUBSCRIBE_DIR"
-                chmod 755 "$SUBSCRIBE_DIR"
-        fi
-
-        # Generate Xray subscription
-        if [ -f "$XRAY_CONF" ]; then
-                echoContent green "创建 Xray 订阅文件于${SUBSCRIBE_DIR}..."
-                XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
-                > "$XRAY_SUB_FILE"
-        fi
-        # 获取用户输入的域名
-        echoContent yellow "请手动输入域名\n"
-        read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
-        if [[ -z "$YOURDOMAIN" ]]; then
-            echoContent red "Error: 域名不能为空."
-            exit 1
-        fi
-
-        # 备份原始文件
-        cp "$XRAY_CONF" "${XRAY_CONF}.bak" || {
-        echoContent red "Error: Failed to create backup ${XRAY_CONF}.bak"
+    # 检查 jq 和 xray 是否已安装
+    if ! command -v jq &> /dev/null; then
+        echoContent red "jq 未安装，请先安装 jq"
         exit 1
-        }
-        echoContent green "创建备份: ${XRAY_CONF}.bak"
+    fi
 
-       generate_short_ids() {
-            short_id1=$(openssl rand -hex 4)  # 8 字节
-            short_id2=$(openssl rand -hex 8)  # 16 字节
-            echo "[\"$short_id1\", \"$short_id2\"]"
-        }
-
-        echoContent green "\n创建一个临时 JSON 文件$TEMP_FILE，复制原始内容$XRAY_CONF"
-        cp "$XRAY_CONF" "$TEMP_FILE" || {
-        echoContent red "Error: Failed to create temporary file $TEMP_FILE"
+    if ! command -v xray &> /dev/null; then
+        echoContent red "xray 未安装或未创建软链接，请先安装 xray 或使用 ln -sf /usr/local/xray/xray /usr/bin/xray 创建软链接"
         exit 1
-        }
-        # 替换 yourdomain 为用户输入的域名
-        jq --arg domain "$YOURDOMAIN" \
+    fi
+
+    echoContent green "临时文件位置: $TEMP_FILE"
+
+    # 检查 config.json 是否存在
+    if [[ ! -f "$XRAY_CONF" ]]; then
+        echoContent red "$XRAY_CONF 不存在"
+        exit 1
+    fi
+
+    # 创建订阅目录
+    if [[ ! -d "$SUBSCRIBE_DIR" ]]; then
+        mkdir -p "$SUBSCRIBE_DIR"
+        chown nobody:nogroup "$SUBSCRIBE_DIR" 2>/dev/null || echoContent yellow "警告: chown 失败，可能需要检查权限"
+        chmod 755 "$SUBSCRIBE_DIR" 2>/dev/null || echoContent yellow "警告: chmod 失败，可能需要检查权限"
+    fi
+
+    # 生成 Xray 订阅文件
+    XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
+    if [[ -f "$XRAY_CONF" ]]; then
+        echoContent green "创建 Xray 订阅文件于 ${SUBSCRIBE_DIR}..."
+        > "$XRAY_SUB_FILE"
+    fi
+
+    # 获取用户输入的域名
+    echoContent yellow "请手动输入域名\n"
+    read -p "请输入域名替换文件中 'yourdomain' (e.g., example.com): " YOURDOMAIN
+    if [[ -z "$YOURDOMAIN" ]]; then
+        echoContent red "错误: 域名不能为空"
+        exit 1
+    fi
+
+    # 备份原始文件
+    cp "$XRAY_CONF" "${XRAY_CONF}.bak" || {
+        echoContent red "错误: 无法创建备份 ${XRAY_CONF}.bak"
+        exit 1
+    }
+    echoContent green "创建备份: ${XRAY_CONF}.bak"
+
+    generate_short_ids() {
+        local short_id1=$(openssl rand -hex 4)  # 8 字节
+        local short_id2=$(openssl rand -hex 8)  # 16 字节
+        echo "[\"$short_id1\", \"$short_id2\"]"
+    }
+
+    echoContent green "\n创建一个临时 JSON 文件 $TEMP_FILE，复制原始内容 $XRAY_CONF"
+    cp "$XRAY_CONF" "$TEMP_FILE" || {
+        echoContent red "错误: 无法创建临时文件 $TEMP_FILE"
+        exit 1
+    }
+
+    # 替换 yourdomain 为用户输入的域名
+    jq --arg domain "$YOURDOMAIN" \
         'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
         "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-        echoContent red "Error: Failed to update domain."
+        echoContent red "错误: 无法更新域名"
         exit 1
-        }
+    }
 
+    echoContent yellow "提取所有 inbounds\n"
+    # 遍历每个 inbound
+    jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
+        url=""
+        tag=$(echo "$inbound" | jq -r '.tag')
+        protocol=$(echo "$inbound" | jq -r '.protocol')
+        port=$(echo "$inbound" | jq -r '.port // "443"')
+        echoContent yellow "\n处理 inbound tag: $tag, protocol: $protocol"
+        network=$(echo "$inbound" | jq -r '.streamSettings.network // "tcp"')
+        url="$url?type=$network"
 
+        case "$network" in
+            "grpc")
+                serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
+                serviceName=$(url_encode "$serviceName")
+                url="$url&serviceName=$serviceName"
+                ;;
+            "ws")
+                path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path')
+                path=$(url_encode "$path")
+                url="$url&path=$path"
+                ;;
+            "xhttp")
+                xhttpSettings=$(echo "$inbound" | jq -r '.streamSettings.xhttpSettings')
+                host=$(echo "$xhttpSettings" | jq -r '.host')
+                path=$(echo "$xhttpSettings" | jq -r '.path')
+                host=$(url_encode "$host")
+                path=$(url_encode "$path")
+                url="$url&host=$host&path=$path"
+                ;;
+            "splithttp")
+                path=$(echo "$inbound" | jq -r '.streamSettings.splithttpSettings.path')
+                path=$(url_encode "$path")
+                url="$url&path=$path"
+                ;;
+            "httpupgrade")
+                path=$(echo "$inbound" | jq -r '.streamSettings.httpupgradeSettings.path')
+                path=$(url_encode "$path")
+                url="$url&path=$path"
+                ;;
+            "kcp")
+                seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed')
+                url="$url&seed=$seed"
+                ;;
+            *)
+                ;;
+        esac
 
-        echoContent yellow  "提取所有 inbounds\n"
-        # 提取所有 inbounds
-        inbounds=$(jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE")
-        #echoContent green "$inbounds"
-       
-
-        # 遍历每个 inbound
-        jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
-            declare -g url=""
-           
-            tag=$(echo "$inbound" | jq -r '.tag')
-            protocol=$(echo "$inbound" | jq -r '.protocol')
-            port=$(echo "$inbound" | jq -r '.port')
-            if [[ "$port" == "null" || -z "$port" ]]; then
-            port="443"
-            fi
-            echoContent yellow "\n处理 inbound tag: $tag, protocol: $protocol"
-            network=$(echo "$inbound" | jq -r '.streamSettings.network // "tcp"')
-            url="$url?type=$network"
-            case "$network" in
-                        "grpc") 
-                        serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName') 
-                        serviceName=$(url_encode "$serviceName")
-                        url="$url&serviceName=$serviceName"
-                        ;;
-                        "ws") 
-                        path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path') 
-                        path=$(url_encode "$path")
-                        url="$url&path=$path"
-                        ;;
-                        "xhttp") 
-                        xhttpSettings=$(echo "$inbound" | jq -r '.streamSettings.xhttpSettings')
-                        host=$(echo "$xhttpSettings" | jq -r '.host')
-                        path=$(echo "$xhttpSettings" | jq -r '.path')
-                        host=$(url_encode "$host")
-                        path=$(url_encode "$path")
-                        url="$url&host=$host&path=$path"
-                        ;;
-                        "splithttp") 
-                        path=$(echo "$inbound" | jq -r '.streamSettings.splithttpSettings.path')
-                        path=$(url_encode "$path")
-                        url="$url&path=$path"
-                        ;;
-                        "httpupgrade")
-                        path=$(echo "$inbound" | jq -r '.streamSettings.httpupgradeSettings.path') 
-                        path=$(url_encode "$path")
-                        url="$url&path=$path"
-                        ;;
-                        "kcp")
-                        seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed')
-                        #seed=$(url_encode "$seed")
-                        url="$url&seed=$seed"
-                        ;;
-                        *) 
-                        ;;
-            esac
-            # 检查 streamSettings.security 是否为 reality
-            security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
-           if [[ "$security" == "reality" ]]; then
-            echoContent green "\n检查 streamSettings:  reality security for $tag, updating keys and settings..."
+        # 检查 streamSettings.security
+        security=$(echo "$inbound" | jq -r '.streamSettings.security // "none"')
+        if [[ "$security" == "reality" ]]; then
+            echoContent green "\n检查 streamSettings: reality security for $tag, updating keys and settings..."
 
             # 生成公私密钥对
-            echoContent green "\n用xray x25519 生成公私匙\n用openssl rand -hex 4生成随机的 shortIds"
-            key_pair=$(xray x25519)
-            private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
-            public_key=$(echo "$key_pair" | grep "Password" | awk '{print $2}')
+            echoContent green "\n用 xray x25519 生成公私钥\n用 openssl rand -hex 4 生成随机的 shortIds"
+            key_pair=$(xray x25519 2>/dev/null) || {
+                echoContent red "错误: 无法生成 x25519 密钥对"
+                exit 1
+            }
+            private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
+            public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
             new_short_ids=$(generate_short_ids)
-            echoContent yellow "\nGenerated new privateKey: $private_key"
-            echoContent yellow "\nGenerated new publicKey: $public_key"
-            echoContent yellow "\nGenerated new shortIds: $new_short_ids"
+            echoContent yellow "\n生成新 privateKey: $private_key"
+            echoContent yellow "\n生成新 publicKey: $public_key"
+            echoContent yellow "\n生成新 shortIds: $new_short_ids"
+
             # 检查 JSON 中是否存在 mldsa65Seed
             if jq -e "(.inbounds[] | select(.tag == \"$tag\") | .streamSettings.realitySettings | has(\"mldsa65Seed\"))" "$TEMP_FILE" > /dev/null; then
-                echoContent green "\n用xray mldsa65生成mldsa65 seed和verify"
-                new_mldsa65_key_pair=$(xray mldsa65) || {
-                    echoContent red "Error: Failed to generate mldsa65 key pair."
+                echoContent green "\n用 xray mldsa65 生成 mldsa65 seed 和 verify"
+                new_mldsa65_key_pair=$(xray mldsa65 2>/dev/null) || {
+                    echoContent red "错误: 无法生成 mldsa65 密钥对"
                     exit 1
                 }
                 mldsa65_seed=$(echo "$new_mldsa65_key_pair" | grep "Seed" | awk '{print $2}')
                 mldsa65_verify=$(echo "$new_mldsa65_key_pair" | grep "Verify" | awk '{print $2}')
-                echoContent yellow "\nGenerated new mldsa65Seed: $mldsa65_seed"
-                echoContent yellow "\nGenerated new mldsa65Verify: $mldsa65_verify"
+                echoContent yellow "\n生成新 mldsa65Seed: $mldsa65_seed"
+                echoContent yellow "\n生成新 mldsa65Verify: $mldsa65_verify"
             else
                 mldsa65_seed=""
                 mldsa65_verify=""
-                echoContent yellow "\nmldsa65Seed not found in JSON, skipping ML-DSA65 key generation."
+                echoContent yellow "\nmldsa65Seed 未找到，跳过 ML-DSA65 密钥生成"
             fi
 
-        
-
-            # 更新 privateKey, publicKey, shortIds, 仅当 mldsa65Seed 存在时更新 mldsa65Seed 和 mldsa65Verify
+            # 更新 reality 设置
             jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed" --arg mldsa65_verify "$mldsa65_verify" \
                 '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
-                    (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids
+                    (.privateKey = $private_key | .publicKey = $public_key | .shortIds = $short_ids
                     | if has("mldsa65Seed") then .mldsa65Seed = $mldsa65_seed else . end
                     | if has("mldsa65Seed") then .mldsa65Verify = $mldsa65_verify else . end)' \
                 "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-                    echoContent red "Error: Failed to update reality settings."
-                    exit 1
-                }
+                echoContent red "错误: 无法更新 reality 设置"
+                exit 1
+            }
 
-            # 更新 URL，仅当 mldsa65Seed 存在时添加 pqv 参数
-            short_id=$(echo "$new_short_ids" | jq -r '.[0]') # 取第一个 short_id
+            # 更新 URL
+            short_id=$(echo "$new_short_ids" | jq -r '.[0]')
             reality_url="&security=reality&pbk=$public_key&fp=chrome&sni=$YOURDOMAIN&sid=$short_id"
-            url=$url$reality_url
+            url="$url$reality_url"
             if [[ -n "$mldsa65_seed" ]]; then
                 url="$url&pqv=$mldsa65_verify"
             fi
-            elif [[ "$security" == "tls" ]]; then
-                        tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
-                        
-                        sni=$(echo "$tlsSettings" | jq -r '.serverName // "$YOURDOMAIN"')
-                        alpn=$(echo "$inbound" | jq -r '.tls.alpn // "h2,http/1.1"')
-
-                        # 如果 alpn 是数组，则将其转换为逗号分隔的字符串
-                        if [[ "$alpn" == \[*\] ]]; then
-                            alpn=$(echo "$alpn" | jq -r 'join(",")')
-                        fi
-                        alpn=$(url_encode "$alpn")
-                        url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
+        elif [[ "$security" == "tls" ]]; then
+            tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
+            sni=$(echo "$tlsSettings" | jq -r '.serverName // "'"$YOURDOMAIN"'"')
+            alpn=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings.alpn // ["h2", "http/1.1"]')
+            read -p "是否启用 Encrypted Client Hello？(y/n): " tls_ech
+            if [[ "$tls_ech" == "y" ]]; then
+                echServerKeys_Config=$(xray ls ech --serverName "$sni" 2>/dev/null) || {
+                    echoContent red "错误: 无法生成 ECH 配置"
+                    exit 1
+                }
+                echServerKeys=$(echo "$echServerKeys_Config" | grep "ECH config list" | awk '{print $3}')
+                echConfigList=$(echo "$echServerKeys_Config" | grep "ECH server keys" | awk '{print $3}')
+                # 更新 echServerKeys
+                jq --arg tag "$tag" --arg echServerKeys "$echServerKeys" \
+                    '(.inbounds[] | select(.tag == $tag) | .streamSettings.tlsSettings).echServerKeys = $echServerKeys' \
+                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "错误: 无法更新 echServerKeys"
+                    exit 1
+                }
             else
-                if [[ "$network" == "xhttp" && -n "$reality_url" ]]; then
-                    url="$url$reality_url"
-                else
-                    url="$url&security=tls&fp=${fp:-chrome}&sni=${YOURDOMAIN:-example.com}"
-                fi
+                echoContent green "\n不启用 Encrypted Client Hello"
+                echConfigList=""
             fi
 
-            # 处理 vless 和 vmess 的 id 替换
-            if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
-                echoContent green "\n处理 vless 和 vmess 的 id 替换,用 xray uuid 生成新的uuid替换"
-                clients=$(echo "$inbound" | jq -c '.settings.clients[]')
-                client_index=0
-                echo "$clients" | while IFS= read -r client; do
+            # 处理 alpn
+            if [[ "$alpn" == \[*\] ]]; then
+                alpn=$(echo "$alpn" | jq -r 'join(",")')
+            fi
+            alpn=$(url_encode "$alpn")
+            url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"
+        else
+            url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN"
+        fi
 
-                    old_id=$(echo "$client" | jq -r '.id')
-                    new_id=$(xray uuid) || {
-                    echoContent red "Error: Failed to generate UUID."
-                    exit 1
+        # 处理 vless 和 vmess 的 id 替换
+        if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
+            vless_decryption=$(echo "$inbound" | jq -r '.settings.decryption // "none"')
+            if [[ "$vless_decryption" != "none" ]]; then
+                echoContent green "\nvless 已加密，进行替换"
+                read -p "选择流量外观 (1=native, 2=xorpub, 3=random): " vless_flowview
+                case "$vless_flowview" in
+                    1)
+                        new_vless_decryption="mlkem768x25519plus.native.600s."
+                        new_vless_encryption="mlkem768x25519plus.native.0rtt."
+                        ;;
+                    2)
+                        new_vless_decryption="mlkem768x25519plus.xorpub.600s."
+                        new_vless_encryption="mlkem768x25519plus.xorpub.0rtt."
+                        ;;
+                    *)
+                        new_vless_decryption="mlkem768x25519plus.random.600s."
+                        new_vless_encryption="mlkem768x25519plus.random.0rtt."
+                        ;;
+                esac
+                read -p "选择加密方式 (mlkem768/x25519): " vless_Authentication
+                if [[ -z "$vless_Authentication" || "$vless_Authentication" == "x25519" ]]; then
+                    echoContent green "选择了 x25519"
+                    x25519_key_pair=$(xray x25519 2>/dev/null) || {
+                        echoContent red "错误: 无法生成 x25519 密钥"
+                        exit 1
                     }
-                flow=$(echo "$client" | jq -r '.flow // empty')
-                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow#$tag"
-                echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id \n"
+                    new_vless_decryption="$new_vless_decryption$(echo "$x25519_key_pair" | grep "Private key" | awk '{print $3}')"
+                    new_vless_encryption="$new_vless_encryption$(echo "$x25519_key_pair" | grep "Public key" | awk '{print $3}')"
+                else
+                    echoContent green "选择了 mlkem768"
+                    mlkem768_key_pair=$(xray mlkem768 2>/dev/null) || {
+                        echoContent red "错误: 无法生成 mlkem768 密钥"
+                        exit 1
+                    }
+                    new_vless_decryption="$new_vless_decryption$(echo "$mlkem768_key_pair" | grep "Seed" | awk '{print $2}')"
+                    new_vless_encryption="$new_vless_encryption$(echo "$mlkem768_key_pair" | grep "Client" | awk '{print $2}')"
+                fi
+                echoContent yellow "\n替换 decryption, $tag: $vless_decryption -> $new_vless_decryption\n"
+                # 更新 decryption
+                jq --arg tag "$tag" --arg new_decryption "$new_vless_decryption" \
+                    '(.inbounds[] | select(.tag == $tag) | .settings).decryption = $new_decryption' \
+                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "错误: 无法更新 decryption"
+                    exit 1
+                }
+            else
+                new_vless_encryption="none"
+            fi
+
+            echoContent green "\n处理 vless 和 vmess 的 id 替换，用 xray uuid 生成新 UUID"
+            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+            client_index=0
+            echo "$clients" | while IFS= read -r client; do
+                old_id=$(echo "$client" | jq -r '.id')
+                new_id=$(xray uuid 2>/dev/null) || {
+                    echoContent red "错误: 无法生成 UUID"
+                    exit 1
+                }
+                flow=$(echo "$client" | jq -r '.flow // ""')
+                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
+                echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id\n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
-                '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.id == $old_id)).id = $new_id' \
-                "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-                        echoContent red "Error: Failed to update UUID."
-                        exit 1
-                        }
+                    '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.id == $old_id)).id = $new_id' \
+                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "错误: 无法更新 UUID"
+                    exit 1
+                }
                 echo "$new_url" >> "$XRAY_SUB_FILE"
-                echoContent skyblue "\n生成 $protocol 订阅链接: $new_url" 
-                qrencode -t ANSIUTF8 "$new_url"
-              #qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url" 
+                echoContent skyblue "\n生成 $protocol 订阅链接: $new_url"
+                if command -v qrencode &> /dev/null; then
+                    qrencode -t ANSIUTF8 "$new_url" || echoContent red "生成二维码失败: $new_url"
+                else
+                    echoContent yellow "警告: qrencode 未安装，跳过二维码生成"
+                fi
                 ((client_index++))
-                done
-                
-            fi
+            done
+        fi
 
-            # 处理 trojan 和 shadowsocks 的 password 替换
-            if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
-                echoContent green "\n处理 trojan 和 shadowsocks 的 password 替换,用openssl rand -base64 16 生成新密码"
-                clients=$(echo "$inbound" | jq -c '.settings.clients[]')
-                client_index=0
-                echo "$clients" | while IFS= read -r client; do
-                    old_password=$(echo "$client" | jq -r '.password')
-                    new_password=$(openssl rand -base64 16)  # 生成 16 字节的 base64 密码
-                    if [[ "$protocol" == "shadowsocks" ]]; then   
-                           
-                     new_url="ss://2022-blake3-aes-128-gcm:QvofbfMIil7768oFAyTpyA==:$new_password@$YOURDOMAIN:$port$url#$tag"
-                    else
-                   
+        # 处理 trojan 和 shadowsocks 的 password 替换
+        if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
+            echoContent green "\n处理 trojan 和 shadowsocks 的 password 替换，用 openssl rand -base64 16 生成新密码"
+            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+            client_index=0
+            echo "$clients" | while IFS= read -r client; do
+                old_password=$(echo "$client" | jq -r '.password')
+                new_password=$(openssl rand -base64 16)
+                if [[ "$protocol" == "shadowsocks" ]]; then
+                    method=$(echo "$inbound" | jq -r '.settings.method // "2022-blake3-aes-128-gcm"')
+                    new_url="ss://$(echo -n "$method:$new_password" | base64 -w 0)@$YOURDOMAIN:$port$url#$tag"
+                else
                     new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
-                    fi
-                    echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password \n"
-
-                    # 更新 password
-                    jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
+                fi
+                echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password\n"
+                # 更新 password
+                jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
                     '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.password == $old_password)).password = $new_password' \
                     "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-                        echoContent red "Error: Failed to update password."
-                        exit 1
-                        }
-                    echo "$new_url" >> "$XRAY_SUB_FILE"
-                    echoContent skyblue "\n生成 $protocol 订阅链接: $new_url" 
-                    qrencode -t ANSIUTF8 "$new_url"
-                  #  qrencode -o "${SUBSCRIBE_DIR}/$protocol_${tag//[@\/]/_}.png" "$url" 2>/dev/null || echoContent red "生成二维码失败: $url"
-                 
-                    ((client_index++))        
-                done
-            fi
-           
-           
-        
-            # 在构造 URL 时使用：
-           
-           
-
-        done
-
-        # 替换原始文件
-            mv "$TEMP_FILE" "$XRAY_CONF" || {
-                echoContent red "Error: Failed to replace $XRAY_CONF"
-                exit 1
+                    echoContent red "错误: 无法更新 password"
+                    exit 1
                 }
-        echoContent skyblue "已为 $XRAY_CONF更新了新的 UUIDs, passwords, reality settings设置，并更新了域名$YOURDOMAIN."
-
-        # 验证 JSON 文件是否有效
-        if jq empty "$XRAY_CONF" &> /dev/null; then
-            echoContent skyblue "JSON 有效.可以进行服务重启了。"
-        
-        else
-            echoContent red "Error: 更新 JSON file 无效. 恢复备份."
-            mv "${XRAY_CONF}.bak" "$XRAY_CONF"
-            exit 1
+                echo "$new_url" >> "$XRAY_SUB_FILE"
+                echoContent skyblue "\n生成 $protocol 订阅链接: $new_url"
+                if command -v qrencode &> /dev/null; then
+                    qrencode -t ANSIUTF8 "$new_url" || echoContent red "生成二维码失败: $new_url"
+                else
+                    echoContent yellow "警告: qrencode 未安装，跳过二维码生成"
+                fi
+                ((client_index++))
+            done
         fi
+    done
+
+    # 替换原始文件
+    mv "$TEMP_FILE" "$XRAY_CONF" || {
+        echoContent red "错误: 无法替换 $XRAY_CONF"
+        exit 1
+    }
+    echoContent skyblue "已为 $XRAY_CONF 更新了新的 UUIDs、passwords、reality settings，并更新了域名 $YOURDOMAIN"
+
+    # 验证 JSON 文件是否有效
+    if jq empty "$XRAY_CONF" &> /dev/null; then
+        echoContent skyblue "JSON 有效，可以进行服务重启"
+    else
+        echoContent red "错误: 更新后的 JSON 文件无效，恢复备份"
+        mv "${XRAY_CONF}.bak" "$XRAY_CONF"
+        exit 1
+    fi
 }
 singbox_config() {
     echoContent skyblue "\nsingbox配置文件修改"
@@ -1116,8 +1169,8 @@ singbox_config() {
 configNginx() {
     echoContent green "nginx.conf 采用stream模块分流\n 包括tls,reality,pre,sing等前缀域名进行分流 ."
             read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密): " TLS_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密): " REALITY_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密): " PRE_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密,该域名可以不用申请SSL证书，但是需要与IP绑定): " REALITY_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流): " PRE_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密): " SING_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站): " WWW_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符或者综合证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
@@ -1135,10 +1188,12 @@ configNginx() {
             sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/yourdomain/$YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$XRAY_CONF"
-            sed -i "s/yourdomain/$YOURDOMAIN/g" "$XRAY_CONF" 
+            sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$XRAY_CONF" 
+            sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$XRAY_CONF" 
+            sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$XRAY_CONF"
             sed -i "s/yourdomain/$SING_YOURDOMAIN/g" "$SINGBOX_CONF"
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
+            sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
             echoContent skyblue "nginx.conf 更新成功."        
 }
@@ -1599,28 +1654,45 @@ manageLogs() {
     echoContent skyblue "\n日志管理菜单"
     echoContent yellow "1. 查看 Nginx 访问日志"
     echoContent yellow "2. 查看 Nginx 错误日志"
-    echoContent yellow "3. 查看 Xray 访问日志"
-    echoContent yellow "4. 查看 Sing-box 日志"
-    echoContent yellow "5. 查看证书日志"
-    echoContent yellow "6. 清除所有日志"
-    echoContent yellow "7. 退出"
+    echoContent yellow "3. 查看 Nginx stream访问日志"
+    echoContent yellow "4. 查看 Nginx stream错误日志"
+    echoContent yellow "5. 查看 Nginx webpage访问日志"
+    echoContent yellow "6. 查看 Nginx webpage错误日志"
+    echoContent yellow "7. 查看 Xray 访问日志"
+    echoContent yellow "8. 查看 Xray 错误日志"
+    echoContent yellow "9. 查看 Sing-box 日志"
+    echoContent yellow "10. 查看证书日志"
+    echoContent yellow "11. 清除所有日志"
+    echoContent yellow "12. 退出"
     read -r -p "请选择一个选项 [1-7]: " log_option
 
     case $log_option in
         1) tail -f "${LOG_DIR}/nginx_access.log" ;;
         2) tail -f "${LOG_DIR}/nginx_error.log" ;;
-        3) tail -f "${LOG_DIR}/xray_access.log" ;;
-        4) tail -f "${LOG_DIR}/singbox.log" ;;
-        5) tail -n 100 "${ACME_LOG}" ;;
-        6)
+        3) tail -f "${LOG_DIR}/nginx_stream_access.log" ;;
+        4) tail -f "${LOG_DIR}/nginx_stream_error.log" ;;
+        5) tail -f "${LOG_DIR}/nginx_webpage_access.log" ;;
+        6) tail -f "${LOG_DIR}/nginx_webpage_error.log" ;;
+        7) tail -f "${LOG_DIR}/xray_access.log" ;;
+        8) tail -f "${LOG_DIR}/xray_error.log" ;;
+        9) tail -f "${LOG_DIR}/singbox.log" ;;
+        10) tail -n 100 "${ACME_LOG}" ;;
+        11)
             echo > "${LOG_DIR}/nginx_access.log"
-            echo > "${LOG_DIR}/nginx_error.log"
+            echo > "${LOG_DIR}/nginx_access.log"
+            echo > "${LOG_DIR}/nginx_stream_access.log"
+            echo > "${LOG_DIR}/nginx_stream_error.log"
+            echo > "${LOG_DIR}/nginx_prextls_access.log"
+            echo > "${LOG_DIR}/nginx_proxy_access.log"
+            echo > "${LOG_DIR}/nginx_xhttpproxy_access.log"
+            echo > "${LOG_DIR}/nginx_webpage_access.log"
+            echo > "${LOG_DIR}/nginx_webpage_error.log"
             echo > "${LOG_DIR}/xray_access.log"
             echo > "${LOG_DIR}/xray_error.log"
             echo > "${LOG_DIR}/singbox.log"
             echoContent green "所有日志已清除."
             ;;
-        7) return ;;
+        12) return ;;
         *) echoContent red "无效选项." ; manageLogs ;;
     esac
 }
@@ -1998,6 +2070,10 @@ restartServices() {
     # 启用并启动服务
     echoContent yellow "停止服务."
     sudo systemctl stop nginx xray sing-box
+    if [ ! -d "$SHM_DIR" ]; then
+            echoContent yellow "创建目录 $SHM_DIR..."
+            mkdir -p "$SHM_DIRR"
+        fi
     echoContent yellow "清理$SHM_DIR/."
     sudo rm -rf "$SHM_DIR"/*
     echoContent yellow "启动服务."
@@ -2142,7 +2218,9 @@ EOF
         echoContent green "singbox安装成功"
     fi
     read -r -p "本地安装已经完成，是否继续配置？500M VPS 建议手动配置 (y/n):"  nsx_config
-    if [[ "$nsx_config"=="y" ]]; then
+    if [[ "$nsx_config"=="n" ]]; then
+        echoContent green "选择手动配置，nginx，xray singbox安装完成"
+    elif [[ "$nsx_config"=="y" ]]; then
         configNSX
     else 
         echoContent green "nginx，xray singbox安装完成，请手动配置"
@@ -2242,7 +2320,12 @@ restartNSXlocal() {
     echo > "${LOG_DIR}/xray_access.log"
     echo > "${LOG_DIR}/xray_error.log"
     echo > "${LOG_DIR}/singbox.log"
-    echoContent yellow "重启nsx本地服务..."
+    echoContent yellow "清理journalctl ..."
+    sudo journalctl --vacuum-time=1h -u xray.service
+    sudo journalctl --vacuum-time=1h -u sing-box.service
+    sudo journalctl --vacuum-time=1h -u nginx.service
+    echoContent yellow "重启nsx本地服务，用journalctl -u xray.service查看xray日志..."
+     
    
 }
 # Stop NSX
