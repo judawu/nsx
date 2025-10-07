@@ -95,7 +95,7 @@
         "key_path": "/usr/local/nsx/certs/sing.yourdomain.key"
       },
       "fallback": {
-        "server": "google.com",
+        "server": "www.harvard.edu",
         "server_port": 80
       }
     },

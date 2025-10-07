@@ -1190,7 +1190,7 @@ configNginx() {
             sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$XRAY_CONF" 
             sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$XRAY_CONF" 
             sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$XRAY_CONF"
-            sed -i "s/yourdomain/$SING_YOURDOMAIN/g" "$SINGBOX_CONF"
+            sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$SINGBOX_CONF"
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
