@@ -660,12 +660,7 @@ xray_config() {
             alpn=$(url_encode "$alpn")
             read -p "是否开启tls Encrypted Client Hello？: " tls_ech < /dev/tty
             if [[  "$tls_ech" == "y" ]]; then
-                echoContent green "\n不启用 Encrypted Client Hello"
-                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
-              
-            else
-              
-                echServerKeys_Config=$(xray tls ech --serverName "$sni" 2>/dev/null) || {
+                 echServerKeys_Config=$(xray tls ech --serverName "$sni" 2>/dev/null) || {
                     echoContent red "错误: 无法生成 ECH 配置"
                     exit 1
                 }
@@ -680,6 +675,12 @@ xray_config() {
                 }
                 url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"
                 
+                
+              
+            else
+                echoContent green "\n不启用 Encrypted Client Hello"
+                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
+               
             
             fi
         else
@@ -2266,8 +2267,8 @@ configNSX() {
     singbox_config
 
     restartServices
-    read -r -p "是否继续配置ufw？(y/n): " ufw_config
-      if [[ "$ufw_config"=="y" ]]; then
+    read  -p "是否继续配置ufw？(y/n): " ufw_config
+      if [[ $ufw_config == "y" ]]; then
         configufw
       else 
         echoContent yellpw "请使用systemctl enable ufw 和systemctl start ufw开启防火墙，用ufw allow port 开启端口访问..."
