@@ -472,7 +472,7 @@ url_encode() {
 }
 xray_config() {
     echoContent skyblue "\nxray配置文件修改"
-
+    echoContent green "xray是非常强大的代理，这个config文件包括了api，内网穿透，多协议配置，加密设置，网络分流等功能\n关于xray的命令可以用xray help进行命令查看"
     # 定义文件路径
   
     TEMP_FILE="/tmp/xray_config_temp.json"
@@ -1166,7 +1166,7 @@ singbox_config() {
     fi
 }
 configNginx() {
-    echoContent green "nginx.conf 采用stream模块分流\n 包括tls,reality,pre,sing等前缀域名进行分流 ."
+    echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\nnginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击"
             read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密): " TLS_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密,该域名可以不用申请SSL证书，但是需要与IP绑定): " REALITY_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流): " PRE_YOURDOMAIN
@@ -1647,7 +1647,11 @@ manageLogs() {
     echoContent yellow "9. 查看 Sing-box 日志"
     echoContent yellow "10. 查看证书日志"
     echoContent yellow "11. 清除所有日志"
-    echoContent yellow "12. 退出"
+    echoContent yellow "12. 查看nginx服务记录(journalctl -u nginx.service)"
+    echoContent yellow "13. 查看xray服务记录(journalctl -u xray.service)"
+    echoContent yellow "14. 查看sing-box服务记录(journalctl -u sing-box.service)"
+    echoContent yellow "15. 清除nsx服务记录 (journalctl --vacuum-time=1m -u xray.service)"
+    echoContent yellow "16. 退出"
     read -r -p "请选择一个选项 [1-7]: " log_option
 
     case $log_option in
@@ -1676,7 +1680,21 @@ manageLogs() {
             echo > "${LOG_DIR}/singbox.log"
             echoContent green "所有日志已清除."
             ;;
-        12) return ;;
+        12)
+          sudo journalctl -u nginx.service
+           ;;
+        13)
+          sudo journalctl -u xray.service
+           ;;
+        14)
+          sudo journalctl -u sing-box.service
+           ;;
+        15)
+        sudo journalctl --vacuum-time=1m -u xray.service
+        sudo journalctl --vacuum-time=1m -u sing-box.service
+        sudo journalctl --vacuum-time=1m -u nginx.service
+           ;;
+        16) return ;;
         *) echoContent red "无效选项." ; manageLogs ;;
     esac
 }
@@ -2533,7 +2551,7 @@ menu() {
     echoContent red "\n=============================================================="
     echoContent green "NSX 安装管理脚本"
     echoContent green "作者: JudaWu"
-    echoContent green "版本: v0.0.3"
+    echoContent green "版本: v0.0.4"
     echoContent green "Github: https://github.com/judawu/nsx"
     echoContent green "描述: 一个集成 Nginx、Sing-box 和 Xray 的代理环境"
     echoContent red "\n=============================================================="
@@ -2550,12 +2568,13 @@ menu() {
     echoContent yellow "10. 卸载nsx"
     echoContent yellow "11. 重启 NSX Docker"
     echoContent yellow "12. 重启 NSX 本地"
-    echoContent yellow "13. 退出"
+    echoContent yellow "13. linux使用帮助"
+    echoContent yellow "14. 退出"
     read -r -p "请选择一个选项 [1-9]: " option
 
     case $option in
         1)
-        echoContent green "输入nsx启动脚本\n选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改"
+        echoContent green "输入nsx启动脚本\n选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改\n选择6进行日志管理..."
         exit 1;;
         2)dockerInstall ;;
         3) localInstall ;;
@@ -2568,7 +2587,9 @@ menu() {
         10)uninstallNSX ;;
         11)restartNSXdocker ;;
         12)restartNSXlocal ;;
-        13) exit 0 ;;
+        13) echoContent green "修改ssh文件: nano /etc/ssh/sshd_config \nufw启动端口命令：sudo ufw allow 9753/tcp \n重启ssh命令： systemctl restart ssh\n添加vpsadmin账号: adduser vpsadmin\n设置sudo权限:visudo 在 User Privilege Specification 下加入一行 vpsadmin ALL=(ALL) NOPASSWD: ALL\nssh禁用root远程登录: PermitRootLogin:yes"
+      ;;
+        14) exit 0 ;;
         *) echoContent red "无效选项." ; menu ;;
     esac
 }
