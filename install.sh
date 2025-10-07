@@ -651,7 +651,12 @@ xray_config() {
             tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
             sni=$(echo "$tlsSettings" | jq -r '.serverName // "'"$YOURDOMAIN"'"')
             alpn=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings.alpn // ["h2", "http/1.1"]')
-            read -p "是否启用 Encrypted Client Hello？(y/n): " tls_ech
+               # 处理 alpn
+            if [[ "$alpn" == \[*\] ]]; then
+                alpn=$(echo "$alpn" | jq -r 'join(",")')
+            fi
+            alpn=$(url_encode "$alpn")
+            read -r -p "是否启用 Encrypted Client Hello？(y/n): " tls_ech
             if [[ "$tls_ech" == "y" ]]; then
                 echServerKeys_Config=$(xray tls ech --serverName "$sni" 2>/dev/null) || {
                     echoContent red "错误: 无法生成 ECH 配置"
@@ -666,19 +671,14 @@ xray_config() {
                     echoContent red "错误: 无法更新 echServerKeys"
                     exit 1
                 }
+                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"
             else
               
 
                 echoContent green "\n不启用 Encrypted Client Hello"
-                echConfigList=""
-            fi
-
-            # 处理 alpn
-            if [[ "$alpn" == \[*\] ]]; then
-                alpn=$(echo "$alpn" | jq -r 'join(",")')
-            fi
-            alpn=$(url_encode "$alpn")
-            url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"
+                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
+            
+           
         else
             if [[ "$network" == "xhttp" && -n "$reality_url" ]]; then
                     url="$url$reality_url"
