@@ -605,8 +605,8 @@ xray_config() {
                 echoContent red "错误: 无法生成 x25519 密钥对"
                 exit 1
             }
-            private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $3}')
-            public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $3}')
+            private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $2}')
+            public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $2}')
             new_short_ids=$(generate_short_ids)
             echoContent yellow "\n生成新 privateKey: $private_key"
             echoContent yellow "\n生成新 publicKey: $public_key"
@@ -653,7 +653,7 @@ xray_config() {
             alpn=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings.alpn // ["h2", "http/1.1"]')
             read -p "是否启用 Encrypted Client Hello？(y/n): " tls_ech
             if [[ "$tls_ech" == "y" ]]; then
-                echServerKeys_Config=$(xray ls ech --serverName "$sni" 2>/dev/null) || {
+                echServerKeys_Config=$(xray tls ech --serverName "$sni" 2>/dev/null) || {
                     echoContent red "错误: 无法生成 ECH 配置"
                     exit 1
                 }
