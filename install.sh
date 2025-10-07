@@ -605,8 +605,8 @@ xray_config() {
                 echoContent red "错误: 无法生成 x25519 密钥对"
                 exit 1
             }
-            private_key=$(echo "$key_pair" | grep "Private key" | awk '{print $2}')
-            public_key=$(echo "$key_pair" | grep "Public key" | awk '{print $2}')
+            private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
+            public_key=$(echo "$key_pair" | grep "Password" | awk '{print $2}')
             new_short_ids=$(generate_short_ids)
             echoContent yellow "\n生成新 privateKey: $private_key"
             echoContent yellow "\n生成新 publicKey: $public_key"
@@ -708,8 +708,8 @@ xray_config() {
                         echoContent red "错误: 无法生成 x25519 密钥"
                         exit 1
                     }
-                    new_vless_decryption="$new_vless_decryption$(echo "$x25519_key_pair" | grep "Private key" | awk '{print $3}')"
-                    new_vless_encryption="$new_vless_encryption$(echo "$x25519_key_pair" | grep "Public key" | awk '{print $3}')"
+                    new_vless_decryption="$new_vless_decryption$(echo "$x25519_key_pair" | grep "PrivateKey" | awk '{print $2}')"
+                    new_vless_encryption="$new_vless_encryption$(echo "$x25519_key_pair" | grep "Password" | awk '{print $2}')"
                 else
                     echoContent green "选择了 mlkem768"
                     mlkem768_key_pair=$(xray mlkem768 2>/dev/null) || {
