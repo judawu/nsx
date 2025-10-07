@@ -659,7 +659,7 @@ xray_config() {
             fi
             alpn=$(url_encode "$alpn")
             read -p "是否开启tls Encrypted Client Hello？: " tls_ech < /dev/tty
-            if [[  "$tls_ech" =="y" ]]; then
+            if [[  "$tls_ech" == "y" ]]; then
                 echoContent green "\n不启用 Encrypted Client Hello"
                 url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
               
