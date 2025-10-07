@@ -652,7 +652,7 @@ xray_config() {
         elif [[ "$security" == "tls" ]]; then
             tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
             sni=$(echo "$tlsSettings" | jq -r '.serverName // "'"$YOURDOMAIN"'"')
-            alpn=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings.alpn // ["h2", "http/1.1"]')
+            alpn=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings.alpn // "h2"')
                # 处理 alpn
             if [[ "$alpn" == \[*\] ]]; then
                 alpn=$(echo "$alpn" | jq -r 'join(",")')
