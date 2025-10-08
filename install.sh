@@ -530,54 +530,6 @@ xray_config() {
         echoContent red "错误: 无法创建临时文件 $TEMP_FILE"
         exit 1
     }
-   # Prompt user for Shadowsocks split configuration
-    read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
-    if [[ -z "$split_ss" ]]; then
-        echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
-    else
-        echoContent green "设置ss分流，更新shadowsocks的密码"
-        # Extract Shadowsocks inbound configuration
-        ss_in=$(jq -c '.inbounds[] | select(.protocol == "shadowsocks")' "$TEMP_FILE")
-        if [[ -z "$ss_in" ]]; then
-            echoContent red "错误: 未找到Shadowsocks inbound配置"
-            exit 1
-        fi
-        ss_in_tag=$(echo "$ss_in" | jq -r '.tag')
-        ss_protocol=$(echo "$ss_in" | jq -r '.protocol')
-        ss_port=$(echo "$ss_in" | jq -r '.port')
-        ss_method=$(echo "$ss_in" | jq -r '.settings.method')
-        ss_password=$(echo "$ss_in" | jq -r '.settings.password')
-
-        # Prompt for Shadowsocks method
-        read -p "输入 shadowsocks method 默认($ss_method) 0=2022-blake3-aes-128-gcm, 1=2022-blake3-aes-256-gcm, 2=2022-blake3-chacha20-poly1305: " ss_method_option < /dev/tty
-        case "$ss_method_option" in
-            0) ss_method="2022-blake3-aes-128-gcm" ;;
-            1) ss_method="2022-blake3-aes-256-gcm" ;;
-            2) ss_method="2022-blake3-chacha20-poly1305" ;;
-            *) echoContent green "默认($ss_method)" ;;
-        esac
-
-        # Prompt for Shadowsocks password
-        read -p "输入 shadowsocks password 默认($ss_password): " ss_new_password < /dev/tty
-        if [[ -z "$ss_new_password" ]]; then
-            ss_new_password="$ss_password"
-        elif [[ ${#ss_new_password} -lt 6 ]]; then
-            ss_new_password=$(openssl rand -base64 16)
-            echoContent green "密码太短，自动生成: $ss_new_password"
-        fi
-
-        # Prompt for Shadowsocks port and validate
-        read -p "输入 shadowsocks port 默认($ss_port): " ss_new_port < /dev/tty
-        if [[ -z "$ss_new_port" ]]; then
-            ss_new_port="$ss_port"
-        elif ! [[ "$ss_new_port" =~ ^[0-9]+$ ]] || [[ "$ss_new_port" -lt 1 || "$ss_new_port" -gt 65535 ]]; then
-            echoContent red "错误: 端口号必须在1-65535之间"
-            exit 1
-        fi
-
-    # Backup TEMP_FILE
-    cp "$TEMP_FILE" "${TEMP_FILE}.bak"
-
     # Update inbounds configuration
     echoContent green "\n更新 $ss_in_tag:\n"
     jq --arg tag "$ss_in_tag" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
@@ -611,6 +563,10 @@ xray_config() {
     # Update outbounds configurations
     for vps_tag in "vps1" "vps2" "vps3" "vps4"; do
         vps_new_address_var="${vps_tag}_new_address"
+        if [[ -z "${!vps_new_address_var}" ]]; then
+            echoContent red "错误: VPS地址未设置 ($vps_tag)"
+            exit 1
+        fi
         jq --arg tag "$vps_tag" --arg ss_new_address "${!vps_new_address_var}" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
             '(.outbounds[] | select(.tag == $tag)) |= (.settings.servers[0].address = $ss_new_address | .settings.servers[0].port = ($ss_new_port | tonumber) | .settings.servers[0].password = $ss_new_password | .settings.servers[0].method = $ss_method)' \
             "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
@@ -618,7 +574,6 @@ xray_config() {
             exit 1
         }
     done
-
     echoContent green "Shadowsocks configuration updated successfully"
     # 替换 yourdomain 为用户输入的域名
     # 获取用户输入的域名
@@ -977,10 +932,10 @@ singbox_config() {
     }
     echoContent green "Backup created: ${SINGBOX_CONF}.bak"
   
-   generate_short_ids() {
+    generate_short_ids() {
     short_id=$(openssl rand -hex 8)  # 16 字节
     echo "[\"\", \"$short_id\"]"
-}
+    }
 
     # 创建临时 JSON 文件
     cp "$SINGBOX_CONF" "$TEMP_FILE" || {
