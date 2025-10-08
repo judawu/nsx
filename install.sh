@@ -634,7 +634,7 @@ xray_config() {
             # 更新 reality 设置
             jq --arg tag "$tag" --arg private_key "$private_key" --arg public_key "$public_key" --argjson short_ids "$new_short_ids" --arg mldsa65_seed "$mldsa65_seed" --arg mldsa65_verify "$mldsa65_verify" \
                 '(.inbounds[] | select(.tag == $tag) | .streamSettings.realitySettings) |=
-                    (.privateKey = $private_key | .publicKey = $public_key | .shortIds = $short_ids
+                    (.privateKey = $private_key | .password = $public_key | .shortIds = $short_ids
                     | if has("mldsa65Seed") then .mldsa65Seed = $mldsa65_seed else . end
                     | if has("mldsa65Seed") then .mldsa65Verify = $mldsa65_verify else . end)' \
                 "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
