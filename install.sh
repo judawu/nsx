@@ -533,17 +533,16 @@ xray_config() {
 
     # 替换 yourdomain 为用户输入的域名
     # 获取用户输入的域名
-    echoContent yellow "请手动输入fallback 域名(订阅域名）\n"
-    read -p "请输入域名替换文件中 'www.harvard.edu' (e.g., yourdomain.com): " YOURDOMAIN < /dev/tty
+    echoContent yellow "请手动输入订阅域名\n"
+    read -p "请输入订阅域名 (e.g., yourdomain.com): " YOURDOMAIN < /dev/tty
     if [[ -z "$YOURDOMAIN" ]]; then
-        YOURDOMAIN=$LOCAL_IP
+        YOURDOMAIN=$REALITY_YOURDOMAIN
         echoContent green "订阅链接地址为：$YOURDOMAIN "
     else
         jq --arg domain "$YOURDOMAIN" \
-            'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
+            'walk(if type == "string" then gsub("yourdomain"; $domain) else . end)' \
             "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
             echoContent red "错误: 无法更新域名"
-            exit 1
         }
     fi
     
@@ -903,16 +902,15 @@ singbox_config() {
     }
 
     echoContent yellow "请手动输入订阅域名\n"
-    read -p "请输入订阅域名替换文件中 'www.harvard.edu' (e.g., yourdomain.com): " SINGBOXDOMAIN
+    read -p "请输入订阅域名 (e.g., yourdomain.com): " SINGBOXDOMAIN
     if [[ -z "$SINGBOXDOMAIN" ]]; then
-        SINGBOXDOMAIN=$LOCAL_IP
+        SINGBOXDOMAIN=$SING_YOURDOMAIN
         echoContent green "订阅链接地址为：$SINGBOXDOMAIN "
     else
         jq --arg domain "$SINGBOXDOMAIN" \
-            'walk(if type == "string" then gsub("www.harvard.edu"; $domain) else . end)' \
+            'walk(if type == "string" then gsub("sing.yourdomain"; $domain) else . end)' \
             "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-            echoContent red "错误: 无法更新域名"
-            exit 1
+            echoContent red "错误: 无法更新sing.yourdomain域名"
         }
     fi
     # 提取所有 inbounds
