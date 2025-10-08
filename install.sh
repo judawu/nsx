@@ -531,50 +531,93 @@ xray_config() {
         exit 1
     }
     # Update inbounds configuration
-    echoContent green "\n更新 $ss_in_tag:\n"
-    jq --arg tag "$ss_in_tag" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
-        '(.inbounds[] | select(.tag == $tag)) |= (.port = ($ss_new_port | tonumber) | .settings.password = $ss_new_password | .settings.method = $ss_method)' \
-        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-        echoContent red "错误: 无法更新 shadowsocks inbound"
-        exit 1
-    }
 
-    # Extract VPS outbounds configurations
-    echoContent green "\n更新 vps,保持和 inbound $ss_in_tag 配置一致:\n"
-    vps1=$(jq -c '.outbounds[] | select(.tag == "vps1")' "$TEMP_FILE")
-    vps1_address=$(echo "$vps1" | jq -r '.settings.servers[0].address // empty')
-    vps2=$(jq -c '.outbounds[] | select(.tag == "vps2")' "$TEMP_FILE")
-    vps2_address=$(echo "$vps2" | jq -r '.settings.servers[0].address // empty')
-    vps3=$(jq -c '.outbounds[] | select(.tag == "vps3")' "$TEMP_FILE")
-    vps3_address=$(echo "$vps3" | jq -r '.settings.servers[0].address // empty')
-    vps4=$(jq -c '.outbounds[] | select(.tag == "vps4")' "$TEMP_FILE")
-    vps4_address=$(echo "$vps4" | jq -r '.settings.servers[0].address // empty')
-
-    # Prompt for VPS addresses
-    read -p "输入 vps1的IP 默认($vps1_address): " vps1_new_address < /dev/tty
-    [[ -z "$vps1_new_address" ]] && vps1_new_address="$vps1_address"
-    read -p "输入 vps2的IP 默认($vps2_address): " vps2_new_address < /dev/tty
-    [[ -z "$vps2_new_address" ]] && vps2_new_address="$vps2_address"
-    read -p "输入 vps3的IP 默认($vps3_address): " vps3_new_address < /dev/tty
-    [[ -z "$vps3_new_address" ]] && vps3_new_address="$vps3_address"
-    read -p "输入 vps4的IP 默认($vps4_address): " vps4_new_address < /dev/tty
-    [[ -z "$vps4_new_address" ]] && vps4_new_address="$vps4_address"
-
-    # Update outbounds configurations
-    for vps_tag in "vps1" "vps2" "vps3" "vps4"; do
-        vps_new_address_var="${vps_tag}_new_address"
-        if [[ -z "${!vps_new_address_var}" ]]; then
-            echoContent red "错误: VPS地址未设置 ($vps_tag)"
+     read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
+    if [[ -z "$split_ss" ]]; then
+        echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
+    else
+        echoContent green "设置ss分流，更新shadowsocks的密码"
+        ss_in=$(jq -c '.inbounds[] | select(.protocol == "shadowsocks")' "$TEMP_FILE")
+        if [[ -z "$ss_in" ]]; then
+            echoContent red "错误: 未找到Shadowsocks inbound配置"
             exit 1
         fi
-        jq --arg tag "$vps_tag" --arg ss_new_address "${!vps_new_address_var}" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
-            '(.outbounds[] | select(.tag == $tag)) |= (.settings.servers[0].address = $ss_new_address | .settings.servers[0].port = ($ss_new_port | tonumber) | .settings.servers[0].password = $ss_new_password | .settings.servers[0].method = $ss_method)' \
+        ss_in_tag=$(echo "$ss_in" | jq -r '.tag')
+        ss_protocol=$(echo "$ss_in" | jq -r '.protocol')
+        ss_port=$(echo "$ss_in" | jq -r '.port')
+        ss_method=$(echo "$ss_in" | jq -r '.settings.method')
+        ss_password=$(echo "$ss_in" | jq -r '.settings.password')
+
+        read -p "输入 shadowsocks method 默认($ss_method) 0=2022-blake3-aes-128-gcm, 1=2022-blake3-aes-256-gcm, 2=2022-blake3-chacha20-poly1305: " ss_method_option < /dev/tty
+        case "$ss_method_option" in
+            0) ss_method="2022-blake3-aes-128-gcm" ;;
+            1) ss_method="2022-blake3-aes-256-gcm" ;;
+            2) ss_method="2022-blake3-chacha20-poly1305" ;;
+            *) echoContent green "默认($ss_method)" ;;
+        esac
+
+        read -p "输入 shadowsocks password 默认($ss_password): " ss_new_password < /dev/tty
+        if [[ -z "$ss_new_password" ]]; then
+            ss_new_password="$ss_password"
+        elif [[ ${#ss_new_password} -lt 6 ]]; then
+            ss_new_password=$(openssl rand -base64 16)
+            echoContent green "密码太短，自动生成: $ss_new_password"
+        fi
+
+        read -p "输入 shadowsocks port 默认($ss_port): " ss_new_port < /dev/tty
+        if [[ -z "$ss_new_port" ]]; then
+            ss_new_port="$ss_port"
+        elif ! [[ "$ss_new_port" =~ ^[0-9]+$ ]] || [[ "$ss_new_port" -lt 1 || "$ss_new_port" -gt 65535 ]]; then
+            echoContent red "错误: 端口号必须在1-65535之间"
+            exit 1
+        fi
+
+      
+        echoContent green "\n更新 $ss_in_tag:\n"
+        jq --arg tag "$ss_in_tag" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
+            '(.inbounds[] | select(.tag == $tag)) |= (.port = ($ss_new_port | tonumber) | .settings.password = $ss_new_password | .settings.method = $ss_method)' \
             "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-            echoContent red "错误: 无法更新 $vps_tag"
+            echoContent red "错误: 无法更新 shadowsocks inbound"
             exit 1
         }
-    done
-    echoContent green "Shadowsocks configuration updated successfully"
+
+        # Extract VPS outbounds configurations
+        echoContent green "\n更新 vps,保持和 inbound $ss_in_tag 配置一致:\n"
+        vps1=$(jq -c '.outbounds[] | select(.tag == "vps1")' "$TEMP_FILE")
+        vps1_address=$(echo "$vps1" | jq -r '.settings.servers[0].address // empty')
+        vps2=$(jq -c '.outbounds[] | select(.tag == "vps2")' "$TEMP_FILE")
+        vps2_address=$(echo "$vps2" | jq -r '.settings.servers[0].address // empty')
+        vps3=$(jq -c '.outbounds[] | select(.tag == "vps3")' "$TEMP_FILE")
+        vps3_address=$(echo "$vps3" | jq -r '.settings.servers[0].address // empty')
+        vps4=$(jq -c '.outbounds[] | select(.tag == "vps4")' "$TEMP_FILE")
+        vps4_address=$(echo "$vps4" | jq -r '.settings.servers[0].address // empty')
+
+        # Prompt for VPS addresses
+        read -p "输入 vps1的IP 默认($vps1_address): " vps1_new_address < /dev/tty
+        [[ -z "$vps1_new_address" ]] && vps1_new_address="$vps1_address"
+        read -p "输入 vps2的IP 默认($vps2_address): " vps2_new_address < /dev/tty
+        [[ -z "$vps2_new_address" ]] && vps2_new_address="$vps2_address"
+        read -p "输入 vps3的IP 默认($vps3_address): " vps3_new_address < /dev/tty
+        [[ -z "$vps3_new_address" ]] && vps3_new_address="$vps3_address"
+        read -p "输入 vps4的IP 默认($vps4_address): " vps4_new_address < /dev/tty
+        [[ -z "$vps4_new_address" ]] && vps4_new_address="$vps4_address"
+
+        # Update outbounds configurations
+        for vps_tag in "vps1" "vps2" "vps3" "vps4"; do
+            vps_new_address_var="${vps_tag}_new_address"
+            if [[ -z "${!vps_new_address_var}" ]]; then
+                echoContent red "错误: VPS地址未设置 ($vps_tag)"
+                exit 1
+            fi
+            jq --arg tag "$vps_tag" --arg ss_new_address "${!vps_new_address_var}" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
+                '(.outbounds[] | select(.tag == $tag)) |= (.settings.servers[0].address = $ss_new_address | .settings.servers[0].port = ($ss_new_port | tonumber) | .settings.servers[0].password = $ss_new_password | .settings.servers[0].method = $ss_method)' \
+                "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                echoContent red "错误: 无法更新 $vps_tag"
+                exit 1
+            }
+        done
+        echoContent green "Shadowsocks configuration updated successfully"
+    fi
     # 替换 yourdomain 为用户输入的域名
     # 获取用户输入的域名
     echoContent yellow "请手动输入订阅域名\n"
