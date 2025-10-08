@@ -663,8 +663,8 @@ xray_config() {
                     echoContent red "错误: 无法生成 ECH 配置"
                     exit 1
                 }
-                echServerKeys=$(echo "$echServerKeys_Config" | sed -n '2p'
-                echConfigList=$(echo "$echServerKeys_Config" | sed -n '4p'
+                echServerKeys=$(echo "$echServerKeys_Config" | sed -n '2p')
+                echConfigList=$(echo "$echServerKeys_Config" | sed -n '4p')
 
                 # 更新 echServerKeys
                 jq --arg tag "$tag" --arg echServerKeys "$echServerKeys" \
@@ -673,15 +673,10 @@ xray_config() {
                     echoContent red "错误: 无法更新 echServerKeys"
                     exit 1
                 }
-                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"
-                
-                
-              
+                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"           
             else
                 echoContent green "\n不启用 Encrypted Client Hello"
-                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn"
-               
-            
+                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn" 
             fi
         else
             if [[ "$network" == "xhttp" && -n "$reality_url" ]]; then
