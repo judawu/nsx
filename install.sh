@@ -681,6 +681,8 @@ xray_config() {
         else
             if [[ "$network" == "xhttp" && -n "$reality_url" ]]; then
                     url="$url$reality_url"
+            elif [[ "$protocol" == "trojan" && -n "$reality_url" ]]; then
+                    url="$url$reality_url"
             else
                     url="$url&security=tls&fp=${fp:-chrome}&sni=${YOURDOMAIN:-example.com}"
             fi
