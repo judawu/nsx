@@ -537,7 +537,7 @@ xray_config() {
         echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
     else
         echoContent green "设置ss分流，更新shadowsocks的密码"
-        ss_in=$(jq -c '.inbounds[] | select(.protocol == "shadowsocks")' "$TEMP_FILE" > /dev/null)
+        ss_in=$(jq -c '.inbounds[] | select(.protocol == "shadowsocks")' "$TEMP_FILE")
         if [[ -z "$ss_in" ]]; then
             echoContent red "错误: 未找到Shadowsocks inbound配置"
             exit 1
@@ -583,13 +583,13 @@ xray_config() {
 
         # Extract VPS outbounds configurations
         echoContent green "\n更新 vps,保持和 inbound $ss_in_tag 配置一致:\n"
-        vps1=$(jq -c '.outbounds[] | select(.tag == "vps1")' "$TEMP_FILE" > /dev/null)
+        vps1=$(jq -c '.outbounds[] | select(.tag == "vps1")' "$TEMP_FILE")
         vps1_address=$(echo "$vps1" | jq -r '.settings.servers[0].address // empty')
-        vps2=$(jq -c '.outbounds[] | select(.tag == "vps2")' "$TEMP_FILE" > /dev/null)
+        vps2=$(jq -c '.outbounds[] | select(.tag == "vps2")' "$TEMP_FILE")
         vps2_address=$(echo "$vps2" | jq -r '.settings.servers[0].address // empty')
-        vps3=$(jq -c '.outbounds[] | select(.tag == "vps3")' "$TEMP_FILE" > /dev/null)
+        vps3=$(jq -c '.outbounds[] | select(.tag == "vps3")' "$TEMP_FILE")
         vps3_address=$(echo "$vps3" | jq -r '.settings.servers[0].address // empty')
-        vps4=$(jq -c '.outbounds[] | select(.tag == "vps4")' "$TEMP_FILE" > /dev/null)
+        vps4=$(jq -c '.outbounds[] | select(.tag == "vps4")' "$TEMP_FILE" )
         vps4_address=$(echo "$vps4" | jq -r '.settings.servers[0].address // empty')
 
         # Prompt for VPS addresses
