@@ -664,8 +664,9 @@ xray_config() {
                     echoContent red "错误: 无法生成 ECH 配置"
                     exit 1
                 }
-                echServerKeys=$(echo "$echServerKeys_Config" | grep "ECH config list" | awk '{print $2}')
-                echConfigList=$(echo "$echServerKeys_Config" | grep "ECH server keys" | awk '{print $2}')
+                echServerKeys=$(echo "$echServerKeys_Config" | sed -n '2p'
+                echConfigList=$(echo "$echServerKeys_Config" | sed -n '4p'
+
                 # 更新 echServerKeys
                 jq --arg tag "$tag" --arg echServerKeys "$echServerKeys" \
                     '(.inbounds[] | select(.tag == $tag) | .streamSettings.tlsSettings).echServerKeys = $echServerKeys' \
