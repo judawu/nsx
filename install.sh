@@ -754,8 +754,8 @@ xray_config() {
                 echConfigList=$(echo "$echServerKeys_Config" | sed -n '2p')
 
                 # 更新 echServerKeys
-                jq --arg tag "$tag" --arg echServerKeys "$echServerKeys" \
-                    '(.inbounds[] | select(.tag == $tag) | .streamSettings.tlsSettings).echServerKeys = $echServerKeys' \
+                jq --arg tag "$tag" --arg echServerKeys "$echServerKeys" --arg echConfigList "$echConfigList" \
+                    '(.inbounds[] | select(.tag == $tag) | .streamSettings.tlsSettings).echServerKeys = $echServerKeys | .streamSettings.tlsSettings).echConfigList = $echConfigList' \
                     "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                     echoContent red "错误: 无法更新 echServerKeys"
                     exit 1
@@ -840,7 +840,7 @@ xray_config() {
                 if [[ -n "$reverse_tag" ]]; then
                  tag=$reverse_tag
                 fi
-                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
+                new_url="$protocol://$new_id@$LOCAL_IP:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id\n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -1260,12 +1260,12 @@ singbox_config() {
 }
 configNginx() {
     echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\nnginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击"
-            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密): " TLS_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密,需要ssl证书): " TLS_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密,该域名可以不用申请SSL证书，但是需要与IP绑定): " REALITY_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流): " PRE_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密): " SING_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站): " WWW_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换yourdomain的新域名 (用于通配符或者综合证书)，如果对上面的域名都有证书，请手动修改nginx.conf: " YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流，需要ssl证书): " PRE_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密，需要ssl证书): " SING_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站，需要ssl证书): " WWW_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (转发给xray 的VLESS-ENCRYPTION-REALITY-MIDSA65端口): " MID_YOURDOMAIN
             read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
             if [[ -z "$NEW_IP" ]]; then
                 NEW_IP="$LOCAL_IP"
@@ -1279,11 +1279,13 @@ configNginx() {
             sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/yourdomain/$YOURDOMAIN/g" "$NGINX_CONF"
+            sed -i "s/mid\.yourdomain/$MID_YOURDOMAIN/g" "$NGINX_CONF"
             sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$XRAY_CONF" 
             sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$XRAY_CONF" 
             sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$XRAY_CONF"
-            sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$SINGBOX_CONF"
+            sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$XRAY_CONF"
+            sed -i "s/mid\.yourdomain/$MID_YOURDOMAIN/g" "$XRAY_CONF"
+            sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$SINGBOX_CONF"           
             sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
             sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
             sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
@@ -1392,8 +1394,8 @@ generateSubscriptions() {
     # 获取用户输入的域名
     read -r -p "请输入订阅域名 (例如: sing.yourdomain): " SUB_DOMAIN
     if [[ -z "$SUB_DOMAIN" ]]; then
-        echoContent red "域名不能为空."
-        return 1
+        SUB_DOMAIN=$(ip addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v "127.0.0.1" | head -n 1)
+        
     fi
 
     # Generate Xray subscription
