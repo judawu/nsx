@@ -95,7 +95,7 @@
       },
       {
              "user": [
-              "reverse@vless.xtls.reality"
+              "reverse@vless.simple"
         ],
         "outboundTag": "simple-reverse-out"
       },
@@ -137,17 +137,37 @@
         "user": [
           "vps@v1"
         ],
-        "outboundTag": "vps_v1"
+        "outboundTag": "vps1"
       },
       {
         "domain": [
           "geosite:netflix"
         ],
         "user": [
-          "vps@v2",
-          "vps@v3"
+          "vps@v2"
         ],
-        "outboundTag": "vps_v2"
+        "outboundTag": "vps2"
+      },
+       {
+        "domain": [
+          "geosite:netflix"
+        ],
+        "user": [
+          "vps@v3"
+        
+        ],
+        "outboundTag": "vps3"
+      },
+         {
+        "domain": [
+          "geosite:netflix"
+        ],
+        "user": [
+          "vps@v4",
+          "vps@v5"
+        
+        ],
+        "outboundTag": "vps4"
       },
       {
         "ruleTag": "private-ip",
@@ -227,6 +247,7 @@
             "tls.yourdomain",
             "reality.yourdomain",
             "pre.yourdomain",
+            "www.yourdomain",
             "google.com"      
           ],
           "privateKey": "oK7K8sOcoiLcdS1vayvQT7rb5RY1j4BQQkfNCPOzxVI",
@@ -274,6 +295,16 @@
           {
             "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51",
             "email": "vps@v3",
+            "level": 0
+          },
+          {
+            "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
+            "email": "vps@v4",
+            "level": 0
+          },
+            {
+            "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
+            "email": "vps@v5",
             "level": 0
           }
         ],
@@ -390,7 +421,8 @@
               "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
             }
           ],
-          "echServerKeys": ""
+          "echServerKeys": "",
+          "echConfigList": ""
         },
         "rawSettings": {
           "acceptProxyProtocol": false
@@ -407,7 +439,7 @@
     },
     
     {
-      "tag": "Vless-splithttp",
+      "tag": "VLESS-SPLITHTTP",
       "listen": "/dev/shm/nsx/vlesssplithttp.sock,0666",
       "protocol": "vless",
       "settings": {
@@ -436,7 +468,7 @@
       }
     },
     {
-      "tag": "Vless-ws",
+      "tag": "VLESS-WS",
       "listen": "/dev/shm/nsx/vlessws.sock,0666",
       "protocol": "vless",
       "settings": {
@@ -463,7 +495,7 @@
       }
     },
     {
-      "tag": "Vmess-ws",
+      "tag": "VMESS-WS",
       "listen": "/dev/shm/nsx/vmessws.sock,0666",
       "protocol": "vmess",
       "settings": {
@@ -492,7 +524,7 @@
       }
     },
     {
-      "tag": "Vless-httpupgrade",
+      "tag": "VLESS-HTTPUPGRADE",
       "listen": "/dev/shm/nsx/vlesshttpupgrade.sock,0666",
       "protocol": "vless",
       "settings": {
@@ -519,7 +551,7 @@
       }
     },
     {
-      "tag": "Vless_grpc",
+      "tag": "VLESS-GRPC",
       "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
       "protocol": "vless",
       "settings": {
@@ -550,14 +582,15 @@
       }
     },
     {
+      "tag": "simple-tunnel-in",
       "listen": "0.0.0.0",
       "port": 10831,
-      "protocol": "tunnel",
-      "tag": "simple-tunnel-in"
+      "protocol": "tunnel"
+      
     },
 
     {
-      "tag": "VLESS-VISION-REALITY-Tunnel1",
+      "tag": "VLESS-VISION-REALITY-TUNNEL",
       "listen": "0.0.0.0",
       "port": 10832,
       "protocol": "vless",
@@ -587,7 +620,11 @@
           "target": "pre.yourdomain:443",
           "xver": 0,
           "serverNames": [
-            "pre.yourdomain"
+            "tls.yourdomain",
+            "reality.yourdomain",
+            "pre.yourdomain",
+            "www.yourdomain",
+            "google.com" 
                   ],
           "privateKey": "EIGcJ6cA3FBhrpniOMkjxJqk_CUdvq4DvaZhB_33Tms",
           "password": "tiapHof8aOr3vzcYINQMkql9AEKPqmo1jAL7zfpbyFQ",
@@ -610,6 +647,7 @@
    
 
     {
+  "tag": "vless_simple_tunnel_reverse",
 	"listen": "0.0.0.0",
 	"port": 10833,
 	"protocol": "vless",
@@ -626,14 +664,14 @@
 					{
 						"id": "e8758aff-d830-4d08-a59e-271df65b995a", 
 						"flow": "xtls-rprx-vision",
-						"email": "reverse@vless.xtls.reality"
+						"email": "reverse@vless.simple"
 					}
 				]
 			}
 		},
    
     {
-      "tag": "VLESS-Decryption-REALITY-MID-REVERSE",
+      "tag": "VLESS-ENCRYPTION-REALITY-MIDSA65",
       "listen": "0.0.0.0",
       "port": 10834,
       "protocol": "vless",
@@ -641,11 +679,11 @@
         "decryption": "mlkem768x25519plus.native.600s.aCF82eKiK6g0DIbv0_nsjbHC4RyKCc9NRjl-X9lyi0k",
         "clients": [
             {
-            "email": "mid@vless.xtls.reality",
+            "email": "forward@vless.encrytion.reality.midsa65",
             "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51"
           },
            {
-	           "email": "reverseback@vless.xtls.reality",
+	           "email": "reverse@vless.encrytion.reality.midsa65",
                    "id": "ac04551d-6ebf-4685-86e2-17c12491f7f4", 
                     "reverse": {
 		       "tag": "complex-reverse-out"
@@ -673,6 +711,7 @@
             "tls.yourdomain",
             "reality.yourdomain",
             "pre.yourdomain",
+            "www.yourdomain",
             "google.com"                       
                                
           ],
@@ -683,7 +722,7 @@
             "a3e79f19",
             "4f10451af6044d56"
           ],
-           "mldsa65Seed": "ROtjiYfCBa-fmPUpy5hlA4Bg_Po9MUxoKs-zSU7kgQ4",
+          "mldsa65Seed": "ROtjiYfCBa-fmPUpy5hlA4Bg_Po9MUxoKs-zSU7kgQ4",
           "mldsa65Verify": "8WVi6HQ01_4QeQXj3VnqTsCrLM30hIS9U7uwzrFohLnucc8yZM8t3gLfY0HHtnfqJH_Ua1eAiS0uAiU6ng3NMfEhLAFlqYFD_xbJf2rgLktiaX2ERZJSW722Psig1tjWMlsf4TCsNel0Fcft-8WKKRfzL4s2tXtTc-SX8GWR2yDrBwMyGxKFWPBDS6O9UOa_kNvdLUpu2y0CrNW7Qs5_NhDLlcJ_S6HAe-NuTpvZ6ISUbWgYsQAlGK_vnNNo5o9PdnV9YfbC_NLD4yELOYbR3oFxfXdU7h4t7cMkx_1LsW01jhpXhOsIMuVWfXSECr5R86WLOS7nolCeyk6V7ZzOVDWlj8Hxe_GaBOf6WVvG_bIboizC4_WrDM7g5niHCbNZlLzn-3u26BoA5P1LXKexRcWn_tkHjyMlIMOF8Xw4M_DRx36uHYEef619X8OhO5oHk7HT05FiU812uBj5oJysu9tRSZeK34gjLJebuYIN2zEHYNpC0ZSRWnys-AVoLA_kHEtc0dvRIswrRRvA2LxTxnU8VWiSnYRegMVFeczwXqr6IGxdMYCSN0n6BpcIaqiLcp5PPswr7D_gPuKSynCrpbpGbzVCdKvY1NioL5T8TD6YFWwPe3N_eC29NeccA4UQcg35x4QUnSspKItuWSCxubr0yVjOV1OeAS0PAShQbLcfeLWCsMZdvEcJaKcxBGIXScxF1C55pD-tYl2g2MeHckQevEtDLRPnE4_IOC3FCcI6kZi74QTdpbXPTMSIAXlbJJeKX4_5iR-l_QzH3cxEY2VhzCFgym29iwbrEiNfKmkMP0XFVxuZN04veULv0EVJXJZIYDtsFd4CzmhVWkhLgFsCfCEDGSByDuxQZ1-Rj78geMCqYOI3esk1ydkGaPmL1gtn46BI1pWenRRN83ShZdj8PtPb0YjlD-Wwj6WKksab4-Dc-O1HnzEob0n8mBBH1BoiuRh2irWepMfvStKCCOXt8s7g5S3fynkEN2ZYiC8uPvbXhG0_JKxJ8zhDpQUnyaydGFhBRAH43jkPTR7BHmDeVyfEEOZ5W43vsRWJcTfi7dU2alGbw2oWgLookTnOgMhtRS4Kd3wg5I5SMK_2f5EuUQ5ZUKGwgv4q_ewp7UDYnizGqswIfFDgH1a5CN5RdrZLGaEPRM9GNjR6xUc97EXiIW7EjD7ULoa8XuxAehjdlv7QdoF-XfMurccWtJqOfSDCYt-KfVIkXOcv7t7bn6g4sjC2T9tc_OzE4TC2J-wSzalhvDMNRR3zDxPXeeaTlOybk-0Wk8-8Ib2p4bLOGv-EgHWkuWyQLlZgMdKB27ye1hmiXw0JthI6m1NWaMj4dJpSrwDimjVIMNKyGFXt9rlgtSXODSqFA7rbTSYgU8gaFBGIfD31mIbpBKloXpxckDKq_6vTDTMGTqArDzAbIOFKWHO08I8PApWf--B_FTwDWbthKllvNH9wv1AxUNu8zFNYN93s1KFBX2wROvhgafmooxTfR1RpcKnST1ry-SQTuiSuXCxs0AyPIAYiNdomziZ2DJ86TYgIwRUS2RibEmURsRNkwwsL_LGv-CGUXMloLA8x91ocdu41g2Ft92wqPgFILA-8GzpGS1c5LtO-CJ6sM52V0_8b6DhJJpEo4vySYwtP9Rs8SUusr9ldGpDG_ySFk75XstXAw4BxpGhJOmDA0t_d2uJm0ABwSniSP57FI0lodzW0Z0UYAqINtUM4S1NlC2QD8EyAy5oD036QGdvdob9I42fpyHRmkdQ_HMLRQCKrfrB_Zc4W4NHGtskdz-9gyOaIbvTKGrcaDylME8UwoKp2TjrC4XdnlinOipL4Vlq6zUry_lx2PBKhYgTcLgY_vAPZvZ247xRRjP2s21mZiU04ZjRZlmbZWO3Ie9TcBhSyikQNmNxkTEtj_mFkjDV9vG8VKGVHbT50FvN9JgFnfqmMZdYVr0aCLkgjWnNnaHGeZfRrO5qCyI_KgMsCVRVxr97C0CJUKdT1r3nVFzxdDObyDM149i3KOB2AlLPyr7VloX6kPqHh6Cwr2htY2SDmWeUviXYHNr26jJKGGyeEuTXVmrSMRQgGfNDpYsQSjX5kkoliBhDkdJM_60VfUz6HXoq9qrzrUhnAEbveGTY58q1y0gJ_4_cE75gwQ0ZhYONg8cS770fjsI4euDvmyzf0h8TqZ3CRPuB-MC9ORxMxl71-dHcW3e0yUOKYJiTMCx_yoLizMQxqlw3xX4PWOHeZK2Mm7a_FRKGWwjutOFDxInDqfb_1P_OcMrCUHVx1vQUvhwEc9WJY3c3TIyf5OtuBtSqT5RIwZZH7Paf37hfg8rM_1BbbzMDQ82yjWSi8abIMBKlBJaViLWIYxIj5FdgwfHUCqBCRY1cNY5aCzIUcKM8NTP96FAS5fViw7Sdhvresq11nVmkEzbUFqzqJ7MxAuObj2YUGBziypY83__cRiyODGPk-ZfY4PuPS-1b0vFbiSSIu85AzuL8rTtosjXfGXOK8r2fw28_Sf3-PgNoHp_FMrLRiB7OdoI0VCEcSKZOm8WzX4oYCmwhPmaFRAgUWfCReRTH3gDVI5zRwhQa0_TQqqnxInmSQAQD3cQo",
         "limitFallbackUpload": {
             "afterBytes": 0,
@@ -707,7 +746,7 @@
       }
     },
     {
-      "tag": "udp-VLESS-mKCP",
+      "tag": "UDP-VLESS-MKCP",
       "listen": "0.0.0.0",
       "port": 10835,
       "protocol": "vless",
@@ -758,7 +797,7 @@
       }
     },
     {
-      "tag": "udp-shadowsocks",
+      "tag": "UDP-SS",
       "protocol": "shadowsocks",
       "listen": "0.0.0.0",
       "port": 10836,
@@ -766,12 +805,6 @@
         "method": "2022-blake3-aes-128-gcm",
         "level": 0,
         "password": "QvofbfMIil7768oFAyTpyA==",
-        "clients": [
-          {
-            "password": "Opgh6u9WJOrCiWD2XsL5hw==",
-            "email": "ss@udp"
-          }
-        ],
         "network": "tcp,udp"
       }
     }
@@ -795,7 +828,7 @@
       "protocol": "blackhole"
     },
     {
-      "tag": "vps_v1",
+      "tag": "vps1",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
@@ -815,7 +848,7 @@
       }
     },
     {
-      "tag": "vps_v2",
+      "tag": "vps2",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
@@ -835,7 +868,7 @@
       }
     },
     {
-      "tag": "vps_v3",
+      "tag": "vps3",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
@@ -855,7 +888,7 @@
       }
     },
     {
-      "tag": "vps_v5",
+      "tag": "vps4",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [

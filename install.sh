@@ -530,7 +530,96 @@ xray_config() {
         echoContent red "错误: 无法创建临时文件 $TEMP_FILE"
         exit 1
     }
+   # Prompt user for Shadowsocks split configuration
+read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
+if [[ -z "$split_ss" ]]; then
+    echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
+else
+    echoContent green "设置ss分流，更新shadowsocks的密码"
+    # Extract Shadowsocks inbound configuration
+    ss_in=$(jq -c '.inbounds[] | select(.protocol == "shadowsocks")' "$TEMP_FILE")
+    if [[ -z "$ss_in" ]]; then
+        echoContent red "错误: 未找到Shadowsocks inbound配置"
+        exit 1
+    fi
+    ss_in_tag=$(echo "$ss_in" | jq -r '.tag')
+    ss_protocol=$(echo "$ss_in" | jq -r '.protocol')
+    ss_port=$(echo "$ss_in" | jq -r '.port')
+    ss_method=$(echo "$ss_in" | jq -r '.settings.method')
+    ss_password=$(echo "$ss_in" | jq -r '.settings.password')
 
+    # Prompt for Shadowsocks method
+    read -p "输入 shadowsocks method 默认($ss_method) 0=2022-blake3-aes-128-gcm, 1=2022-blake3-aes-256-gcm, 2=2022-blake3-chacha20-poly1305: " ss_method_option < /dev/tty
+    case "$ss_method_option" in
+        0) ss_method="2022-blake3-aes-128-gcm" ;;
+        1) ss_method="2022-blake3-aes-256-gcm" ;;
+        2) ss_method="2022-blake3-chacha20-poly1305" ;;
+        *) echoContent green "默认($ss_method)" ;;
+    esac
+
+    # Prompt for Shadowsocks password
+    read -p "输入 shadowsocks password 默认($ss_password): " ss_new_password < /dev/tty
+    if [[ -z "$ss_new_password" ]]; then
+        ss_new_password="$ss_password"
+    elif [[ ${#ss_new_password} -lt 6 ]]; then
+        ss_new_password=$(openssl rand -base64 16)
+        echoContent green "密码太短，自动生成: $ss_new_password"
+    fi
+
+    # Prompt for Shadowsocks port and validate
+    read -p "输入 shadowsocks port 默认($ss_port): " ss_new_port < /dev/tty
+    if [[ -z "$ss_new_port" ]]; then
+        ss_new_port="$ss_port"
+    elif ! [[ "$ss_new_port" =~ ^[0-9]+$ ]] || [[ "$ss_new_port" -lt 1 || "$ss_new_port" -gt 65535 ]]; then
+        echoContent red "错误: 端口号必须在1-65535之间"
+        exit 1
+    fi
+
+    # Backup TEMP_FILE
+    cp "$TEMP_FILE" "${TEMP_FILE}.bak"
+
+    # Update inbounds configuration
+    echoContent green "\n更新 $ss_in_tag:\n"
+    jq --arg tag "$ss_in_tag" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
+        '(.inbounds[] | select(.tag == $tag)) |= (.port = ($ss_new_port | tonumber) | .settings.password = $ss_new_password | .settings.method = $ss_method)' \
+        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+        echoContent red "错误: 无法更新 shadowsocks inbound"
+        exit 1
+    }
+
+    # Extract VPS outbounds configurations
+    echoContent green "\n更新 vps,保持和 inbound $ss_in_tag 配置一致:\n"
+    vps1=$(jq -c '.outbounds[] | select(.tag == "vps1")' "$TEMP_FILE")
+    vps1_address=$(echo "$vps1" | jq -r '.settings.servers[0].address // empty')
+    vps2=$(jq -c '.outbounds[] | select(.tag == "vps2")' "$TEMP_FILE")
+    vps2_address=$(echo "$vps2" | jq -r '.settings.servers[0].address // empty')
+    vps3=$(jq -c '.outbounds[] | select(.tag == "vps3")' "$TEMP_FILE")
+    vps3_address=$(echo "$vps3" | jq -r '.settings.servers[0].address // empty')
+    vps4=$(jq -c '.outbounds[] | select(.tag == "vps4")' "$TEMP_FILE")
+    vps4_address=$(echo "$vps4" | jq -r '.settings.servers[0].address // empty')
+
+    # Prompt for VPS addresses
+    read -p "输入 vps_v1的IP 默认($vps1_address): " vps1_new_address < /dev/tty
+    [[ -z "$vps1_new_address" ]] && vps1_new_address="$vps1_address"
+    read -p "输入 vps_v2的IP 默认($vps2_address): " vps2_new_address < /dev/tty
+    [[ -z "$vps2_new_address" ]] && vps2_new_address="$vps2_address"
+    read -p "输入 vps_v3的IP 默认($vps3_address): " vps3_new_address < /dev/tty
+    [[ -z "$vps3_new_address" ]] && vps3_new_address="$vps3_address"
+    read -p "输入 vps_v4的IP 默认($vps4_address): " vps4_new_address < /dev/tty
+    [[ -z "$vps4_new_address" ]] && vps4_new_address="$vps4_address"
+
+    # Update outbounds configurations
+    for vps_tag in "vps1" "vps2" "vps3" "vps4"; do
+        vps_new_address_var="${vps_tag}_new_address"
+        jq --arg tag "$vps_tag" --arg ss_new_address "${!vps_new_address_var}" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
+            '(.outbounds[] | select(.tag == $tag)) |= (.settings.servers[0].address = $ss_new_address | .settings.servers[0].port = ($ss_new_port | tonumber) | .settings.servers[0].password = $ss_new_password | .settings.servers[0].method = $ss_method)' \
+            "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+            echoContent red "错误: 无法更新 $vps_tag"
+            exit 1
+        }
+    done
+
+    echoContent green "Shadowsocks configuration updated successfully"
     # 替换 yourdomain 为用户输入的域名
     # 获取用户输入的域名
     echoContent yellow "请手动输入订阅域名\n"
@@ -747,8 +836,14 @@ xray_config() {
                     echoContent red "错误: 无法生成 UUID"
                     exit 1
                 }
+                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url
                 flow=$(echo "$client" | jq -r '.flow // empty')
-                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
+                reverse_tag=$(echo "$client" | jq -r '.reverse.tag // empty')
+                
+                if [[ -n "$reverse_tag" ]]; then
+                 tag=$reverse_tag
+                fi
+                new_url=$new_url&flow=$flow&encryption=$new_vless_encryption#$tag"
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id\n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
@@ -769,19 +864,17 @@ xray_config() {
         fi
 
         # 处理 trojan 和 shadowsocks 的 password 替换
-        if [[ "$protocol" == "trojan" || "$protocol" == "shadowsocks" ]]; then
-            echoContent green "\n处理 trojan 和 shadowsocks 的 password 替换，用 openssl rand -base64 16 生成新密码"
+        if [[ "$protocol" == "trojan"  ]]; then
+            echoContent green "\n处理 trojan  的 password 替换，用 openssl rand -base64 16 生成新密码"
             clients=$(echo "$inbound" | jq -c '.settings.clients[]')
             client_index=0
             echo "$clients" | while IFS= read -r client; do
                 old_password=$(echo "$client" | jq -r '.password')
                 new_password=$(openssl rand -base64 16)
-                if [[ "$protocol" == "shadowsocks" ]]; then
-                    method=$(echo "$inbound" | jq -r '.settings.method // "2022-blake3-aes-128-gcm"')
-                    new_url="ss://$(echo -n "$method:$new_password" | base64 -w 0)@$YOURDOMAIN:$port$url#$tag"
-                else
-                    new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
-                fi
+           
+                
+                new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
+                
                 echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password\n"
                 # 更新 password
                 jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
@@ -1296,8 +1389,10 @@ generateSubscriptions() {
     # 如果订阅文件存在，则不再执行后续生成逻辑
   
         if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" && -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
-            echoContent green "订阅文件已存在并处理完成，可通过 http://yourdomain/subscribe/ 访问."
+            read -p "订阅文件已存在并处理完成，可通过 http://yourdomain/subscribe/ 访问.是否继续(y/n):" gen_sub
+            if [[ -z $gen_sub ]]; then
             return 0
+            fi
         fi
     fi
     # 获取用户输入的域名
@@ -1402,12 +1497,13 @@ generateSubscriptions() {
                 tlsSettings=$(echo "$inbound" | jq -r '.streamSettings.tlsSettings')
                 fp=$(echo "$tlsSettings" | jq -r '.fingerprint // "chrome"')
                 sni=$(echo "$tlsSettings" | jq -r '.serverName // "'"$SUB_DOMAIN"'"')
+                ech=$(echo "$tlsSettings" | jq -r '.echConfigList // empty')
                 alpn=$(echo "$inbound" | jq -r '.tls.alpn // "http/1.1"')
                 # 如果 alpn 是数组，则将其转换为逗号分隔的字符串
                 if [[ "$alpn" == \[*\] ]]; then
                     alpn=$(echo "$alpn" | jq -r 'join(",")')
                 fi
-                params="$params&security=tls&fp=$fp&sni=$sni&alpn=$alpn"
+                params="$params&security=tls&fp=$fp&sni=$sni&alpn=$alpn&ech=$ech"
             else
                 params="$params&security=tls&fp=chrome&sni=$SUB_DOMAIN"
             fi
@@ -1673,7 +1769,7 @@ manageLogs() {
         10) tail -n 100 "${ACME_LOG}" ;;
         11)
             echo > "${LOG_DIR}/nginx_access.log"
-            echo > "${LOG_DIR}/nginx_access.log"
+            echo > "${LOG_DIR}/nginx_error.log"
             echo > "${LOG_DIR}/nginx_stream_access.log"
             echo > "${LOG_DIR}/nginx_stream_error.log"
             echo > "${LOG_DIR}/nginx_prextls_access.log"
