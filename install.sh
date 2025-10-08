@@ -531,49 +531,49 @@ xray_config() {
         exit 1
     }
    # Prompt user for Shadowsocks split configuration
-read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
-if [[ -z "$split_ss" ]]; then
-    echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
-else
-    echoContent green "设置ss分流，更新shadowsocks的密码"
-    # Extract Shadowsocks inbound configuration
-    ss_in=$(jq -c '.inbounds[] | select(.protocol == "shadowsocks")' "$TEMP_FILE")
-    if [[ -z "$ss_in" ]]; then
-        echoContent red "错误: 未找到Shadowsocks inbound配置"
-        exit 1
-    fi
-    ss_in_tag=$(echo "$ss_in" | jq -r '.tag')
-    ss_protocol=$(echo "$ss_in" | jq -r '.protocol')
-    ss_port=$(echo "$ss_in" | jq -r '.port')
-    ss_method=$(echo "$ss_in" | jq -r '.settings.method')
-    ss_password=$(echo "$ss_in" | jq -r '.settings.password')
+    read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
+    if [[ -z "$split_ss" ]]; then
+        echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
+    else
+        echoContent green "设置ss分流，更新shadowsocks的密码"
+        # Extract Shadowsocks inbound configuration
+        ss_in=$(jq -c '.inbounds[] | select(.protocol == "shadowsocks")' "$TEMP_FILE")
+        if [[ -z "$ss_in" ]]; then
+            echoContent red "错误: 未找到Shadowsocks inbound配置"
+            exit 1
+        fi
+        ss_in_tag=$(echo "$ss_in" | jq -r '.tag')
+        ss_protocol=$(echo "$ss_in" | jq -r '.protocol')
+        ss_port=$(echo "$ss_in" | jq -r '.port')
+        ss_method=$(echo "$ss_in" | jq -r '.settings.method')
+        ss_password=$(echo "$ss_in" | jq -r '.settings.password')
 
-    # Prompt for Shadowsocks method
-    read -p "输入 shadowsocks method 默认($ss_method) 0=2022-blake3-aes-128-gcm, 1=2022-blake3-aes-256-gcm, 2=2022-blake3-chacha20-poly1305: " ss_method_option < /dev/tty
-    case "$ss_method_option" in
-        0) ss_method="2022-blake3-aes-128-gcm" ;;
-        1) ss_method="2022-blake3-aes-256-gcm" ;;
-        2) ss_method="2022-blake3-chacha20-poly1305" ;;
-        *) echoContent green "默认($ss_method)" ;;
-    esac
+        # Prompt for Shadowsocks method
+        read -p "输入 shadowsocks method 默认($ss_method) 0=2022-blake3-aes-128-gcm, 1=2022-blake3-aes-256-gcm, 2=2022-blake3-chacha20-poly1305: " ss_method_option < /dev/tty
+        case "$ss_method_option" in
+            0) ss_method="2022-blake3-aes-128-gcm" ;;
+            1) ss_method="2022-blake3-aes-256-gcm" ;;
+            2) ss_method="2022-blake3-chacha20-poly1305" ;;
+            *) echoContent green "默认($ss_method)" ;;
+        esac
 
-    # Prompt for Shadowsocks password
-    read -p "输入 shadowsocks password 默认($ss_password): " ss_new_password < /dev/tty
-    if [[ -z "$ss_new_password" ]]; then
-        ss_new_password="$ss_password"
-    elif [[ ${#ss_new_password} -lt 6 ]]; then
-        ss_new_password=$(openssl rand -base64 16)
-        echoContent green "密码太短，自动生成: $ss_new_password"
-    fi
+        # Prompt for Shadowsocks password
+        read -p "输入 shadowsocks password 默认($ss_password): " ss_new_password < /dev/tty
+        if [[ -z "$ss_new_password" ]]; then
+            ss_new_password="$ss_password"
+        elif [[ ${#ss_new_password} -lt 6 ]]; then
+            ss_new_password=$(openssl rand -base64 16)
+            echoContent green "密码太短，自动生成: $ss_new_password"
+        fi
 
-    # Prompt for Shadowsocks port and validate
-    read -p "输入 shadowsocks port 默认($ss_port): " ss_new_port < /dev/tty
-    if [[ -z "$ss_new_port" ]]; then
-        ss_new_port="$ss_port"
-    elif ! [[ "$ss_new_port" =~ ^[0-9]+$ ]] || [[ "$ss_new_port" -lt 1 || "$ss_new_port" -gt 65535 ]]; then
-        echoContent red "错误: 端口号必须在1-65535之间"
-        exit 1
-    fi
+        # Prompt for Shadowsocks port and validate
+        read -p "输入 shadowsocks port 默认($ss_port): " ss_new_port < /dev/tty
+        if [[ -z "$ss_new_port" ]]; then
+            ss_new_port="$ss_port"
+        elif ! [[ "$ss_new_port" =~ ^[0-9]+$ ]] || [[ "$ss_new_port" -lt 1 || "$ss_new_port" -gt 65535 ]]; then
+            echoContent red "错误: 端口号必须在1-65535之间"
+            exit 1
+        fi
 
     # Backup TEMP_FILE
     cp "$TEMP_FILE" "${TEMP_FILE}.bak"
@@ -599,13 +599,13 @@ else
     vps4_address=$(echo "$vps4" | jq -r '.settings.servers[0].address // empty')
 
     # Prompt for VPS addresses
-    read -p "输入 vps_v1的IP 默认($vps1_address): " vps1_new_address < /dev/tty
+    read -p "输入 vps1的IP 默认($vps1_address): " vps1_new_address < /dev/tty
     [[ -z "$vps1_new_address" ]] && vps1_new_address="$vps1_address"
-    read -p "输入 vps_v2的IP 默认($vps2_address): " vps2_new_address < /dev/tty
+    read -p "输入 vps2的IP 默认($vps2_address): " vps2_new_address < /dev/tty
     [[ -z "$vps2_new_address" ]] && vps2_new_address="$vps2_address"
-    read -p "输入 vps_v3的IP 默认($vps3_address): " vps3_new_address < /dev/tty
+    read -p "输入 vps3的IP 默认($vps3_address): " vps3_new_address < /dev/tty
     [[ -z "$vps3_new_address" ]] && vps3_new_address="$vps3_address"
-    read -p "输入 vps_v4的IP 默认($vps4_address): " vps4_new_address < /dev/tty
+    read -p "输入 vps4的IP 默认($vps4_address): " vps4_new_address < /dev/tty
     [[ -z "$vps4_new_address" ]] && vps4_new_address="$vps4_address"
 
     # Update outbounds configurations
@@ -870,11 +870,8 @@ else
             client_index=0
             echo "$clients" | while IFS= read -r client; do
                 old_password=$(echo "$client" | jq -r '.password')
-                new_password=$(openssl rand -base64 16)
-           
-                
-                new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"
-                
+                new_password=$(openssl rand -base64 16)  
+                new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"      
                 echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password\n"
                 # 更新 password
                 jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
