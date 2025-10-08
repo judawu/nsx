@@ -834,14 +834,13 @@ xray_config() {
                     echoContent red "错误: 无法生成 UUID"
                     exit 1
                 }
-                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url
+                
                 flow=$(echo "$client" | jq -r '.flow // empty')
                 reverse_tag=$(echo "$client" | jq -r '.reverse.tag // empty')
-                
                 if [[ -n "$reverse_tag" ]]; then
                  tag=$reverse_tag
                 fi
-                new_url=$new_url&flow=$flow&encryption=$new_vless_encryption#$tag"
+                new_url="$protocol://$new_id@$YOURDOMAIN:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id\n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
