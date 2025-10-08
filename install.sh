@@ -755,7 +755,7 @@ xray_config() {
 
                 # 更新 echServerKeys
                 jq --arg tag "$tag" --arg echServerKeys "$echServerKeys" --arg echConfigList "$echConfigList" \
-                    '(.inbounds[] | select(.tag == $tag) | .streamSettings.tlsSettings).echServerKeys = $echServerKeys | .streamSettings.tlsSettings).echConfigList = $echConfigList' \
+                    '(.inbounds[] | select(.tag == $tag) | .streamSettings.tlsSettings) |.echServerKeys = $echServerKeys | .echConfigList = $echConfigList' \
                     "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                     echoContent red "错误: 无法更新 echServerKeys"
                     exit 1
