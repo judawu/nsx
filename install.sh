@@ -2445,7 +2445,7 @@ stopNSXdocker() {
     # Check if Docker service is running
     if ! systemctl is-active --quiet docker; then
         echoContent red "Docker 服务未运行"
-        exit 0
+        exit 1
     fi
     # Stop and remove containers
     echoContent yellow "运行 docker compose down..."
@@ -2481,7 +2481,13 @@ uninstallNSX() {
 
     # Stop NSX containers
     if command -v docker &>/dev/null && [[ -f "$COMPOSE_FILE" ]]; then
-        stopNSXdocker
+       # Check if Docker service is running
+        if systemctl is-active --quiet docker; then
+           stopNSXdocker
+        else
+            echoContent yellow "docker 没有运行..."
+        fi
+       
     fi
 
     # Uninstall Xray
