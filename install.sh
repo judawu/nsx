@@ -2445,7 +2445,7 @@ stopNSXdocker() {
     # Check if Docker service is running
     if ! systemctl is-active --quiet docker; then
         echoContent red "Docker 服务未运行"
-        exit 1
+        exit 0
     fi
     # Stop and remove containers
     echoContent yellow "运行 docker compose down..."
