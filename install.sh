@@ -2482,7 +2482,7 @@ uninstallNSX() {
     # Stop NSX containers
     if command -v docker &>/dev/null && [[ -f "$COMPOSE_FILE" ]]; then
        # Check if Docker service is running
-        if systemctl is-active --quiet docker; then
+        if sudo systemctl is-active --quiet docker; then
            stopNSXdocker
         else
             echoContent yellow "docker 没有运行..."
@@ -2497,22 +2497,22 @@ uninstallNSX() {
             echoContent yellow "停止并卸载 Xray..."
             
             if [[ -f "/etc/systemd/system/xray.service" ]]; then
-                systemctl stop xray 2>/dev/null
-                systemctl disable xray 2>/dev/null
-                rm -f /etc/systemd/system/xray.service || {
+                sudo systemctl stop xray 2>/dev/null
+                sudo systemctl disable xray 2>/dev/null
+                sudo rm -f /etc/systemd/system/xray.service || {
                     echoContent red "无法删除 xray.service，请检查权限."
                     exit 1
                 }
             fi
                if [[ -f "/usr/bin/xray" ]]; then
-                rm -rf /usr/bin/xray* || {
+                sudo rm -rf /usr/bin/xray* || {
                     echoContent red "无法清理 /usr/bin/xray，请检查权限."
                     exit 1
                 }
               
             fi
             if [[ -d "/usr/local/nsx/xray" ]]; then
-                rm -rf /usr/local/bin/xray/* || {
+                sudo rm -rf /usr/local/bin/xray/* || {
                     echoContent red "无法清理 /usr/local/bin/xray，请检查权限."
                     exit 1
                 }
@@ -2536,26 +2536,26 @@ uninstallNSX() {
             echoContent yellow "停止并卸载 Sing-box..."
           
             if [[ -f "/etc/systemd/system/sing-box.service" ]]; then
-                systemctl stop sing-box 2>/dev/null
-                systemctl disable sing-box 2>/dev/null
-                rm -f /etc/systemd/system/sing-box.service || {
+                sudo systemctl stop sing-box 2>/dev/null
+                sudo systemctl disable sing-box 2>/dev/null
+                sudo rm -f /etc/systemd/system/sing-box.service || {
                     echoContent red "无法删除 sing-box.service，请检查权限."
                     exit 1
                 }
             fi
                if [[ -f "/usr/bin/sing-box" ]]; then
-                rm -rf /usr/bin/sing-box* || {
+                sudo rm -rf /usr/bin/sing-box* || {
                     echoContent red "无法清理 /usr/bin/sing-box，请检查权限."
                     exit 1
                 }
               
             fi
             if [[ -d "/usr/local/nsx/sing-box" ]]; then
-                rm -rf /usr/local/nsx/sing-box/* || {
+                sudo rm -rf /usr/local/nsx/sing-box/* || {
                     echoContent red "无法清理 /usr/local/nsx/sing-box，请检查权限."
                     exit 1
                 }
-                rmdir /usr/local/nsx/sing-box 2>/dev/null || true
+                sudo rmdir /usr/local/nsx/sing-box 2>/dev/null || true
             fi
         
             if ! command -v sing-box &>/dev/null; then
@@ -2574,9 +2574,9 @@ uninstallNSX() {
             echoContent yellow "停止并卸载 Nginx..."
           
             if [[ -f "/etc/systemd/system/nginx.service" ]]; then
-                systemctl stop nginx 2>/dev/null
-                systemctl disable nginx 2>/dev/null
-                rm -f /etc/systemd/system/nginx.service || {
+                sudo systemctl stop nginx 2>/dev/null
+                sudo systemctl disable nginx 2>/dev/null
+                sudo rm -f /etc/systemd/system/nginx.service || {
                     echoContent red "无法删除 nginx.service，请检查权限."
                     exit 1
                 }
@@ -2585,7 +2585,7 @@ uninstallNSX() {
              $uninstallCmd --purge nginx nginx-common nginx-full -y
     
                 # 删除残留的配置文件和日志
-            rm -rf /etc/nginx /var/log/nginx /var/cache/nginx
+            sudo rm -rf /etc/nginx /var/log/nginx /var/cache/nginx
             if ! command -v nginx &>/dev/null; then
                 echoContent green " Nginx 卸载完成."
             else
@@ -2602,16 +2602,16 @@ uninstallNSX() {
             echoContent yellow "停止并卸载 Docker..."
            
             if [[ -f "/etc/systemd/system/docker.service" ]]; then
-                systemctl stop docker 2>/dev/null
-                systemctl disable docker 2>/dev/null
-                rm -f /etc/systemd/system/docker.service || {
+                sudo systemctl stop docker 2>/dev/null
+                sudo systemctl disable docker 2>/dev/null
+                sudo rm -f /etc/systemd/system/docker.service || {
                     echoContent red "无法删除 docker.service，请检查权限."
                     exit 1
                 }
             fi
           
             # Clean up Docker data (images, containers, volumes)
-            if docker system prune -a -f --volumes; then
+            if sudo docker system prune -a -f --volumes; then
                 echoContent green "Docker 数据清理完成."
             else
                 echoContent yellow "警告: Docker 数据清理失败，部分数据可能仍存在."
@@ -2632,14 +2632,14 @@ uninstallNSX() {
         echoContent yellow "清理 NSX 配置文件和证书..."
         for file in "$COMPOSE_FILE" "$NGINX_CONF" "$XRAY_CONF" "$SINGBOX_CONF" "$CERT_DIR"/* "$CREDENTIALS_FILE"; do
             if [[ -f "$file" || -d "$file" ]]; then
-                rm -rf "$file" || {
+                sudo rm -rf "$file" || {
                     echoContent red "无法删除 $file，请检查权限."
                     exit 1
                 }
             fi
         done
         if [[ -d "/usr/local/nsx" ]]; then
-            rmdir /usr/local/nsx 2>/dev/null || true
+            sudo rmdir /usr/local/nsx 2>/dev/null || true
         fi
         echoContent green "NSX 配置文件和证书清理完成."
     else
@@ -2647,7 +2647,7 @@ uninstallNSX() {
     fi
 
     # Reload systemd daemon
-    if ! systemctl daemon-reload; then
+    if ! sudo systemctl daemon-reload; then
         echoContent red "无法重新加载 systemd 配置，请检查."
         exit 1
     fi
