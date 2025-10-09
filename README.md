@@ -624,7 +624,7 @@ naive，tuic,hysteria2 采用UDP，会被Qos
  ```
 shadowtls是一个插件，客户端需要配置ss并启用插件
 
- xray服务器配置VLESS-ENCRYPTION-REALITY-MIDSA65示例，这个示例中包括了vless的encrytion，reaity 量子加密等，请阅读[说明书](https://xtls.github.io/具体理解)：
+ xray服务器配置VLESS-ENCRYPTION-REALITY-MIDSA65示例，这个示例中包括了vless的encrytion，reaity 量子加密等，请阅读[说明书](https://xtls.github.io/)：
 ```
 {
       "tag": "VLESS-ENCRYPTION-REALITY-MIDSA65",
