@@ -113,6 +113,12 @@ sudo bash install.sh
 ![安装](png/sub2.png)
 
  ## 手动修改客户端订阅
+
+  1.如果 target 支持后量子密钥交换算法 X25519MLKEM768, 那么 reality 客户端也会自动使用该后量子算法进行密钥协商。具体是否支持可以使用 xray tls ping cloudflare.com (网址更改为    dest, 可以带端口号) 检查
+  
+  2.使用 xray mldsa65 生成mldsa65使用的公私钥对，服务端配置私钥后只会在证书扩展中添加，不影响旧版客户端或没启用该功能的客户端。，配置该功能后 target 所返回的证书长度必须大于 3500, 因为后量子签名会导致 Reality 返回的临时证书变大，为了防止产生特征 target 返回的证书也要很大。 可以使用 xray tls ping example.com 进行查看检查。同时为了完美的后量子安全，target 也需要支持后量子密钥交换 X25519MLKEM768, 支持情况一样可以通过前面的命令查看。例如使用target为google.com:443可以成功，而使用target为cloudflare.com:443因为证书长度<3500 不能成功
+
+  3.使用reality需要将flow：“xtls-rprx-vision”删掉，希望xray下一版本xtls-rprx-vision和vlsess encrytion'能够整合
  
   通过 `http://<sub_domain>/sub/` 访问订阅文件后如果发现订阅链接不对，可以手动修改进行代理访问
 
