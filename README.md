@@ -6,7 +6,7 @@ NSX 安装管理脚本是一个用于部署和管理集成 Nginx、Sing-box 和 
 
 - **作者**：JudaWu
 - **版本**：v0.0.5
-- **网站**：[https://github.com/judawu/nsx](https://p4.juda.dpdns.org/)
+- **网站**：[https://github.com/judawu/nsx](https://x1.juda.autos)
 - **描述**：一个集成 Nginx、Sing-box 和 Xray 的代理环境，支持 Reality、TLS 等安全设置，适用于代理服务器搭建。
 
 脚本通过菜单式交互简化操作，支持多种操作系统，并处理证书申请、密钥生成和配置更新。
