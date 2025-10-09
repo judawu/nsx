@@ -48,7 +48,8 @@ sudo bash install.sh
   - 日志：`/usr/local/nsx/log`
   - 证书：`/usr/local/nsx/certs`
 - **注意**：安装后，使用 `ufw allow <port>` 开启端口，并启用防火墙（`systemctl enable ufw && systemctl start ufw`）。
-
+![docker安装](png/dockerinstall1.png)
+![docker安装2](png/dockerinstall2.png)
 ### 2. 本地安装 NSX
 直接安装 Nginx、Xray 和 Sing-box 到本地系统，使用 systemd 管理服务。
 
@@ -63,7 +64,7 @@ sudo bash install.sh
   - Xray：`/usr/local/nsx/xray/xray`（软链接到 `/usr/bin/xray`）。
   - Sing-box：`/usr/local/nsx/sing-box/sing-box`（软链接到 `/usr/bin/sing-box`）。
 - **注意**：安装后手动配置防火墙。脚本会创建别名 `nsx` 指向脚本文件。
-
+![local安装2](png/localinstall1.png)
 ## 证书管理
 
 脚本使用 acme.sh 管理证书，支持 Let's Encrypt 或 ZeroSSL。
@@ -85,23 +86,19 @@ sudo bash install.sh
 
 - **菜单选项**：5
 - **子选项**：
-  1. **配置 NSX 服务**：更新脚本和配置文件，重启服务。
-  2. **修改 nginx.conf**：使用 nano 编辑，替换域名等，重载 Nginx。
-  3. **修改 xray config.json**：
-     - 替换域名、生成新 UUID/密码、Reality 密钥（x25519/ML-DSA65）。
-     - 生成订阅链接和二维码。
-     - 支持协议：VLESS, VMess, Trojan, Shadowsocks。
-     - 重启 Xray。
-  4. **修改 sing-box config.json**：
-     - 类似 Xray，生成新 UUID/密码、Reality 密钥。
-     - 支持协议：VLESS, VMess, Trojan, Shadowsocks, Hysteria2, TUIC, Naive。
-     - 重启 Sing-box。
-  5. **退出**。
-- **订阅文件**：`/usr/local/nsx/www/subscribe/{xray_sub.txt,singbox_sub.txt}`
-- **注意**：配置更新会备份原文件（.bak）。Reality 设置仅在 JSON 中存在相应字段时更新。
+  1. **复杂配置nsx服务**：复杂配置nsx服务（修改uuid，password和生成订阅等，适合本地）。
+  2. **简单配置nsx服务**：简单配置nsx服务(只修改域名，适合Docker。
+![配置](png/configNSX_1.png)
+![配置](png/configNSX_2.png) 
+![配置](png/configNSX_3.png)
+![配置](png/configNSX_4.png)
+![配置](png/configNSX_5.png)
+![配置](png/configNSX_6.png)
+![配置](png/configNSX_7.png) 
 
 ## 订阅生成
-
+- **订阅文件**：`/usr/local/nsx/www/subscribe/{xray_sub.txt,singbox_sub.txt}`
+- **注意**：配置更新会备份原文件（.bak）。Reality 设置仅在 JSON 中存在相应字段时更新。
 生成代理订阅链接和二维码，支持 Xray 和 Sing-box。
 
 - **菜单选项**：9
@@ -635,13 +632,7 @@ shadowtls是一个插件，客户端需要配置ss并启用插件
 
 - **菜单选项**：6
 - **子选项**：
-  1. 查看 Nginx 访问日志（`tail -f /usr/local/nsx/log/nginx_access.log`）。
-  2. 查看 Nginx 错误日志。
-  3. 查看 Xray 访问日志。
-  4. 查看 Sing-box 日志。
-  5. 查看证书日志（最后 100 行）。
-  6. 清除所有日志。
-  7. 退出。
+  ![日志](png/logmanager.png) 
 - **日志路径**：`/usr/local/nsx/log/{nginx_*,xray_*,singbox.log}`
 
 ## 更新和卸载
@@ -657,20 +648,13 @@ shadowtls是一个插件，客户端需要配置ss并启用插件
 ### 卸载 NSX
 - **菜单选项**：10
 - **步骤**：停止服务，卸载 Nginx/Xray/Sing-box/Docker（可选），清理配置文件/证书（可选）。
-
+![卸载](png/uninstallnsx.png)
 ## 使用菜单
 
 运行 `nsx` 或 `sudo bash install.sh` 进入主菜单：
-- 1: 阅读说明
-- 2: Docker 安装
-- 3: 本地安装
-- 4: 证书管理
-- 5: 配置管理
-- 6: 日志管理
-- 7: 更新脚本
-- 8: 停止 Docker
-- 9: 生成订阅
-- 10: 卸载
-- 11: 退出
+
+## 客户端配置（OneXray）
+![客户端](png/client 1.jpg)
+![客户端](png/client 2.jpg)
 
 
