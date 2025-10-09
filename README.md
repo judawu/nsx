@@ -711,8 +711,35 @@ shadowtls是一个插件，客户端需要配置ss并启用插件
       }
     }
 ```
+## 日志管理
 
-  xray客户端配置示例：
+查看或清除日志文件。
+
+- **菜单选项**：6
+- **子选项**：
+  ![日志](png/logmanager.png) 
+- **日志路径**：`/usr/local/nsx/log/{nginx_*,xray_*,singbox.log}`
+
+## 更新和卸载
+
+### 更新脚本
+- **菜单选项**：7
+- **步骤**：克隆 GitHub 仓库，替换 install.sh，可选择更新配置文件，重启服务。
+![更新](png/updatescript.png)
+### 停止 Docker
+- **菜单选项**：8
+- **步骤**：停止容器，清理 `/dev/shm/nsx`。
+
+### 卸载 NSX
+- **菜单选项**：10
+- **步骤**：停止服务，卸载 Nginx/Xray/Sing-box/Docker（可选），清理配置文件/证书（可选）。
+![卸载](png/uninstallnsx.png)
+## 使用菜单
+
+  运行 `nsx` 或 `sudo bash install.sh` 进入主菜单
+
+## 客户端配置（手搓）
+  xray客户端配置：
   ```
   
 {
@@ -1958,35 +1985,10 @@ shadowtls是一个插件，客户端需要配置ss并启用插件
   ]
 }
  ```
-## 日志管理
 
-查看或清除日志文件。
-
-- **菜单选项**：6
-- **子选项**：
-  ![日志](png/logmanager.png) 
-- **日志路径**：`/usr/local/nsx/log/{nginx_*,xray_*,singbox.log}`
-
-## 更新和卸载
-
-### 更新脚本
-- **菜单选项**：7
-- **步骤**：克隆 GitHub 仓库，替换 install.sh，可选择更新配置文件，重启服务。
-![更新](png/updatescript.png)
-### 停止 Docker
-- **菜单选项**：8
-- **步骤**：停止容器，清理 `/dev/shm/nsx`。
-
-### 卸载 NSX
-- **菜单选项**：10
-- **步骤**：停止服务，卸载 Nginx/Xray/Sing-box/Docker（可选），清理配置文件/证书（可选）。
-![卸载](png/uninstallnsx.png)
-## 使用菜单
-
-运行 `nsx` 或 `sudo bash install.sh` 进入主菜单：
 
 ## 客户端配置（OneXray）
-![客户端](png/client 1.jpg)
-![客户端](png/client 2.jpg)
+![客户端](png/client%201.jpg)
+![客户端](png/client%202.jpg)
 
 
