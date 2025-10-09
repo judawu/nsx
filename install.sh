@@ -1972,27 +1972,7 @@ dockerInstall() {
     installDocker
     createDirectories
     installAcme
-
-    # Copy configuration files (assuming files are in the script's directory)
-    if [[ $(pwd) != $BASE_DIR ]]; then 
-        if [[  -f "$COMPOSE_FILE" ]]; then 
-         cp ./docker/docker-compose.yml "$COMPOSE_FILE"
-        chmod 644 "$COMPOSE_FILE"
-        fi
-        if [[  -f "$COMPOSE_FILE" ]]; then
-         cp ./nginx/nginx.conf "$NGINX_CONF"
-         chmod 644 "$NGINX_CONF"
-        fi
-        if [[  -f "$COMPOSE_FILE" ]]; then
-          cp ./xray/config.json "$XRAY_CONF"
-          chmod 644 "$XRAY_CONF"
-        fi
-        if [[  -f "$COMPOSE_FILE" ]]; then
-           cp ./sing-box/config.json "$SINGBOX_CONF"
-           chmod 644 "$SINGBOX_CONF"
-        fi       
-    fi
-
+    updateNSX
     # Check certificates
     if [ ! -d "${CERT_DIR}" ] || [ -z "$(ls -A "${CERT_DIR}"/*.pem 2>/dev/null)" ]; then
         echoContent yellow "未找到证书，运行证书管理..."
@@ -2323,9 +2303,9 @@ EOF
         echoContent green "singbox安装成功"
     fi
     read -r -p "本地安装已经完成，是否继续配置？500M VPS 建议手动配置 (y/n):"  nsx_config
-    if [[ "$nsx_config"=="n" ]]; then
+    if [[ "$nsx_config" == "n" ]]; then
         echoContent green "选择手动配置，nginx，xray singbox安装完成"
-    elif [[ "$nsx_config"=="y" ]]; then
+    elif [[ "$nsx_config" == "y" ]]; then
         configNSX
     else 
         echoContent green "nginx，xray singbox安装完成，请手动配置"
