@@ -780,6 +780,7 @@ xray_config() {
             vless_decryption=$(echo "$inbound" | jq -r '.settings.decryption // "none"')
             vless_fallback=$(echo "$inbound" | jq -r '.settings.fallbacks[0].dest // empty')
             if [[ -z "$vless_fallback" ]]; then
+                
                 read -p "是否启用 encrytion（y/n)，服务器decryption目前不能和fallback同时使用: " enable_vless_encrytion < /dev/tty
                 if [[ "$enable_vless_encrytion" == "y" ]]; then
                     echoContent green "\nvless 服务器decryption 开启"
@@ -1394,7 +1395,7 @@ generateSubscriptions() {
     # 如果订阅文件存在，则不再执行后续生成逻辑
   
         if [[ -f "${SUBSCRIBE_DIR}/xray_sub.txt" && -f "${SUBSCRIBE_DIR}/singbox_sub.txt" ]]; then
-            read -p "订阅文件已存在并处理完成，可通过 http://yourdomain/subscribe/ 访问.是否继续(y/n):" gen_sub
+            read -p "订阅文件已存在并处理完成，可通过 http://yourdomain/subscribe/ 访问.是否继续:" gen_sub
             if [[ -z $gen_sub ]]; then
             return 0
             fi
