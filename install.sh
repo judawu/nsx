@@ -1487,10 +1487,6 @@ generateSubscriptions() {
                 realitySettings=$(echo "$inbound" | jq -r '.streamSettings.realitySettings')
                 private_key=$(echo "$realitySettings" | jq -r '.privateKey // empty')
                 pbk=$(echo "$realitySettings" | jq -r '.password // empty')
-                # 使用 xray 命令生成公钥
-                # if [[ -z "$pbk" ]]; then
-                #     pbk=$(xray x25519 -i "$private_key" | grep "Public key" | awk '{print $3}')
-                # fi 
                 sid=$(echo "$realitySettings" | jq -r '.shortIds[0] // empty')
                 pqv=$(echo "$realitySettings" | jq -r '.mldsa65Verify // empty')
                 params="$params&security=reality&pbk=$pbk&sid=$sid&pqv=$pqv&fp=chrome&sni=$SUB_DOMAIN"
@@ -1652,6 +1648,10 @@ generateSubscriptions() {
                         if [[ -z "$uuid" || -z "$name" ]]; then
                             echoContent red "跳过无效 VLESS 配置: UUID 或 name 为空 (tag: $tag)"
                             continue
+                        fi
+                        reverse_tag=$(echo "$user" | jq -r '.reverse.tag // empty')
+                        if [[ -n "$reverse_tag" ]]; then
+                        name=$reverse_tag
                         fi
                         SUB_LINK="vless://$uuid@$SUB_DOMAIN:$port?$params&flow=$flow#$name"
                         ;;
