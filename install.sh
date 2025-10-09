@@ -2645,7 +2645,7 @@ menu() {
     echoContent red "\n=============================================================="
     echoContent green "NSX 安装管理脚本"
     echoContent green "作者: JudaWu"
-    echoContent green "版本: v0.0.4"
+    echoContent green "版本: v0.0.5"
     echoContent green "Github: https://github.com/judawu/nsx"
     echoContent green "描述: 一个集成 Nginx、Sing-box 和 Xray 的代理环境"
     echoContent red "\n=============================================================="
@@ -2668,7 +2668,7 @@ menu() {
 
     case $option in
         1)
-        echoContent green "输入nsx启动脚本\n选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改\n选择6进行日志管理..."
+        echoContent green "输入nsx启动脚本\n选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改\n选择6进行日志管理\n选择7进行脚本更新...\n这是一个复合脚本，设计了多种功能，说明参考https://github.com/judawu/nsx"
         exit 1;;
         2)dockerInstall ;;
         3) localInstall ;;
@@ -2681,7 +2681,7 @@ menu() {
         10)uninstallNSX ;;
         11)restartNSXdocker ;;
         12)restartNSXlocal ;;
-        13) echoContent green "修改ssh文件: nano /etc/ssh/sshd_config \nufw启动端口命令：sudo ufw allow port/tcp \n重启ssh命令： systemctl restart ssh\n添加vpsadmin账号: adduser vpsadmin\n设置sudo权限:visudo 在 User Privilege Specification 下加入一行 vpsadmin ALL=(ALL) NOPASSWD: ALL\nssh禁用root远程登录: PermitRootLogin:yes"
+        13) echoContent green "\n 1.修改ssh文件: nano /etc/ssh/sshd_config \n 2.ufw启动端口命令：sudo ufw allow port/tcp \n 3.重启ssh命令： systemctl restart ssh\n 4.添加vpsadmin账号: adduser vpsadmin\n 5.设置sudo权限:visudo 在 User Privilege Specification 下加入一行 vpsadmin ALL=(ALL) NOPASSWD: ALL\n 6.ssh禁用root远程登录: PermitRootLogin:yes\n 7.xray命令：xray help"
       ;;
         14) exit 0 ;;
         *) echoContent red "无效选项." ; menu ;;
