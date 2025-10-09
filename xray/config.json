@@ -678,7 +678,7 @@
 	"port": 10833,
 	"protocol": "vless",
 	"settings": {
-	"decryption": "mlkem768x25519plus.native.600s.aCF82eKiK6g0DIbv0_nsjbHC4RyKCc9NRjl-X9lyi0k",
+	"decryption": "none",
 	"clients": [
 	{
 	"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
@@ -702,7 +702,7 @@
       "port": 10834,
       "protocol": "vless",
       "settings": {
-        "decryption": "mlkem768x25519plus.native.600s.aCF82eKiK6g0DIbv0_nsjbHC4RyKCc9NRjl-X9lyi0k",
+        "decryption": "none",
         "clients": [
             {
             "email": "forward@vless.encrytion.reality.midsa65",

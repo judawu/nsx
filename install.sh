@@ -778,53 +778,57 @@ xray_config() {
         # 处理 vless 和 vmess 的 id 替换
         if [[ "$protocol" == "vless" || "$protocol" == "vmess" ]]; then
             vless_decryption=$(echo "$inbound" | jq -r '.settings.decryption // "none"')
-            if [[ "$vless_decryption" != "none" ]]; then
-                echoContent green "\nvless 已加密，进行替换"
-                read -p "选择流量外观 (1=native, 2=xorpub, 3=random): " vless_flowview < /dev/tty
-                case "$vless_flowview" in
-                    1)
-                        new_vless_decryption="mlkem768x25519plus.native.600s."
-                        new_vless_encryption="mlkem768x25519plus.native.0rtt."
-                        ;;
-                    2)
-                        new_vless_decryption="mlkem768x25519plus.xorpub.600s."
-                        new_vless_encryption="mlkem768x25519plus.xorpub.0rtt."
-                        ;;
-                    *)
-                        new_vless_decryption="mlkem768x25519plus.random.600s."
-                        new_vless_encryption="mlkem768x25519plus.random.0rtt."
-                        ;;
-                esac
-                read -p "选择加密方式 (mlkem768/x25519): " vless_Authentication < /dev/tty
-                if [[ -z "$vless_Authentication" || "$vless_Authentication" == "x25519" ]]; then
-                    echoContent green "选择了 x25519"
-                    x25519_key_pair=$(xray x25519 2>/dev/null) || {
-                        echoContent red "错误: 无法生成 x25519 密钥"
+            vless_fallback=$(echo "$inbound" | jq -r '.settings.fallbacks[0].dest // empty')
+            if [[ -z "$vless_fallback" ]]; then
+                read -p "是否启用 encrytion（y/n)，服务器decryption目前不能和fallback同时使用: " enable_vless_encrytion < /dev/tty
+                if [[ "$enable_vless_encrytion" == "y" ]]; then
+                    echoContent green "\nvless 服务器decryption 开启"
+                    read -p "选择流量外观 (1=native, 2=xorpub, 3=random): " vless_flowview < /dev/tty
+                    case "$vless_flowview" in
+                        1)
+                            new_vless_decryption="mlkem768x25519plus.native.600s."
+                            new_vless_encryption="mlkem768x25519plus.native.0rtt."
+                            ;;
+                        2)
+                            new_vless_decryption="mlkem768x25519plus.xorpub.600s."
+                            new_vless_encryption="mlkem768x25519plus.xorpub.0rtt."
+                            ;;
+                        *)
+                            new_vless_decryption="mlkem768x25519plus.random.600s."
+                            new_vless_encryption="mlkem768x25519plus.random.0rtt."
+                            ;;
+                    esac
+                    read -p "选择加密方式 (mlkem768/x25519): " vless_Authentication < /dev/tty
+                    if [[ -z "$vless_Authentication" || "$vless_Authentication" == "x25519" ]]; then
+                        echoContent green "选择了 x25519"
+                        x25519_key_pair=$(xray x25519 2>/dev/null) || {
+                            echoContent red "错误: 无法生成 x25519 密钥"
+                            exit 1
+                        }
+                        new_vless_decryption="$new_vless_decryption$(echo "$x25519_key_pair" | grep "PrivateKey" | awk '{print $2}')"
+                        new_vless_encryption="$new_vless_encryption$(echo "$x25519_key_pair" | grep "Password" | awk '{print $2}')"
+                    else
+                        echoContent green "选择了 mlkem768"
+                        mlkem768_key_pair=$(xray mlkem768 2>/dev/null) || {
+                            echoContent red "错误: 无法生成 mlkem768 密钥"
+                            exit 1
+                        }
+                        new_vless_decryption="$new_vless_decryption$(echo "$mlkem768_key_pair" | grep "Seed" | awk '{print $2}')"
+                        new_vless_encryption="$new_vless_encryption$(echo "$mlkem768_key_pair" | grep "Client" | awk '{print $2}')"
+                    fi
+                    echoContent yellow "\n替换 decryption, $tag: $vless_decryption -> $new_vless_decryption\n"
+                    # 更新 decryption
+                    jq --arg tag "$tag" --arg new_decryption "$new_vless_decryption" \
+                        '(.inbounds[] | select(.tag == $tag) | .settings).decryption = $new_decryption' \
+                        "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                        echoContent red "错误: 无法更新 decryption"
                         exit 1
                     }
-                    new_vless_decryption="$new_vless_decryption$(echo "$x25519_key_pair" | grep "PrivateKey" | awk '{print $2}')"
-                    new_vless_encryption="$new_vless_encryption$(echo "$x25519_key_pair" | grep "Password" | awk '{print $2}')"
                 else
-                    echoContent green "选择了 mlkem768"
-                    mlkem768_key_pair=$(xray mlkem768 2>/dev/null) || {
-                        echoContent red "错误: 无法生成 mlkem768 密钥"
-                        exit 1
-                    }
-                    new_vless_decryption="$new_vless_decryption$(echo "$mlkem768_key_pair" | grep "Seed" | awk '{print $2}')"
-                    new_vless_encryption="$new_vless_encryption$(echo "$mlkem768_key_pair" | grep "Client" | awk '{print $2}')"
+                    echoContent green "\n不启用vless encryption"
+                    new_vless_encryption="none"
                 fi
-                echoContent yellow "\n替换 decryption, $tag: $vless_decryption -> $new_vless_decryption\n"
-                # 更新 decryption
-                jq --arg tag "$tag" --arg new_decryption "$new_vless_decryption" \
-                    '(.inbounds[] | select(.tag == $tag) | .settings).decryption = $new_decryption' \
-                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-                    echoContent red "错误: 无法更新 decryption"
-                    exit 1
-                }
-            else
-                new_vless_encryption="none"
             fi
-           
             echoContent green "\n处理 vless 和 vmess 的 id 替换，用 xray uuid 生成新 UUID"
             clients=$(echo "$inbound" | jq -c '.settings.clients[]')
             client_index=0
