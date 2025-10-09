@@ -2668,7 +2668,7 @@ menu() {
 
     case $option in
         1)
-        echoContent green "输入nsx启动脚本\n选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请\n选择5进行配置文件修改\n选择6进行日志管理\n选择7进行脚本更新...\n这是一个复合脚本，设计了多种功能，说明参考https://github.com/judawu/nsx"
+        echoContent green "输入nsx启动脚本\n选择2 安装Docker版服务用docker启动\n选择3安装XRAY,SINGBOX,NINGX到本机\n选择4进行证书申请，包括3种证书申请方式\n选择5进行nsx配置文件修改，进入5之后选择1进行本机的所有配置的重新设置\n选择6进行日志管理，可以查看和清理日志\n选择7进行脚本更新...\n这是一个复合脚本，设计了多种功能，说明参考https://github.com/judawu/nsx"
         exit 1;;
         2)dockerInstall ;;
         3) localInstall ;;
