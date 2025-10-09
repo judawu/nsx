@@ -422,9 +422,12 @@
         "network": "raw",
         "security": "tls",
         "tlsSettings": {
-          "alpn": [
-            "http/1.1",
-            "h2"
+          "serverName": "tls.yourdomain",
+          "rejectUnknownSni": true,
+          "allowInsecure": false,
+          "alpn": [    
+            "h2",
+            "http/1.1"
           ],
           "certificates": [
             {
@@ -432,6 +435,7 @@
               "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
             }
           ],
+          "disableSystemRoot": true,
           "echServerKeys": "",
           "echConfigList": ""
         },

@@ -760,10 +760,10 @@ xray_config() {
                     echoContent red "错误: 无法更新 echServerKeys"
                     exit 1
                 }
-                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn&ech=$echConfigList"           
+                url="$url&security=tls&fp=chrome&sni=$sni&alpn=$alpn&ech=$echConfigList"           
             else
                 echoContent green "\n不启用 Encrypted Client Hello"
-                url="$url&security=tls&fp=chrome&sni=$YOURDOMAIN&alpn=$alpn" 
+                url="$url&security=tls&fp=chrome&sni=$sni&alpn=$alpn" 
             fi
         else
             if [[ "$network" == "xhttp" && -n "$reality_url" ]]; then
@@ -824,7 +824,7 @@ xray_config() {
             else
                 new_vless_encryption="none"
             fi
-
+           
             echoContent green "\n处理 vless 和 vmess 的 id 替换，用 xray uuid 生成新 UUID"
             clients=$(echo "$inbound" | jq -c '.settings.clients[]')
             client_index=0
@@ -840,7 +840,12 @@ xray_config() {
                 if [[ -n "$reverse_tag" ]]; then
                  tag=$reverse_tag
                 fi
-                new_url="$protocol://$new_id@$LOCAL_IP:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
+                if [[ "$security" == "reality" ]]; then
+                sub_your_domain=$LOCAL_IP
+                else
+                sub_your_domain=$YOURDOMAIN
+                fi
+                new_url="$protocol://$new_id@$sub_your_domain:$port$url&flow=$flow&encryption=$new_vless_encryption#$tag"
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id\n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
