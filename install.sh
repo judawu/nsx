@@ -1135,7 +1135,7 @@ singbox_config() {
 
                     # 构造 URL
                     #new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port?congestion_control=bbr&sni=$SINGBOXDOMAIN#$tag"
-                     new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port?$url#$tag"
+                     new_url="tuic://$new_uuid:$new_password@$SINGBOXDOMAIN:$port$url#$tag"
                 
                     echo "$new_url" >> "$SINGBOX_SUB_FILE"
                     echoContent skyblue "\n生成 $type 订阅链接: $new_url"
@@ -1945,6 +1945,7 @@ updateNSX() {
     if [[ "$keep_webpage" == "n" ]]; then
         echoContent green "保留现有网站，不进行更新."
     elif [[ "$keep_webpage" == "y" ]]; then
+         echoContent green "更新网站."
         if ! cp -r "$TEMP_DIR/www/" "$BASE_DIR"; then
             echoContent red "无法复制仓库网站 到 $WWW_DIR."
             exit 1
