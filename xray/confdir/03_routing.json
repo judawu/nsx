@@ -1,0 +1,112 @@
+{
+"routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "domainMatcher": "hybrid",
+    "rules": [
+      {
+        "ruleTag": "bt",
+        "protocol": [
+          "bittorrent"
+        ],
+        "outboundTag": "block"
+      },
+      {
+             "user": [
+              "reverse@vless.simple"
+        ],
+        "outboundTag": "simple-reverse-out"
+      },
+      {
+        "inboundTag": [
+          "simple-tunnel-in"
+        ],
+        "outboundTag": "simple-reverse-out"
+      },
+      {
+        "ruleTag": "selfip",
+        "ip": [
+          "127.0.0.1",
+          "yourIP"
+        ],
+        "outboundTag": "direct"
+      },
+ 
+      {
+        "domainMatcher": "hybrid",
+        "type": "field",
+        "ruleTag": "know-ad",
+        "domain": [
+          "regexp:^.*\\.doubleclick\\.net$",
+          "regexp:^(?:pagead2\\.googlesyndication\\.com|s\\.youtube\\.com)$",
+          "domain:notifications-pa.googleapis.com",
+          "domain:people-pa.googleapis.com",
+          "domain:redirector.googlevideo.com",
+          "domain:suggestqueries.google.com",
+          "domain:mip.ymclg.cn",
+          "pur-oil-in-global-health-issue.colbydunlop.com"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "geosite:netflix"
+        ],
+        "user": [
+          "vps@v1"
+        ],
+        "outboundTag": "vps1"
+      },
+      {
+        "domain": [
+          "geosite:netflix"
+        ],
+        "user": [
+          "vps@v2"
+        ],
+        "outboundTag": "vps2"
+      },
+       {
+        "domain": [
+          "geosite:netflix"
+        ],
+        "user": [
+          "vps@v3"
+        
+        ],
+        "outboundTag": "vps3"
+      },
+         {
+        "domain": [
+          "geosite:netflix"
+        ],
+        "user": [
+          "vps@v4",
+          "vps@v5"
+        
+        ],
+        "outboundTag": "vps4"
+      },
+      {
+        "ruleTag": "private-ip",
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "ruleTag": "cn-ip",
+        "ip": [
+          "geoip:cn"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "ruleTag": "ad-domain",
+        "domain": [
+          "geosite:category-ads-all"
+        ],
+        "outboundTag": "block"
+      }
+    ]
+  }
+}
