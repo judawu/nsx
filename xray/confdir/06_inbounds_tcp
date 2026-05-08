@@ -1,0 +1,224 @@
+{
+inbounds": [
+    {
+      "tag": "VLESS-TLS-TCP",
+      "listen": "/dev/shm/nsx/xray_tls_proxy.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@tls",
+            "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
+            "flow": "xtls-rprx-vision",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+       
+          {
+            "path": "/vlesssplithttp",
+            "dest": "/dev/shm/nsx/vlesssplithttp.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vlesshttpupgrade",
+            "dest": "/dev/shm/nsx/vlesshttpupgrade.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vlessws",
+            "dest": "/dev/shm/nsx/vlessws.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vmessws",
+            "dest": "/dev/shm/nsx/vmessws.sock",
+            "xver": 0
+          },
+          {
+            "dest": "/dev/shm/nsx/trojan_xhttp_reality.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "tls.yourdomain",
+          "rejectUnknownSni": true,
+          "allowInsecure": false,
+          "alpn": [    
+            "h2",
+            "http/1.1"
+          ],
+          "certificates": [
+            {
+              "certificateFile": "/usr/local/nsx/certs/tls.yourdomain.pem",
+              "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
+            }
+          ],
+          "disableSystemRoot": true,
+          "echServerKeys": "",
+          "echConfigList": ""
+        },
+        "rawSettings": {
+          "acceptProxyProtocol": false
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    
+    {
+      "tag": "VLESS-SPLITHTTP",
+      "listen": "/dev/shm/nsx/vlesssplithttp.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "VLESS@splithttp",
+            "id": "c3c55d96-e8d5-41b5-b79d-fcafc1cb164c",
+            "level": 0
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "splithttp",
+        "splithttpSettings": {
+          "path": "/vlesssplithttp"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "tag": "VLESS-WS",
+      "listen": "/dev/shm/nsx/vlessws.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "2c65bf80-35cb-491d-b057-fac6a3f74fa4"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/vlessws"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "tag": "VMESS-WS",
+      "listen": "/dev/shm/nsx/vmessws.sock,0666",
+      "protocol": "vmess",
+      "settings": {
+        "clients": [
+          {
+            "id": "1f52cb64-23cc-46d7-aa4d-acf363097319",
+            "level": 0,
+            "email": "ws@vmess"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/vmessws"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "tag": "VLESS-HTTPUPGRADE",
+      "listen": "/dev/shm/nsx/vlesshttpupgrade.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "850413a9-c769-4fa7-adae-c320fe5103b9"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "httpupgrade",
+        "httpupgradeSettings": {
+          "path": "/vlesshttpupgrade"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "tag": "VLESS-GRPC",
+      "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
+            "email": "vless@grpc",
+            "level": 0
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "security": "none",
+        "grpcSettings": {
+          "serviceName": "/reality/grpc/h1|h2",
+          "multiMode": true
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    }
+  ]
+}
