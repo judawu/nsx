@@ -1,5 +1,5 @@
 {
-inbounds": [  
+  inbounds": [  
     {
       "tag": "VLESS-VISION-REALITY",
       "listen": "/dev/shm/nsx/xray_reality_proxy.sock,0666",
