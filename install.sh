@@ -2280,11 +2280,9 @@ EOF
     version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
     echoContent green " Xray-core版本:${version}"
     echoContent green "\n 安装目录/usr/local/nsx/xray/，下载中..."
-    if [[ "${release}" == "alpine" ]]; then
-        wget -c -q -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
-    else
-        wget -c -q  -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
-    fi
+
+    wget --no-check-certificate -c -q  -P /usr/local/nsx/xray/ "https://github.com/XTLS/Xray-core/releases/download/${version}/${xrayCoreCPUVendor}.zip"
+  
 
     if [[ ! -f "/usr/local/nsx/xray/${xrayCoreCPUVendor}.zip" ]]; then
         read -r -p "核心下载失败，请重新尝试安装" 
