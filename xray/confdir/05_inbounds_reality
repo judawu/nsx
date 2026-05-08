@@ -1,0 +1,184 @@
+{
+inbounds": [  
+    {
+      "tag": "VLESS-VISION-REALITY",
+      "listen": "/dev/shm/nsx/xray_reality_proxy.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@xtls.reality",
+            "id": "2c8721ed-1eb6-4eb7-9c3d-3cf2605d8cb6",
+            "flow": "xtls-rprx-vision",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "path": "/vlesssplithttp",
+            "dest": "/dev/shm/nsx/vlesssplithttp.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vlesshttpupgrade",
+            "dest": "/dev/shm/nsx/vlesshttpupgrade.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vlessws",
+            "dest": "/dev/shm/nsx/vlessws.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vmessws",
+            "dest": "/dev/shm/nsx/vmessws.sock",
+            "xver": 0
+          },
+          {
+            "dest": "/dev/shm/nsx/vless_xhttp_reality.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "target": "/dev/shm/nsx/xray_tls_proxy.sock",
+          "xver": 0,
+          "serverNames": [
+            "tls.yourdomain",
+            "reality.yourdomain",
+            "pre.yourdomain",
+            "www.yourdomain",
+            "mid.yourdomain",
+            "abc.xyz",
+            "www.mckesson.com",
+            "www.emerson.com",         
+            "www.science.org", 
+            "www.mlb.com", 
+            "www.openai.com",
+            "www.cloudflare.com",
+            "www.historians.org",
+            "www.visittheusa.com"
+          ],
+          "privateKey": "oK7K8sOcoiLcdS1vayvQT7rb5RY1j4BQQkfNCPOzxVI",
+          "password": "FeZkCok3ermqBaJ1WdAusSUBvN7lsaBLwlS3UzrSdj0",
+          "maxTimeDiff": 0,
+          "shortIds": [
+            "a8ccbfd4",
+            "64f1914d508165d5"
+          ]
+        },
+        "rawSettings": {
+          "acceptProxyProtocol": false
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "tag": "VLESS-XHTTP-REALITY",
+      "listen": "/dev/shm/nsx/vless_xhttp_reality.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@xhttp.reality",
+            "id": "cbb18fe0-d766-4551-babd-f1c4c2338d15",
+            "level": 0
+          },
+          {
+            "id": "a9e117e1-a44a-44b2-8791-4083c9879fe0",
+            "email": "vps@v1",
+            "level": 0
+          },
+          {
+            "id": "518e1e77-33c9-48b8-867b-aa7c8ceff11d",
+            "email": "vps@v2",
+            "level": 0
+          },
+          {
+            "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51",
+            "email": "vps@v3",
+            "level": 0
+          },
+          {
+            "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
+            "email": "vps@v4",
+            "level": 0
+          },
+            {
+            "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
+            "email": "vps@v5",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "dest": "/dev/shm/nsx/trojan_xhttp_reality.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "none",
+        "xhttpSettings": {
+          "host": "",
+          "path": "/reality/xhttp",
+          "mode": "auto"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ],
+        "metadataOnly": false,
+        "routeOnly": false
+      }
+    },
+    {
+      "tag": "TROJAN-XHTTP-REALITY",
+      "listen": "/dev/shm/nsx/trojan_xhttp_reality.sock,0666",
+      "protocol": "trojan",
+      "settings": {
+        "clients": [
+          {
+            "email": "trojan@xhttp.reality",
+            "password": "4mzwTTgrJ/xU/D9q5jccnQ==",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "dest": "www.harvard.edu:443",
+            "xver": 0
+          }
+        ]
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    }
+   
+  ]
+}
