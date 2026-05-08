@@ -1,0 +1,119 @@
+  "outbounds": [
+ {
+      "tag": "proxy_udp_shadowsocks",
+      "protocol": "shadowsocks",
+         "settings": {
+     "servers": [
+       {
+      "email": "ss@udp",
+      "address": "YOUR_REMOTE_VPS_DOMAIN",
+      "port": 8084,
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "un5ScfhUBs1KNriPufZwFg==:T8DqWrVkqEvbsuxOobS7CQ==",
+      "uot": false,
+      "UoTVersion": 2,
+      "level": 0
+       }
+               ]  
+     }
+    },
+
+{
+      "tag": "proxy_trojan_singbox",
+      "protocol": "trojan",
+       "settings": {
+        "servers": [
+          {
+            "address": "YOUR_REMOTE_VPS_DOMAIN",
+            "port": 443,
+            "password": "932e7e06-44a7-473e-adf3-ef242b916a86"
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+          "fingerprint": "chrome",
+          "allowInsecure": false // 禁止不安全证书
+        }
+      }
+    },
+
+   {
+      "tag": "proxy_vless_reality_singbox",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+          //  "port": 8089,
+               "port": 10809,  //通过服务器nginx 的stream进行中转
+            "users": [
+              {
+                "id": "8ee68d2b-ddf1-4907-8397-80baa9baf596", 
+                "flow": "xtls-rprx-vision", // Windows, macOS 同学保持这个不变
+                "encryption": "none",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+       "streamSettings": {
+                "network": "raw",
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                    "fingerprint": "chrome", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN", // 服务端 serverNames 之一
+                    "publicKey": "5UfBABAhNTGsQCs5rKjmZvXZPaj1qMX_16n8EcSKHyI", // 服务端私钥对应的公钥
+                    "shortId": "331342c1b15e2daf", // 服务端 shortIds 之一
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+            }
+    },
+   {
+      "tag": "proxy_vless_reality_grpc_singbox",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+          //  "port": 8088,
+               "port": 10808,  //通过服务器nginx 的stream进行中转
+            "users": [
+              {
+                "id": "e0e0e84a-4ad2-4b78-948f-9885575d0681", 
+               
+                "encryption": "none",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+       "streamSettings": {
+                  "network": "grpc",
+               
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                    "fingerprint": "chrome", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN", // 服务端 serverNames 之一
+                    "publicKey": "wXRLYwaKNqRj-89n_zk1GgPUUcycHYJjOZZI3Nqo3CA", // 服务端私钥对应的公钥
+                    "shortId": "6b882364f3c93976", // 服务端 shortIds 之一
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                },
+                 "grpcSettings": {
+                    "serviceName": "grpc", // 与服务端一致
+                    "multiMode": false,
+                    "idle_timeout": 60,
+                    "health_check_timeout": 20
+                }
+
+            }
+    }
+]
+}
