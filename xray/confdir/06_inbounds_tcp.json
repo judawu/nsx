@@ -1,5 +1,5 @@
 {
-inbounds": [
+"inbounds": [
     {
       "tag": "VLESS-TLS-TCP",
       "listen": "/dev/shm/nsx/xray_tls_proxy.sock,0666",
