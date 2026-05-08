@@ -1,0 +1,66 @@
+{
+  // DNS设置
+  "dns": {
+      "hosts": {
+            "geosite:category-ads-all": "127.0.0.1"
+        },
+    "servers": [
+      // 国外域名使用国外DNS查询
+      {
+        "address": "tcp+local://94.140.14.49:53",
+        "domains": ["geosite:geolocation-!cn"]	
+      },
+      {
+      "address": "8.8.8.8",
+      "port": 53,
+      "domains": ["regex:\\.goo.*\\.com$"],
+      "expectedIPs": ["geoip:us"],
+      "skipFallback": false
+     },
+    {
+        "address": "https+local://dns.google/dns-query",
+        "domains": [
+          "geosite:netflix",
+          "geosite:tiktok"],
+        "skipFallback": true,
+        "queryStrategy": "UseIPv4"
+      },
+      // {
+      //   "address": "https://1.1.1.1/dns-query",
+      //   "domains": ["geosite:openai"],
+      //   "skipFallback": true,
+      //   "queryStrategy": "UseIPv6"
+      // },
+      // 国内域名使用国内DNS查询，并期待返回国内的IP，若不是国内IP则舍弃，用下一个查询
+      {
+        "address": "223.5.5.5",
+        "domains": ["geosite:cn"],
+        "expectIPs": ["geoip:cn"]
+      },
+      //对国内网站进行二次查询
+      {
+        "address": "114.114.114.114",
+        "domains": ["geosite:cn"]
+      },
+      "https+local://1.1.1.1/dns-query", 
+      "https+local://cloudflare-dns.com/dns-query",
+      "tls://dns.unfiltered.adguard-dns.com",
+      "quic+local://dns.adguard.com",
+      "tcp+local://94.140.14.49:53",
+      "94.140.14.59",  
+      //nextDNS
+      "45.90.28.0",
+      "45.90.30.0",
+      "146.112.61.108", //PI-HOLE
+      "185.220.100.240",
+      "185.220.101.240",
+      "https://dns.unfiltered.adguard-dns.com/dns-query",
+      "tcp://1.1.1.1:53",
+      "8.8.8.8",
+      "8.8.4.4",
+  
+      // 最后的备份，上面全部失败时，用本机DNS查询
+      "localhost"
+    ]
+  }
+}
