@@ -1,7 +1,7 @@
 {
  // 路由设置
   "routing": {
-    "domainStrategy": "IPIfNonMatch",
+   // "domainStrategy": "IPIfNonMatch",
     "domainMatcher": "hybrid",
    // 所谓分流，就是将符合否个条件的流量，用指定`tag`的出站协议去处理（对应配置的5.x内容）
     "rules": [
