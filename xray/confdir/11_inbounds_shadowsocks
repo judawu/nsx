@@ -1,0 +1,17 @@
+{
+inbounds": [
+	
+    {
+      "tag": "UDP-SS",
+      "protocol": "shadowsocks",
+      "listen": "0.0.0.0",
+      "port": 10836,
+      "settings": {
+        "method": "2022-blake3-aes-128-gcm",
+        "level": 0,
+        "password": "QvofbfMIil7768oFAyTpyA==",
+        "network": "tcp,udp"
+      }
+    }
+  ]
+}
