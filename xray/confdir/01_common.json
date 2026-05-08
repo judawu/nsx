@@ -1,0 +1,19 @@
+{
+
+  "log": {
+    "loglevel": "error",
+    "error": "/usr/local/nsx/log/xray_error.log",
+    "access": "/usr/local/nsx/log/xray_access.log"
+  },
+ "api": {
+    "tag": "api",
+     "listen": "127.0.0.1:10830",
+    "services": [
+      "HandlerService",
+      "LoggerService",
+      "StatsService",
+      "RoutingService"
+    ]
+  },
+ "stats": {}
+ }

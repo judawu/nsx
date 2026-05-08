@@ -1,7 +1,0 @@
-{
-"log": {
-    "loglevel": "error",
-    "error": "/usr/local/nsx/log/xray_error.log",
-    "access": "/usr/local/nsx/log/xray_access.log"
-  }
- }
