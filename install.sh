@@ -1868,9 +1868,9 @@ updateConfig() {
             exit 1
         fi
          # Generate final xray config
-        if ! xray run -confdir "$XRAY_DIR/confdir"; then
+        if ! xray run -test -confdir "$XRAY_DIR/confdir"; then
             echoContent red "生成 Xray 配置失败"
-            exit 1
+           
         fi
         if ! cp "$TEMP_DIR/sing-box/config.json" "$SINGBOX_CONF"; then
             echoContent red "无法复制 sing-box/config.json 到 $SINGBOX_CONF."
