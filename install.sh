@@ -1868,7 +1868,7 @@ updateConfig() {
             exit 1
         fi
          # Generate final xray config
-        if ! xray run -confdir "$XRAY_DIR/confdir" > "$XRAY_CONF"; then
+        if ! xray run -confdir "$XRAY_DIR/confdir"; then
             echoContent red "生成 Xray 配置失败"
             exit 1
         fi
