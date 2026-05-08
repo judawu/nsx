@@ -1,0 +1,211 @@
+{
+
+  "outbounds": [
+ {
+      "tag": "proxy_vless_tls_tcp",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+            "port": 443,
+            "users": [
+              {
+                "id": "808cf3a7-f4e0-4f11-8975-e4a2c2302805", // 和服务器端的一致
+                "flow": "xtls-rprx-vision",      
+                "encryption": "none",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "YOUR_REMOTE_VPS_DOMAIN" ,
+           "alpn": [
+            "http/1.1",
+            "h2"
+          ],
+          "fingerprint": "chrome",
+          "allowInsecure": false // 禁止不安全证书,这需要为true，不然浏览器不认
+        }
+      }
+    },
+  
+    {   
+            "tag": "proxy_vless_splithttp",
+            "protocol": "vless",
+            "settings": {
+                "vnext": [
+                    {
+                        "address": "YOUR_REMOTE_VPS_DOMAIN",
+                        "port": 443,
+                        "users": [
+                            {
+                                "id": "759cd425-52bc-4c7a-be70-a0a3a12cc1c3", // 与服务端一致
+                                "encryption": "none"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "splithttp",
+                "splithttpSettings": {
+                    "path": "/vlesssplithttp", // 与服务端一致
+                    "host": "YOUR_REMOTE_VPS_DOMAIN" // 若 "address": "" 中填的是 VPS 的 IP，此处必须填 Nginx 配置中 server_name 的值，否则会因在 Nginx 配置中启用了 ssl_reject_handshake 而连接失败
+                },
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN",
+                     "alpn": [
+                        "h3",
+                        "h2",
+                        "http/1.1"
+                    ],
+                    "fingerprint": "chrome" ,
+                    "allowInsecure": false // 禁止不安全证书
+                }
+            }
+           
+        },
+     {
+          
+           "tag": "proxy_vless_ws",
+           "protocol": "vless",
+            "settings": {
+                "vnext": [
+                    {
+                        "address": "YOUR_REMOTE_VPS_DOMAIN",
+                        "port": 443,
+                        "users": [
+                            {
+                                "id": "3e0f8a38-7235-45f5-b3d0-92f0f22d3b24", // 与服务端一致
+                                "encryption": "none"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/vlessws?ed=2560", // 与服务端一致，建议增加 ?ed=2560 以启用 0-RTT 降低延迟
+                       "host": "YOUR_REMOTE_VPS_DOMAIN"
+               
+              
+                  },
+                "security": "tls",
+                "tlsSettings": {
+                  "serverName": "YOUR_REMOTE_VPS_DOMAIN",
+                
+                    "fingerprint": "chrome"
+                }
+            }
+        },
+     {
+           "tag": "proxy_vless_httpupgrade",
+            "protocol": "vless",
+            "settings": {
+                "vnext": [
+                    {
+                        "address": "YOUR_REMOTE_VPS_DOMAIN",
+                        "port": 443,
+                        "users": [
+                            {
+                                "id": "38e76fc8-00a6-4be1-a430-c296ea6044c2", // 与服务端一致
+                                "encryption": "none"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "httpupgrade",
+                "httpupgradeSettings": {
+                    "path": "/vlesshttpupgrade?ed=2560", // 与服务端一致，建议增加 ?ed=2560 以启用 0-RTT 降低延迟
+                    "host": "YOUR_REMOTE_VPS_DOMAIN" // 若 "address": "" 中填的是 VPS 的 IP，此处必须填 Nginx 配置中 server_name 的值，否则会因在 Nginx 配置中启用了 ssl_reject_handshake 而连接失败
+                },
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "proxy.juda.autos", //可以支持prox.juda.autos,proxy.juda.autos
+                    "fingerprint": "chrome"
+                }
+            }
+        },
+     {
+           "tag": "proxy_grpc_vless_tcp",
+           "protocol": "vless",
+            "settings": {
+                "vnext": [
+                    {
+                        "address": "YOUR_REMOTE_VPS_DOMAIN",
+                        "port": 443,
+                        "users": [
+                            {
+                                "id": "54da3b49-bbb7-41c9-89b7-398ab6bfcec0", // 与服务端一致
+                                "encryption": "none"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "grpcSettings": {
+                    "serviceName": "/reality/grpc/h2", // 与服务端一致
+                    "multiMode": true,
+                    "idle_timeout": 60,
+                    "health_check_timeout": 20
+                },
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN",
+                    "fingerprint": "chrome"
+                }
+            }
+            
+        },
+  //infra/conf: failed to build outbound config with tag proxy_udp_vless_quic > infra/conf: failed to build stream settings for outbound detour > common/errors: The feature QUIC transport (without web service, etc.) has been removed and migrated to XHTTP stream-one H3. Please update your config(s) according to release note and documentation.
+  // {
+  //   "tag": "proxy_udp_vless_quic",
+  //   "protocol": "vless",
+  //     "settings": {
+  //       "vnext": [
+  //         {
+  //           "address": "YOUR_REMOTE_VPS_DOMAIN", // 服务器IP或域名
+  //           "port": 443, // 与服务器端口一致
+  //           "users": [
+  //             {
+  //               "id": "f24b353-8a10-43a4-95fe-644c0759225d", // 与服务器UUID一致
+  //               "flow": "xtls-rprx-vision-udp443",
+  //               "encryption": "none",
+  //                 "level": 0
+  //             }
+  //           ]
+  //         }
+  //       ]
+  //     },
+  //     "streamSettings": {
+  //       "network": "quic",
+  //       "security": "tls",
+  //       "tlsSettings": {
+  //         "allowInsecure": false, // 若使用自签名证书，设为true（仅测试用）
+  //         "serverName": "YOUR_REMOTE_VPS_DOMAIN" // 服务器域名，若无域名可留空
+  //       },
+  //       "quicSettings": {
+  //         "security": "none", // 与服务器一致
+  //      //   "key": "", // 与服务器一致
+  //         "header": {
+  //           "type": "none" // 与服务器一致
+  //            //    "type": "wechat-video" 
+  //         }
+  //       }
+  //     }
+     
+  //   }
+  ]
+  }
