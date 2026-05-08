@@ -1,0 +1,49 @@
+
+
+{
+  // 日志设置
+  // 注意，本例中我默认注释掉了日志文件，因为windows, macOS, Linux 需要写不同的路径，请自行配置
+  "log": {
+    // "access": "/home/local/xray_log/access.log",    // 访问记录
+    // "error": "/home/local/xray_log/error.log",    // 错误记录
+    "loglevel": "debug" // 内容从少到多: "none", "error", "warning", "info", "debug"
+  },
+  //  支持的API服务
+
+  "api": {
+    "tag": "api",
+     "listen": "127.0.0.1:10810",
+    "services": [
+      "HandlerService",
+      "LoggerService",
+      "StatsService",
+      "RoutingService"
+    ]
+  },
+
+  "stats": {},//目前统计信息不需要任何参数，只要 StatsObject 项存在，内部的统计即会开启
+
+  //策略设置
+
+   "policy": {
+    "levels": {
+      "0": {
+        "handshake": 2,
+        "connIdle": 300,
+        "uplinkOnly": 1,
+        "downlinkOnly": 3,
+        "statsUserUplink": true,
+        "statsUserDownlink": true,
+        "statsUserOnline": true,
+        "bufferSize": 16
+      }
+    },
+    "system": {
+      "statsInboundUplink": true,
+      "statsInboundDownlink": true,
+      "statsOutboundUplink": true,
+      "statsOutboundDownlink": true
+    }
+  }
+
+}
