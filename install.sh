@@ -1833,7 +1833,7 @@ updateConfig() {
 
         # Ensure source configuration files exist in the repository
         for src in "$TEMP_DIR/docker/docker-compose.yml" "$TEMP_DIR/nginx/nginx.conf" \
-                   "$TEMP_DIR/xray/config.json" "$TEMP_DIR/sing-box/config.json"; do
+                   "$TEMP_DIR/xray/confdir" "$TEMP_DIR/sing-box/config.json"; do
             if [[ ! -f "$src" ]]; then
                 echoContent red "仓库中缺少配置文件: $src."
                 exit 1
@@ -1858,8 +1858,14 @@ updateConfig() {
             echoContent red "无法复制 nginx.conf 到 $NGINX_CONF."
             exit 1
         fi
-        if ! cp "$TEMP_DIR/xray/config.json" "$XRAY_CONF"; then
-            echoContent red "无法复制 xray/config.json 到 $XRAY_CONF."
+        rm -rf "$XRAY_DIR/confdir"
+        if ! cp "$TEMP_DIR/xray/confdir" "$XRAY_DIR"; then
+            echoContent red "无法复制 xray/confdir 到 $XRAY_DIR."
+            exit 1
+        fi
+         # Generate final xray config
+        if ! xray run -confdir "$XRAY_DIR/confdir" > "$XRAY_CONF"; then
+            echoContent red "生成 Xray 配置失败"
             exit 1
         fi
         if ! cp "$TEMP_DIR/sing-box/config.json" "$SINGBOX_CONF"; then
