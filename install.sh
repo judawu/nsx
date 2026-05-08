@@ -1833,13 +1833,17 @@ updateConfig() {
 
         # Ensure source configuration files exist in the repository
         for src in "$TEMP_DIR/docker/docker-compose.yml" "$TEMP_DIR/nginx/nginx.conf" \
-                   "$TEMP_DIR/xray/confdir" "$TEMP_DIR/sing-box/config.json"; do
+                   "$TEMP_DIR/sing-box/config.json"; do
             if [[ ! -f "$src" ]]; then
                 echoContent red "仓库中缺少配置文件: $src."
                 exit 1
             fi
         done
-
+          # Check xray confdir
+        if [[ ! -d "$TEMP_DIR/xray/confdir" ]]; then
+        echoContent red "仓库中缺少 Xray confdir: $TEMP_DIR/xray/confdir"
+        exit 1
+        fi
         # Ensure destination directories exist
         for dest in "$COMPOSE_FILE" "$NGINX_CONF" "$XRAY_CONF" "$SINGBOX_CONF"; do
             mkdir -p "$(dirname "$dest")" || {
