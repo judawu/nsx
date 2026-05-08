@@ -1,7 +1,7 @@
 {
 {
 "routing": {
-  
+   "rules": [
       {
         "user": [
               "reverse@vless.simple"
