@@ -10,18 +10,7 @@
         ],
         "outboundTag": "block"
       },
-      {
-             "user": [
-              "reverse@vless.simple"
-        ],
-        "outboundTag": "simple-reverse-out"
-      },
-      {
-        "inboundTag": [
-          "simple-tunnel-in"
-        ],
-        "outboundTag": "simple-reverse-out"
-      },
+     
       {
         "ruleTag": "selfip",
         "ip": [
@@ -47,45 +36,7 @@
         ],
         "outboundTag": "block"
       },
-      {
-        "domain": [
-          "geosite:netflix"
-        ],
-        "user": [
-          "vps@v1"
-        ],
-        "outboundTag": "vps1"
-      },
-      {
-        "domain": [
-          "geosite:netflix"
-        ],
-        "user": [
-          "vps@v2"
-        ],
-        "outboundTag": "vps2"
-      },
-       {
-        "domain": [
-          "geosite:netflix"
-        ],
-        "user": [
-          "vps@v3"
-        
-        ],
-        "outboundTag": "vps3"
-      },
-         {
-        "domain": [
-          "geosite:netflix"
-        ],
-        "user": [
-          "vps@v4",
-          "vps@v5"
-        
-        ],
-        "outboundTag": "vps4"
-      },
+   
       {
         "ruleTag": "private-ip",
         "ip": [
