@@ -1,0 +1,41 @@
+{
+
+  // CPOY FROM https://github.com/XTLS/Xray-examples/blob/main/Hysteria2/client.jsonc
+    "outbounds": [
+        {
+            "tag": "proxy",
+            "protocol": "hysteria",
+            "settings": {
+                "address": "YOUR_REMORE_VPS_DOMAIN",
+                "port": 10837,
+                "version": 2
+            },
+            "streamSettings": {
+                "network": "hysteria",
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "10837" // SNI
+                },
+                "hysteriaSettings": {
+                    "version": 2,
+                    "auth": "QvofbfMIil7768oFAyTpyA==" // Hysteria 密码
+                },
+                "finalmask": {
+                    "udp": [
+                        {
+                            "type": "salamander",
+                            "settings": {
+                                "password": "QvofbfMIil7768oFAyTpyA==" // salamander 混淆密码
+                            }
+                        }
+                    ],
+                    "quicParams": {
+                        "congestion": "bbr", // 可改为 brutal，若如此做请自行修改下面宽带
+                        "brutalUp": "30 mbps",
+                        "brutalDown": "100 mbps"
+                    }
+                }
+            }
+        }
+    ]
+}
