@@ -1,0 +1,86 @@
+{
+ // 出站设置
+  "outbounds": [
+    {
+      "tag": "direct",
+       "settings": {
+                "domainStrategy": "ForceIPv4"
+            },
+      "protocol": "freedom"
+    },
+
+    //服务器1 xray列表
+     {
+      "tag": "proxy_xhttp_reality",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "YOUR_REMOTE_VPS_IP", // 替换成你的真实域名
+            "port": 443,
+            "users": [  
+              {
+                "id": "def42c61-6a92-40b6-b6c7-75ebd6ee9c5d",             
+                "encryption": "none",
+                "email": "vps@v4",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+       "streamSettings": {
+                 "network": "xhttp",
+                  "xhttpSettings": {
+                    "host": "",
+                    "path": "/reality/xhttp",
+                    "mode": "auto"//,
+                    //  "extra": {
+                    //   "headers": {
+                    //       // "key": "value"
+                    //   },
+                    //   "xPaddingBytes": "100-1000",
+                    //   "noGRPCHeader": false, // stream-up/one, client only
+       
+                    //   "scMaxEachPostBytes": 1000000, // packet-up only
+                    //   "scMinPostsIntervalMs": 30, // packet-up, client only
+                    //   "scStreamUpServerSecs": "20-80", // stream-up, server only
+                    //   "xmux": { // h2/h3 mainly, client only
+                    //       "maxConcurrency": "16-32",
+                    //       "maxConnections": 0,
+                    //       "cMaxReuseTimes": 0,
+                    //       "hMaxRequestTimes": "600-900",
+                    //       "hMaxReusableSecs": "1800-3000",
+                    //       "hKeepAlivePeriod": 0
+                    //   },
+                    //   "downloadSettings": { // client only
+                    //       "address": "", // another domain/IP
+                    //       "port": 443,
+                    //       "network": "xhttp",
+                    //       "security": "tls",
+                    //       "tlsSettings": {
+                    //           ...
+                    //       },
+                    //       "xhttpSettings": {
+                    //           "path": "/yourpath", // must be the same
+                    //           ...
+                    //       },
+                    //       "sockopt": {} // will be replaced by upload's "sockopt" the latter's "penetrate" is true
+                    //   }
+                    //          }
+                  },
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                    "fingerprint": "chrome", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN", // 服务端 serverNames 之一
+                    "publicKey": "QiZjZ7TlAJprBrkr3XY7x-eAyM-COjIp5z-TSOagJE4", // 服务端私钥对应的公钥
+                    "shortId": "21bd9629", // 服务端 shortIds 之一
+                   // "mldsa65Verify": "iM0NRCeXaeg74l5CCzlWUWezPiYPhXge3XWU592ImWwiIRPD09NxGOq43BuhZqyzvOY2IsjvNme62RuGXz8bY1cklCnVoba19Xdk6c1diagFlQaD5BFmNHU8OuQlhxK0fdHNv_tPsxS0vA2EKhYTmeFvKt00XtW50JOdC_1vxdr7meFxJenGBDc8x2EWVZYmV73gmtquerqx9NOYnOixMoiuyrs3P7DJ3pF67eNZHgzSw6bAyk2Abi4U5lpkGZQMZedKXvIUwRV0HgChP_zQDFQqulIm2KgUY6W0eYCNtYqWUaBQpgHUAU_vusvOp2VwMM6kNemwiulkAwszbgi_tb06UPoQHghkIhsSfvJGbwR4YhYyf33njatdHqSLnLjaR4wy-a-36zEPI1fWFrV1olG99cJItHNf4LSfu4480aKFSfu6F3Xp12WkINcNFtmM57vg70IUJwePUnjpKrANwKLDiFYY6JeIOtof_bP9u2b22V0Gn3owbq5m_sFOYzWHnvqdweGXEw-oygaBkHQ7LBAaSHDj7X4RuyneCeO1vl7czv2zdbk0HHiG3G7KZ8thfWAjBWb1eMbg8v8L6PyAlxSsuJZXwgh7D01dJLpdIaKCMmko5kJnCKjl_MuhvU1Mnc2NifBvNTfMnLxHMhJG1YeczjXr0KnWwAN_uQUT_2sP0FWDcZj0WKhLs-CsjKKeaiFt7cEie7MkPiEzOXu_hfssMLtCizQ2pxQRR4SGW9TjzeP7-FWRlAfiKv8YUOK3LtO1xkIrW50IGOINWpNP262hV237oKB98rSw2JhPeT55SMGAYQ0h6KqT4LT3Vb_SBStsWr4W-McgEhL42pzXfoaL-S2yUL6Wa_GKKMIq00CLA4F1jQlcUH48xMv0LM6bT8vmIlwJZ3gg65xwGUP8pGa-tijpirWZB1mN8YHIm1T_fHiTPsIV4QSgcrs1bKaJLchvnldzfEqUkFJIilAb5PbAaDUfknTY2orIv0CCoxx1c10QVDtwpUm8qZnpFZEtp0Xfl1Pcj92UR0lGkI5YJpkvLD9Hs4G26kHZ_yAcqOWFvBGDc3s6kstJg9FV3r6Lu7ieS2rFLTXaOAsidXXKfks5ZMS5zuU-rDU38u_WGaGNaRMdJJsT-NMckkkOzifv-Y_nyBlulwl0b9QfdQLBtiRqAnLQql7xggaywqW9v0eicaxk9U3dQ4mC8ASNoHsod1orWNj9jAJ7zyqRlaR-_yJb2YPtIEOxAw96VRCyB8NJwTlrpHrxcI0aZXItKs3N92ekJe-S7SmyKgzrzF47q8Jh6htUigw9JxjCk7kB4WAB1PaD5JfoEEddJoXxaUrxvYgwFXVqUMFZEUL-cpBDHJouAJi_5kE0Cl_RmKCF5-2djIAudjhsql4p5rJLOoYEgWEpVu88LFUh8y6IbzruZ70ZOrGDW9qymdyKdxcoboeredmg_uiUt8VAQfasRBCQbODB-gE1UYuz25uOlv9ZHGg7rSU8twmIF_wBzHeTm8RvwxPD9Vaa32Xpk_nHD54wmqSukHPJkwGkUm5eRsuKqOo3J0VYQp3ibwi7LfUWH6zH26yXFxUkj_evuJ7jcWmqtz9XpW5h9Ytb20ttpCuS4ERVktPGD1lUJtXyyN1De_CnuqP33_ztzADE3SskiDqlYnxoQqhGrOZXmrWBMdA5oLkvo8wRH2C2GJMBF4raVreivuVhb2_eM0VeWIZVYhGbiT_nv4WoPPqT7eYBiBkYlV1tZT3QERtMQZYLEWxhqXh2B5Uwn6JIZmjP5Lz_hMlQieyXwUrX7oQSTz7FjhvuL_iOW3EfvANmm9ufDKTVhSIdgcf8XhG516KTrxcUytMw6klFmxi_p2VY2xP0aOMi3tkBPc7QYS9AFVT7U0i4CHPfY3VzOfDW2lOPrCgTRMd6Cn0xoSJmbai85VT41YSDSlJ0gGvMlRcDdpj_CSFKCCMLphNr8xB4seCPxEsKQdqrwU0ECvOXPAZ8QoeXqr3J4n2oueBCoIFZ5fW5iIpGeWKr1Ke_BgF9eL9MZi93sS8bU67vtJUYn5WKen70Lqr5Tx2JAhtvkW0B9vR5_lL0dG4TTW9wwXVrwO63H05ufJbJrlEFSOAa4ZJ_-QLYveAVm2WNWbxi3mVzHgE0vvIPKkbYomdIvP42M4sl8ZN04VgEl8uY-VxO1pGbBzwUu8mgCCkxSMMfRwTR13o66rOjmF84cEBhlaI3zYCV5Lc5vhmMxg6eV5-xKoBJHpuwY95l02tPKi9ce0jO0HpLEIFcUnXuFX7nNuVXejq31iJvEalACrjIg29sMX-2LXbclVaTGIiy3sq4bHx-AjuMZRCHZiNMRhRT3p5oaUYsxCBN8JOGhX_FGRMqacBdQOyup5T-W805mrEJU7oXh5t4bX_NIbjk4cSBhWohlcvzNIpUy44_F_6TD-pMBe7rweUZDJKY8noP56DSesC7Xnir9kPymJhoDNFyDM9WwFgm0SwY6hMoRFwgXR7gebY8DOY3YmmKN4zpwB6BFp1Lzh3aftdkUNcHqbgWI1lHKfIVGJ3yzLcZE5dzjBzjhK5QI0LowOQ8qVpXtlSUl8GQZvYIlqW_7wY", // 选填，服务端 mldsa65Seed 生成的公钥，对证书进行抗量子的额外验
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+            }
+    }
+]
+
+}
