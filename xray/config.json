@@ -1,6 +1,6 @@
 {
   "log": {
-    "loglevel": "none",
+    "loglevel": "error",
     "error": "/usr/local/nsx/log/xray_error.log",
     "access": "/usr/local/nsx/log/xray_access.log"
   },
@@ -827,6 +827,51 @@
         ]
       }
     },
+	{
+            "tag": "IN-Hysteria2",
+            "listen": "0.0.0.0",
+            "port": 10837,
+            "protocol": "hysteria",
+            "settings": {
+                "version": 2
+            },
+            "streamSettings": {
+                "network": "hysteria",
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "tls.yourdomain", 
+                    "alpn": [
+                        "h3"
+                    ], 
+                    "certificates": [
+                        {
+                            "usage": "encipherment",
+                             "certificateFile": "/usr/local/nsx/certs/tls.yourdomain.pem",
+                             "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
+                        }
+                    ] 
+                },
+                "hysteriaSettings": {
+                    "version": 2,
+                    "auth": "QvofbfMIil7768oFAyTpyA==" 
+                },
+                "finalmask": {
+                    "udp": [
+                        {
+                            "type": "salamander",
+                            "settings": {
+                                "password": "QvofbfMIil7768oFAyTpyA==" 
+                            }
+                        }
+                    ], 
+                    "quicParams": {
+                        "congestion": "brutal",
+                        "brutalUp": "100 mbps",
+                        "brutalDown": "100 mbps" 
+                    }
+                }
+            }
+        },
     {
       "tag": "UDP-SS",
       "protocol": "shadowsocks",
