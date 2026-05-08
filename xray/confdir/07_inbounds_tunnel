@@ -1,0 +1,102 @@
+{
+inbounds": [
+  
+    {
+      "tag": "simple-tunnel-in",
+      "listen": "0.0.0.0",
+      "port": 10831,
+      "protocol": "tunnel"
+      
+    },
+
+    {
+      "tag": "VLESS-VISION-REALITY-TUNNEL",
+      "listen": "0.0.0.0",
+      "port": 10832,
+      "protocol": "vless",
+      "settings": {
+       "decryption": "none",
+        "clients": [
+            {
+            "email": "mid@vless.xtls.reality",
+            "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51",
+            "flow": "xtls-rprx-vision"     
+          }
+        ],
+         "fallbacks": [
+          {
+            
+            "dest": "/dev/shm/nsx/vless_xhttp_reality.sock",
+            "xver": 0
+          } 
+           ]
+
+          },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "target": "pre.yourdomain:443",
+          "xver": 0,
+          "serverNames": [
+            "tls.yourdomain",
+            "reality.yourdomain",
+            "pre.yourdomain",
+            "www.yourdomain",
+            "mid.yourdomain",
+            "abc.xyz",
+            "www.mckesson.com",
+            "www.emerson.com",         
+            "www.science.org", 
+            "www.mlb.com", 
+            "www.openai.com",
+            "www.cloudflare.com",
+            "www.historians.org",
+            "www.visittheusa.com" 
+                  ],
+          "privateKey": "EIGcJ6cA3FBhrpniOMkjxJqk_CUdvq4DvaZhB_33Tms",
+          "password": "tiapHof8aOr3vzcYINQMkql9AEKPqmo1jAL7zfpbyFQ",
+          "maxTimeDiff": 0,
+          "shortIds": [
+            "a3e79f19",
+            "4f10451af6044d56"
+          ]
+            }
+              },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+   
+{
+  "tag": "vless_simple_tunnel_reverse",
+	"listen": "0.0.0.0",
+	"port": 10833,
+	"protocol": "vless",
+	"settings": {
+	"decryption": "none",
+	"clients": [
+	{
+	"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
+						"flow": "xtls-rprx-vision",
+						"reverse": {
+							"tag": "simple-reverse-out"
+						}
+					},
+					{
+						"id": "e8758aff-d830-4d08-a59e-271df65b995a", 
+						"flow": "xtls-rprx-vision",
+						"email": "reverse@vless.simple"
+					}
+				]
+			}
+		}
+   
+  ]
+}
