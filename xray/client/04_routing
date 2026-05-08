@@ -1,0 +1,230 @@
+{
+ // 路由设置
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "domainMatcher": "hybrid",
+   // 所谓分流，就是将符合否个条件的流量，用指定`tag`的出站协议去处理（对应配置的5.x内容）
+    "rules": [
+      // 域名屏蔽
+      {
+        "type": "field",
+        "domain": ["geosite:category-ads-all"],
+        "outboundTag": "block"
+      },
+        {
+        "type": "field",
+        "domain": ["m.baidu.com"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "protocol": [
+          "bittorrent"
+        ],
+        "outboundTag": "block"
+      },
+      // dns分流
+      {
+      "inboundTag": [
+            "dns-in"
+                ],
+      "outboundTag": "dns-out"
+            },
+    // {
+    //     "port": "853",
+    //     "network": "tcp",
+    //     "outboundTag": "block"
+    // },
+    // {
+    //     "port": "443,853",
+    //     "network": "udp",
+    //     "outboundTag": "block"
+    // },
+  //隧道路由（端口转发）
+    {
+      "inboundTag": "tunnel-src",
+      "outboundTag": "tunnel-dist-xray-xhttp-reality-1"
+    },
+    //http代理出站路由
+    {
+       "inboundTag": "http-in",
+      "outboundTag": "tunnel-dist-xray-xhttp-reality-2"
+    },
+    //反向代理1
+    {
+               "inboundTag": "reverse-in-vless-simple",
+                "outboundTag": "reverse-out-redirect"
+    },
+    //反向代理2
+             {
+                "inboundTag": "reverse-in-vless-complex",
+                "outboundTag": "reverse-out-redirect"
+            },
+
+     {
+                "inboundTag": [
+                    "tls-decrypt"
+                ],
+                // tls-repark 中定义了一些参数(比如IP和SNI), 不同的网站可能需要不同的参数
+                // 要支持更多的网站，可以新建更多的此类 freedom 出站，然后在这里把不同的明文请求按需求路由到不同的出站重新打包回 HTTPS
+                // 这里的域名来源就是 tls-decrypt 入站的 followRedirect, 所以一个本地端口就可以接受任何网站的请求并在核心中这样区分开
+                "domain": [
+                    "facebook.com"
+                ],
+                "outboundTag": "tls-repack"
+            },
+            {
+                "inboundTag": [
+                    "socks-in"
+                ],
+                // 你要 mitm 的网址
+                "domain": [
+                    "facebook.com"
+                ],
+                "outboundTag": "redirect-out"
+            },
+
+
+  {
+        "type": "field",
+        "ip": [
+          "127.0.0.1"
+        ],
+        "outboundTag": "direct"
+  },
+  //不允许私有ip出站
+
+  {
+        "type": "field",
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "block"
+  },
+
+  //api出站回流
+  {
+        "inboundTag": [
+          "api-in"
+        ],
+        "outboundTag": "api",
+        "type": "field"
+      },
+
+
+      //广告过滤
+      {
+        "domainMatcher": "hybrid",
+        "type": "field",
+        "ruleTag": "know-ad",
+        "domain": [
+          "regexp:^.*\\.doubleclick\\.net$",
+          "regexp:^(?:pagead2\\.googlesyndication\\.com|s\\.youtube\\.com)$" ,
+          "domain:notifications-pa.googleapis.com",
+          "domain:people-pa.googleapis.com",
+          "domain:redirector.googlevideo.com",
+          "domain:suggestqueries.google.com",
+          "domain:dingxiang-inc.com",
+          "domain:hubspot.com",
+          "domain:hubspotusercontent-na1.ne",
+          "domain:cookielaw.org",
+          "domain:right.com"
+        ],
+       "outboundTag": "block"
+      },
+
+      //出站分流1
+      {
+        "type": "field",
+        "domain": ["www.linkedin.com"],      
+        "outboundTag": "proxy_xhttp_reality"
+      },
+      //出站分流2
+       {
+        "type": "field",
+        "domain": [
+         "domain:thermo.com",
+         "domain:office.com",
+        "domain:office.net",
+        "domain:office365.com",
+        "domain:vscode-cdn.net",
+        "domain:live.com",
+        "domain:sharepointonline.com",
+        "domain:microsoftonline.com",
+        "domain:static.microsoft",
+        "domain:microsoft.com",
+        "outlook.com"
+      ],      
+        "outboundTag": "direct"
+ 
+      },
+      //出站分流3
+      {
+                "ip": [
+                    "1.1.1.1"
+                ],
+                "outboundTag": "proxy_xhttp_reality"
+            },
+      ////出站分流4 国内域名直连
+      {
+        "type": "field",
+        "domain": ["geosite:cn"],
+        "outboundTag": "direct"
+      },
+      //出站分流5 国内IP直连
+      {
+        "type": "field",
+        "ip": ["geoip:cn", "geoip:private"],
+        "outboundTag": "direct"
+      },
+      //出站分流6 国外域名代理
+      {
+        "type": "field",
+        "domain": ["geosite:geolocation-!cn"],
+
+      //选择出站代理
+    
+      //从singbox 选择
+     //  "outboundTag": "proxy_trojan_singbox"
+    //   "outboundTag": "proxy_shadowsocks_singbox"
+     // "outboundTag": "proxy_vless_reality_singbox"
+    //   "outboundTag": "proxy_vless_reality_grpc_singbox"
+   //    "outboundTag": "proxy_vless_tcp_singbox"
+
+    //从xray选择
+      // "outboundTag": "proxy_vless_reality"
+        "outboundTag": "proxy_xhttp_reality"
+       //  "outboundTag": "proxy_xhttp_trojan"
+
+
+        //下面两个要启用不安全证书，不然会连不上, 重新上传正确的域名证书就可以了
+       //  "outboundTag": "proxy_vless_tls_tcp"
+       //  "outboundTag": "proxy_trojan_tls_tcp"      
+       //   "outboundTag": "proxy_vless_splithttp"
+       //  "outboundTag": "proxy_vless_ws"
+        // "outboundTag": "proxy_vless_httpupgrade"
+       // "outboundTag": "proxy_grpc_vless_tcp"
+       //"outboundTag": "proxy_udp_shadowsocks"
+
+       //下面2个不能用
+      //   "outboundTag": "proxy_udp_vless_mkcp"
+  
+      
+
+         //这个被xray取消了
+         // "outboundTag": "proxy_h2_vless_reality"
+          //  "outboundTag": "proxy_udp_vless_quic"
+      },
+   
+    
+      //  默认规则
+      // 在Xray中，任何不符合上述路由规则的流量，都会默认使用【第一个outbound（5.1）】的设置，所以一定要把转发VPS的outbound放第一个
+      // 3.6 走国内"223.5.5.5"的DNS查询流量分流走direct出站
+      {
+        "type": "field",
+        "ip": ["223.5.5.5","114.114.114.114"],
+        "outboundTag": "direct"
+      }
+    ]
+  },
+}
