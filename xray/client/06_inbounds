@@ -1,0 +1,31 @@
+{
+ "inbounds": [
+    
+    // 一般都默认使用socks5协议作本地转发，可以在windows 的proxy setting里面设置全局代理
+    {
+      "tag": "socks-in",
+      "protocol": "socks",
+      "listen": "127.0.0.1", // 这个是通过socks5协议做本地转发的地址
+      "port": 10800, // 这个是通过socks5协议做本地转发的端口
+      "settings": {
+        "udp": true
+      },
+      "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ],
+                "routeOnly": true
+            }
+    },
+   //  有少数APP不兼容socks协议，需要用http协议做转发，则可以用下面的端口
+    {
+      "tag": "http-in",
+      "protocol": "http",
+      "listen": "127.0.0.1", // 这个是通过http协议做本地转发的地址
+      "port": 10801 // 这个是通过http协议做本地转发的端口
+    }
+  ]
+}
