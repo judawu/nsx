@@ -2277,7 +2277,7 @@ EOF
     # Install Xray and Sing-box
     echoContent skyblue "\n 安装xray..."
    
-    version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=5" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
+    version=$(curl -s "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=10" | jq -r ".[]|select (.prerelease==false)|.tag_name" | head -1)
     echoContent green " Xray-core版本:${version}"
     echoContent green "\n 安装目录/usr/local/nsx/xray/，下载中..."
 
