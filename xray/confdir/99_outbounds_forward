@@ -1,0 +1,66 @@
+  {
+  "outbounds": [
+  
+    {
+      "tag": "vps1",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "107.174.131.113",
+            "port": 10836,
+            "method": "2022-blake3-aes-128-gcm",
+            "password": "QvofbfMIil7768oFAyTpyA=="
+          }
+        ]
+      },
+      "streamSettings": {
+        "sockopt": {
+          "tcpMptcp": true,
+          "tcpNoDelay": true
+        }
+      }
+    },
+   
+    {
+      "tag": "vps2",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "104.219.214.2",
+            "port": 10836,
+            "method": "2022-blake3-aes-128-gcm",
+            "password": "QvofbfMIil7768oFAyTpyA=="
+          }
+        ]
+      },
+      "streamSettings": {
+        "sockopt": {
+          "tcpMptcp": true,
+          "tcpNoDelay": true
+        }
+      }
+    },
+    {
+      "tag": "vps3",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "107.148.54.116",
+            "port": 10836,
+            "method": "2022-blake3-aes-128-gcm",
+            "password": "QvofbfMIil7768oFAyTpyA=="
+          }
+        ]
+      },
+      "streamSettings": {
+        "sockopt": {
+          "tcpMptcp": true,
+          "tcpNoDelay": true
+        }
+      }
+    }
+  ]
+}
