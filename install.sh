@@ -1863,7 +1863,7 @@ updateConfig() {
             exit 1
         fi
         rm -rf "$XRAY_DIR/confdir"
-        if ! cp "$TEMP_DIR/xray/confdir" "$XRAY_DIR"; then
+        if ! cp -r "$TEMP_DIR/xray/confdir" "$XRAY_DIR/"; then
             echoContent red "无法复制 xray/confdir 到 $XRAY_DIR."
             exit 1
         fi
