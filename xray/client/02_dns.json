@@ -63,19 +63,7 @@
       "localhost"
     ]
   },
-   "routing": {
-  
-    "rules": [
-    
-      // dns分流
-      {
-      "inboundTag": [
-            "dns-in"
-                ],
-      "outboundTag": "dns-out"
-            },
-    ]
-  },
+
  "inbounds": [
   //dns入站
     {     
