@@ -32,15 +32,5 @@
     "disableFallback": false,
     "disableFallbackIfMatch": false,
     "useSystemHosts": false
-  },
-  "fakedns": [
-    {
-      "ipPool": "198.18.0.0/15",
-      "poolSize": 65535
-    },
-    {
-      "ipPool": "fc00::/18",
-      "poolSize": 65535
-    }
-  ]
+  }
 }
