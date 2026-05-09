@@ -86,6 +86,79 @@
         "type": "field",
         "ip": ["223.5.5.5","114.114.114.114"],
         "outboundTag": "direct"
+      },
+
+   //出站分流1
+      {
+        "type": "field",
+        "domain": ["www.linkedin.com"],      
+        "outboundTag": "proxy_xhttp_reality"
+      },
+      //出站分流2
+       {
+        "type": "field",
+        "domain": [
+        "domain:office.com",
+        "domain:office.net",
+        "domain:office365.com",
+        "domain:vscode-cdn.net",
+        "domain:live.com",
+        "domain:sharepointonline.com",
+        "domain:microsoftonline.com",
+        "domain:static.microsoft",
+        "domain:microsoft.com",
+        "outlook.com"
+      ],      
+        "outboundTag": "direct"
+      },
+      //出站分流3
+      {
+                "ip": [
+                    "1.1.1.1"
+                ],
+                "outboundTag": "proxy_xhttp_reality"
+            },
+      ////出站分流4 国内域名直连
+      {
+        "type": "field",
+        "domain": ["geosite:cn"],
+        "outboundTag": "direct"
+      },
+      //出站分流5 国内IP直连
+      {
+        "type": "field",
+        "ip": ["geoip:cn", "geoip:private"],
+        "outboundTag": "direct"
+      },
+      //出站分流6 国外域名代理
+      {
+        "type": "field",
+        "domain": ["geosite:geolocation-!cn"],
+      //选择出站代理
+        "outboundTag": "proxy_xhttp_reality"
+     
+     //  从singbox 选择
+     //  "outboundTag": "proxy_trojan_singbox"
+     //  "outboundTag": "proxy_shadowsocks_singbox"
+     //  "outboundTag": "proxy_vless_reality_singbox"
+     //   "outboundTag": "proxy_vless_reality_grpc_singbox"
+     //   "outboundTag": "proxy_vless_tcp_singbox"
+     //  从xray选择
+     // "outboundTag": "proxy_vless_reality"
+     //  "outboundTag": "proxy_xhttp_trojan"
+
+
+        //下面要启用不安全证书，不然会连不上, 重新上传正确的域名证书就可以了
+       //  "outboundTag": "proxy_vless_tls_tcp"
+       //  "outboundTag": "proxy_trojan_tls_tcp"      
+       //   "outboundTag": "proxy_vless_splithttp"
+       //  "outboundTag": "proxy_vless_ws"
+        // "outboundTag": "proxy_vless_httpupgrade"
+       // "outboundTag": "proxy_grpc_vless_tcp"
+       //"outboundTag": "proxy_udp_shadowsocks"
+
+ 
+      //   "outboundTag": "proxy_udp_vless_mkcp"
       }
     ]
   }
