@@ -694,7 +694,7 @@ xray_config() {
                 exit 1
             }
             private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
-            public_key=$(echo "$key_pair" | grep "Password (PublicKey)" | awk '{print $2}')
+            public_key=$(echo "$key_pair" | grep "Password" | awk '{print $3}')
             new_short_ids=$(generate_short_ids)
             echoContent yellow "\n生成新 privateKey: $private_key"
             echoContent yellow "\n生成新 publicKey: $public_key"
