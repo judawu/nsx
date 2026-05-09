@@ -1868,8 +1868,8 @@ updateConfig() {
             exit 1
         fi
          # Generate final xray config
-        echoContent green "通过xray生成自签证证书/usr/local/nsx/certs/tls.yourdomain.pem来生成config.json"
-        xray tls gen -host tls.yourdomain -out /usr/local/nsx/certs/tls.yourdomain.pem -key /usr/local/nsx/certs/tls.yourdomain.key
+        # echoContent green "通过xray生成自签证证书/usr/local/nsx/certs/tls.yourdomain.pem来生成config.json"
+        # xray tls gen -host tls.yourdomain -out /usr/local/nsx/certs/tls.yourdomain.pem -key /usr/local/nsx/certs/tls.yourdomain.key
         if ! xray run -confdir="$XRAY_DIR/confdir" -dump > "$XRAY_CONF"; then
             echoContent red "生成 Xray 配置失败"
            
