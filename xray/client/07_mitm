@@ -1,33 +1,6 @@
 {
 // copy from https://github.com/XTLS/Xray-examples/blob/main/MITM-Domain-Fronting/config.jsonc
-    "routing": {
-        "domainStrategy": "AsIs",
-        "rules": [
-            {
-                "inboundTag": [
-                    "tls-decrypt"
-                ],
-                // tls-repark 中定义了一些参数(比如IP和SNI), 不同的网站可能需要不同的参数
-                // 要支持更多的网站，可以新建更多的此类 freedom 出站，然后在这里把不同的明文请求按需求路由到不同的出站重新打包回 HTTPS
-                // 这里的域名来源就是 tls-decrypt 入站的 followRedirect, 所以一个本地端口就可以接受任何网站的请求并在核心中这样区分开
-                "domain": [
-                    "e-hentai.org"
-                ],
-                "outboundTag": "tls-repack"
-            },
-            {
-                "inboundTag": [
-                    "socks-in"
-                ],
-                // 你要 mitm 的网址
-                "domain": [
-                    "e-hentai.org"
-                ],
-                "outboundTag": "redirect-out"
-            }
-          
-        ]
-    },
+
     "inbounds": [
         // 请求在该入站中被解密
         {
