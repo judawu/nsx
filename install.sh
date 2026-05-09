@@ -531,11 +531,7 @@ xray_config() {
         exit 1
     }
 
-     echoContent green "删除所有 streamSettings 中的 port,这是由于xray run -confdir不当合并导入的"
-    jq 'walk(if type == "object" then .streamSettings? |= del(.port) else . end)' "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
-            echoContent red "错误: 无法更新"
-            exit 1
-        }
+   
     # Update inbounds configuration
 
      read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
@@ -1873,13 +1869,18 @@ updateConfig() {
             echoContent red "无法复制 xray/confdir 到 $XRAY_DIR."
             exit 1
         fi
-         # Generate final xray config
+        # Generate final xray config
         # echoContent green "通过xray生成自签证证书/usr/local/nsx/certs/tls.yourdomain.pem来生成config.json"
         # xray tls gen -host tls.yourdomain -out /usr/local/nsx/certs/tls.yourdomain.pem -key /usr/local/nsx/certs/tls.yourdomain.key
         if ! xray run -confdir="$XRAY_DIR/confdir" -dump > "$XRAY_CONF"; then
             echoContent red "生成 Xray 配置失败"
            
         fi
+         echoContent green "删除所有 streamSettings 中的 port,这是由于xray run -confdir不当合并导入的"
+         jq 'walk(if type == "object" then .streamSettings? |= del(.port) else . end)' "$XRAY_CONF" > "$XRAY_CONF".tmp" && mv "$XRAY_CONF".tmp" "$TEMP_FILE" || {
+            echoContent red "错误: 无法更新$XRAY_CONF"
+            exit 1
+        }
         if ! cp "$TEMP_DIR/sing-box/config.json" "$SINGBOX_CONF"; then
             echoContent red "无法复制 sing-box/config.json 到 $SINGBOX_CONF."
             exit 1
