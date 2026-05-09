@@ -1864,6 +1864,7 @@ updateConfig() {
             echoContent red "无法复制 nginx.conf 到 $NGINX_CONF."
             exit 1
         fi
+        echoContent green "删除/usr/local/nsx/xray下面的confdir用网站里的替换，之后用 xray run -confdir 合并$XRAY_CONF"
         rm -rf "$XRAY_DIR/confdir"
         if ! cp -r "$TEMP_DIR/xray/confdir" "$XRAY_DIR/"; then
             echoContent red "无法复制 xray/confdir 到 $XRAY_DIR."
