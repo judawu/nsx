@@ -1876,11 +1876,16 @@ updateConfig() {
             echoContent red "生成 Xray 配置失败"
            
         fi
-         echoContent green "删除所有 streamSettings 中的 port,这是由于xray run -confdir不当合并导入的"
-         jq 'walk(if type == "object" then .streamSettings? |= del(.port) else . end)' "$XRAY_CONF" > "$XRAY_CONF".tmp" && mv "$XRAY_CONF".tmp" "$XRAY_CONF" || {
-            echoContent red "错误: 无法更新$XRAY_CONF"
+        echoContent green "删除所有 streamSettings 中的 port，这是由于 xray run -confdir 不当合并导入的"
+
+        # 使用 jq 删除所有 streamSettings 下的 port
+        TMP_CONF="${XRAY_CONF}.tmp"
+        if jq 'walk(if type == "object" then .streamSettings? |= del(.port) else . end)' "$XRAY_CONF" > "$TMP_CONF"; then
+            mv "$TMP_CONF" "$XRAY_CONF"
+        else
+            echoContent red "错误: 无法更新 $XRAY_CONF"
             exit 1
-        }
+        fi
         if ! cp "$TEMP_DIR/sing-box/config.json" "$SINGBOX_CONF"; then
             echoContent red "无法复制 sing-box/config.json 到 $SINGBOX_CONF."
             exit 1
