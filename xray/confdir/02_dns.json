@@ -3,10 +3,6 @@
     "tag": "dns_inbound",
     "hosts": {
       "geosite:category-ads-all": "127.0.0.1",
-      "dns.google": [
-        "8.8.8.8",
-        "8.8.4.4"
-      ]
     },
     "servers": [
       "quic+local://dns.adguard.com",
