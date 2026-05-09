@@ -87,8 +87,28 @@
         }
       }
     },
-    {
+     {
       "tag": "vps3",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "107.149.143.173",
+            "port": 10836,
+            "method": "2022-blake3-aes-128-gcm",
+            "password": "QvofbfMIil7768oFAyTpyA=="
+          }
+        ]
+      },
+      "streamSettings": {
+        "sockopt": {
+          "tcpMptcp": true,
+          "tcpNoDelay": true
+        }
+      }
+    },
+    {
+      "tag": "vps4",
       "protocol": "shadowsocks",
       "settings": {
         "servers": [
