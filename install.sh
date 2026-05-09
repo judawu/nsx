@@ -530,6 +530,12 @@ xray_config() {
         echoContent red "错误: 无法创建临时文件 $TEMP_FILE"
         exit 1
     }
+
+     echoContent green "删除所有 streamSettings 中的 port,这是由于xray run -confdir不当合并导入的"
+    jq 'walk(if type == "object" then .streamSettings? |= del(.port) else . end)' "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+            echoContent red "错误: 无法更新"
+            exit 1
+        }
     # Update inbounds configuration
 
      read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
