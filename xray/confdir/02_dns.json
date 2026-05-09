@@ -2,7 +2,7 @@
 "dns": {
     "tag": "dns_inbound",
     "hosts": {
-      "geosite:category-ads-all": "127.0.0.1",
+      "geosite:category-ads-all": "127.0.0.1"
     },
     "servers": [
       "quic+local://dns.adguard.com",
