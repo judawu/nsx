@@ -183,7 +183,27 @@
 
  
       //   "outboundTag": "proxy_udp_vless_mkcp"
-      }
+      },
+   //隧道路由（端口转发）
+    {
+      "inboundTag": "tunnel-src",
+      "outboundTag": "tunnel-dist-xray-xhttp-reality-1"
+    },
+    //http代理出站路由
+    {
+       "inboundTag": "http-in",
+      "outboundTag": "tunnel-dist-xray-xhttp-reality-2"
+    },
+    //反向代理1
+    {
+               "inboundTag": "reverse-in-vless-simple",
+                "outboundTag": "reverse-out-redirect"
+    },
+    //反向代理2
+             {
+                "inboundTag": "reverse-in-vless-complex",
+                "outboundTag": "reverse-out-redirect"
+            }
     ]
   }
 }
