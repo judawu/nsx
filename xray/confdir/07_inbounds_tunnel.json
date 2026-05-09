@@ -1,23 +1,6 @@
 
 {
-"routing": {
-   "rules": [
-      {
-        "user": [
-              "reverse@vless.simple"
-        ],
-        "outboundTag": "simple-reverse-out"
-      },
-      {
-        "inboundTag": [
-          "simple-tunnel-in"
-        ],
-        "outboundTag": "simple-reverse-out"
-      }
-    
-    ]
-  }
-},
+
 
 "inbounds": [
   
