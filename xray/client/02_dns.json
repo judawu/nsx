@@ -86,15 +86,15 @@
 
 
  "inbounds": [
-  //dns入站
+  //dns入站rewrite
     {     
-      "tag": "dns-in",
+      "tag": "dns-rewrite",
       "listen": "127.0.0.1",
       "port": 10853,
       "protocol": "dokodemo-door",
       "settings": {
-          "address": "223.5.5.5",
-          "port": 53,
+          "rewriteaddress": "223.5.5.5",
+          "rewriteport": 53,
           "network": "udp"
             } 
     } 
