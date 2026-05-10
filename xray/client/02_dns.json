@@ -12,7 +12,7 @@
     "disableFallbackIfMatch": false,
     "enableParallelQuery": false,
     "useSystemHosts": false,
-    "clientIP": "1.2.3.4"
+    "clientIP": "1.2.3.4",
    
     "servers": [
           // adblock
