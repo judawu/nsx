@@ -1,9 +1,7 @@
 {
 // DNS设置
   "dns": {
-      "hosts": {
-            "geosite:category-ads-all": "127.0.0.1"
-        },
+    
     "servers": [
       // 国外域名使用国外DNS查询
       {
@@ -36,6 +34,13 @@
         "address": "223.5.5.5",
         "domains": ["geosite:cn"],
         "expectIPs": ["geoip:cn"]
+      },
+
+        // adblock
+      {
+        "address": "127.0.0.1",
+        "domains": ["geosite:category-ads-all"],
+        "expectIPs": ["geosite:category-ads-all"]
       },
       //对国内网站进行二次查询
       {
