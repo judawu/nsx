@@ -12,11 +12,10 @@
     "disableFallbackIfMatch": false,
     "enableParallelQuery": false,
     "useSystemHosts": false,
- 
-      "hosts": [
-      "baidu.com": "127.0.0.1",
-      "dns.google": ["8.8.8.8", "8.8.4.4"]
-      ],
+    "hosts": [
+      {"baidu.com": "127.0.0.1"},
+      {"dns.google": ["8.8.8.8", "8.8.4.4"]}
+    ],
     "servers": [
           // adblock
       {
