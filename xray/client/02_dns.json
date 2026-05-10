@@ -1,6 +1,9 @@
 {
 // DNS设置
  
+  
+  "dns": {
+    "tag": "dns_inbound",
     "queryStrategy": "UseIP",
     "disableCache": false,
     "serveStale": false,
@@ -9,8 +12,7 @@
     "disableFallbackIfMatch": false,
     "enableParallelQuery": false,
     "useSystemHosts": false,
-    "tag": "dns_inbound"
-  "dns": {
+ 
       "hosts": {
       "baidu.com": "127.0.0.1",
       "dns.google": ["8.8.8.8", "8.8.4.4"]
