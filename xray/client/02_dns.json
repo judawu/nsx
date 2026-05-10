@@ -15,9 +15,9 @@
   
    
     "servers": [
-          // adblock
+       // adblock
       {
-        "address": "127.0.0.1",
+        "address": "fakedns",
         "domains": ["geosite:category-ads-all"],
         "expectIPs": ["geosite:category-ads-all"]
     
@@ -97,6 +97,18 @@
           "rewriteport": 53,
           "network": "udp"
             } 
+    },
+
+   {     
+      "tag": "dns-in",
+      "listen": "127.0.0.1",
+      "port": 5353,
+      "protocol": "dokodemo-door",
+       "sniffing": {
+        "enabled": true,
+        "destOverride": ["fakedns"], // 使用 "fakedns"，或与其它 sniffer 搭配使用
+        "metadataOnly": false // 此项为 true 时 destOverride 仅可使用 fakedns
+      }
     } 
  ],
 
