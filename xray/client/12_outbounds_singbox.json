@@ -1,3 +1,4 @@
+{
   "outbounds": [
  {
       "tag": "proxy_udp_shadowsocks",
