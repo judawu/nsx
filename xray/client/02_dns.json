@@ -1,10 +1,9 @@
-{
-  // DNS设置
+/ DNS设置
   "dns": {
       "hosts": {
             "geosite:category-ads-all": "127.0.0.1"
         },
-     "servers": [
+    "servers": [
       // 国外域名使用国外DNS查询
       {
         "address": "tcp+local://94.140.14.49:53",
@@ -17,7 +16,7 @@
       "expectedIPs": ["geoip:us"],
       "skipFallback": false
      },
-     {
+    {
         "address": "https+local://dns.google/dns-query",
         "domains": [
           "geosite:netflix",
@@ -25,7 +24,13 @@
         "skipFallback": true,
         "queryStrategy": "UseIPv4"
       },
-  
+      // {
+      //   "address": "https://1.1.1.1/dns-query",
+      //   "domains": ["geosite:openai"],
+      //   "skipFallback": true,
+      //   "queryStrategy": "UseIPv6"
+      // },
+      // 国内域名使用国内DNS查询，并期待返回国内的IP，若不是国内IP则舍弃，用下一个查询
       {
         "address": "223.5.5.5",
         "domains": ["geosite:cn"],
@@ -52,10 +57,12 @@
       "tcp://1.1.1.1:53",
       "8.8.8.8",
       "8.8.4.4",
+  
       // 最后的备份，上面全部失败时，用本机DNS查询
       "localhost"
     ]
   },
+
 
  "inbounds": {
   //dns入站
