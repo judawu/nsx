@@ -168,44 +168,7 @@
                 }
             }
             
-        },
-  //infra/conf: failed to build outbound config with tag proxy_udp_vless_quic > infra/conf: failed to build stream settings for outbound detour > common/errors: The feature QUIC transport (without web service, etc.) has been removed and migrated to XHTTP stream-one H3. Please update your config(s) according to release note and documentation.
-  // {
-  //   "tag": "proxy_udp_vless_quic",
-  //   "protocol": "vless",
-  //     "settings": {
-  //       "vnext": [
-  //         {
-  //           "address": "YOUR_REMOTE_VPS_DOMAIN", // 服务器IP或域名
-  //           "port": 443, // 与服务器端口一致
-  //           "users": [
-  //             {
-  //               "id": "f24b353-8a10-43a4-95fe-644c0759225d", // 与服务器UUID一致
-  //               "flow": "xtls-rprx-vision-udp443",
-  //               "encryption": "none",
-  //                 "level": 0
-  //             }
-  //           ]
-  //         }
-  //       ]
-  //     },
-  //     "streamSettings": {
-  //       "network": "quic",
-  //       "security": "tls",
-  //       "tlsSettings": {
-  //         "allowInsecure": false, // 若使用自签名证书，设为true（仅测试用）
-  //         "serverName": "YOUR_REMOTE_VPS_DOMAIN" // 服务器域名，若无域名可留空
-  //       },
-  //       "quicSettings": {
-  //         "security": "none", // 与服务器一致
-  //      //   "key": "", // 与服务器一致
-  //         "header": {
-  //           "type": "none" // 与服务器一致
-  //            //    "type": "wechat-video" 
-  //         }
-  //       }
-  //     }
-     
-  //   }
+        }
+ 
   ]
   }
