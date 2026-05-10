@@ -56,3 +56,6 @@ mv "$TMP_CONF" "$XRAY_CONF" || {
             exit 1
 }
         
+echo "h合并的文件位于/media/pi/usb/xray/config.json，建议进入/media/pi/usb/xray/confdir手动修改所有outbounds的配置"
+
+echo "然后执行xray run -confdir"
