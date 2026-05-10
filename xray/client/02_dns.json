@@ -65,7 +65,7 @@
   },
 
 
- "inbounds": {
+ "inbounds": [
   //dns入站
     {     
       "tag": "dns-in",
@@ -78,9 +78,9 @@
           "network": "udp"
             } 
     } 
-},
+ ],
 
-  "outbounds": {
+  "outbounds": [
     //dns出站
     {
       "tag": "dns-out",  
@@ -93,5 +93,5 @@
                }
       } 
     }
-}
+  ]
 }
