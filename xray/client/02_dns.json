@@ -1,4 +1,5 @@
-/ DNS设置
+{
+// DNS设置
   "dns": {
       "hosts": {
             "geosite:category-ads-all": "127.0.0.1"
