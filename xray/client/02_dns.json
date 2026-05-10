@@ -76,6 +76,7 @@
           "port": 53,
           "network": "udp"
             } 
+        } 
   ],
 
   "outbounds": [
