@@ -12,7 +12,7 @@
     "disableFallbackIfMatch": false,
     "enableParallelQuery": false,
     "useSystemHosts": false,
-    "hosts": {
+    "Hosts": {
       "baidu.com": "127.0.0.1",
       "dns.google": "8.8.8.8"
     },
