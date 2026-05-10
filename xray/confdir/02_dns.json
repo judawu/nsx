@@ -4,7 +4,7 @@
 
     "servers": [
       {
-        "address": "127.0.0.1",
+        "address":  "fakedns", // fakedns 排在首位,
         "domains": ["geosite:category-ads-all"],
         "expectIPs": ["geosite:category-ads-all"]
       },
