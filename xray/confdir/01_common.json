@@ -1,9 +1,11 @@
 {
 
   "log": {
-    "loglevel": "error",
+    "access": "/usr/local/nsx/log/xray_access.log",
     "error": "/usr/local/nsx/log/xray_error.log",
-    "access": "/usr/local/nsx/log/xray_access.log"
+    "dnsLog": false,
+    "loglevel": "debug",
+    "maskAddress": "quarter" 
   },
 
  "stats": {},
