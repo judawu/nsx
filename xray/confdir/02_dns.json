@@ -25,6 +25,12 @@
         ],
         "skipFallback": false
       },
+    
+      {
+        "address": "127.0.0.1",
+        "domains": ["geosite:category-ads-all"],
+        "expectIPs": ["geosite:category-ads-all"]
+      },
       "localhost"
     ],
     "queryStrategy": "UseIP",
