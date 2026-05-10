@@ -4,7 +4,7 @@
 
     "servers": [
       {
-        "address":  "fakedns", 
+        "address":  "127.0.0.1", 
         "domains": ["geosite:category-ads-all"],
         "expectIPs": ["geosite:category-ads-all"]
       },
