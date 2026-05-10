@@ -79,8 +79,7 @@
     } 
   ],
 
-  "outbounds": [
-
+  "outbounds": {
     //dns出站
     {
       "tag": "dns-out",  
@@ -93,8 +92,5 @@
       }
            
     }
-
-
-
-  ]
+}
 }
