@@ -11,18 +11,7 @@
       "RoutingService"
     ]
   },
- "routing": { 
-    "rules": [
-    //api出站回流
-  {
-        "inboundTag": [
-          "api-in"
-        ],
-        "outboundTag": "api",
-        "type": "field"
-      },
-    ]
-},
+
 "inbounds": [
    //  api的入站,通过端口转发查询本地xray api的接口，例如可以用./xray api lsi -s 127.0.0.1:10802查询xray api的入站列表
     // 也可以通过端口转发查询服务器的API
