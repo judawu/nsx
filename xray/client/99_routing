@@ -13,6 +13,15 @@
                 ],
       "outboundTag": "dns-out"
             },
+
+         //api出站回流
+      {
+        "inboundTag": [
+          "api-in"
+        ],
+        "outboundTag": "api",
+        "type": "field"
+      },
       //mitm
        {
                 "inboundTag": [
