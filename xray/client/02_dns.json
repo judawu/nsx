@@ -12,14 +12,15 @@
     "disableFallbackIfMatch": false,
     "enableParallelQuery": false,
     "useSystemHosts": false,
- 
+    "clientIP": "1.2.3.4"
    
     "servers": [
           // adblock
       {
         "address": "127.0.0.1",
         "domains": ["geosite:category-ads-all"],
-        "expectIPs": ["geosite:category-ads-all"]
+        "expectIPs": ["geosite:category-ads-all"],
+        "clientIP": "1.2.3.4"
       },
       // 国外域名使用国外DNS查询
       {
