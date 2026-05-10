@@ -90,8 +90,8 @@
             },
       "proxySettings": {
           "tag": "direct" // 当 "nonIPQuery" 设置为 "skip" 时，若不写此字段，将使用本地网络出站；若设置此字段，将使用对应 "tag" 出站，目的地址对应 "dns-in" 中的 "settings" 字段的内容
-               }
+                        }
       } 
-    }
+    
   ]
 }
