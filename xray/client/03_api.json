@@ -21,8 +21,8 @@
       "port": 10802,
       "protocol": "dokodemo-door",
       "settings": {
-        "address": "127.0.0.1",
-        "port": 10810 //,
+        "rewriteAddress": "127.0.0.1",
+        "rewritePort": 10810 //,
         // "portMap": {
         //             "10802": ":10810"
         //           }
