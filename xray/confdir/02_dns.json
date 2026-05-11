@@ -5,8 +5,8 @@
     "servers": [
       {
         "address":  "127.0.0.1", 
-        "domains": ["geosite:category-ads-all"],
-        "expectIPs": ["geosite:category-ads-all"]
+        "domains": ["geosite:category-ads-all"]
+    
       },
       "quic+local://dns.adguard.com",
       "tcp+local://94.140.14.49:53",
