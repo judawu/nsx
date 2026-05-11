@@ -107,7 +107,7 @@
       },
       {
         "inboundTag": [
-          "simple-tunnel-in"
+          "simple-reverse-in"
         ],
         "outboundTag": "simple-reverse-out"
       }
