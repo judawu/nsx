@@ -101,7 +101,7 @@
       },
       {
         "user": [
-              "reverse@vless.simple"
+              "simple-reverse-in@vless"
         ],
         "outboundTag": "simple-reverse-out"
       },
