@@ -1,42 +1,5 @@
 {
 
-
-  // 4_入站设置
-  "inbounds": [
-
-  //端口转发
-   //隧道功能入站https://github.com/XTLS/Xray-core/pull/4968
-   //通过配置即可简单地把客户端的 IPv4/TCP/10830-10850 端口通过 VLESS 协议转发到服务端相应的 IPv4/TCP/10830-10850 端口
-  //以设置 tunnel 入站 settings 的 address/port 或 direct 出站的 redirect 以强制覆写目标地址或端口，或都覆写
-  //由 tunnel 入站 10848 端口接收的流量会通过 VLESS 协议转发到 1.1.1.1:53，优先级高于原有的 address/port
-   {
-            "tag": "tunnel-src",
-            "listen": "0.0.0.0",
-          
-            "port": "10830-10850,10851",
-            "protocol": "tunnel", //与dokodemo-door互为别名
-            "settings": {
-                "network": "TCP", // default: TCP
-              //  "address": "remote 127.0.0.1", // default: remote 127.0.0.1
-               // "port": 0, // default: equals to local listening port
-                "portMap": {
-                    "10848": "1.1.1.1:53",  //转发端口到dns服务器
-
-                    "10850": ":443", // overrides port only
-                    "10851": "YOUR_REMOTE_VPS_IP:443", // overrides address and port
-                    "10845": "YOUR_REMOTE_VPS_IP:10849",// 这个指向了远程的一份web服务器
-                    "10846": ":10849" ,// overrides port only
-                    "10847": "YOUR_REMOTE_VPS_IP:80",// overrides address and port
-                    "10844": ":8888", // 指向服务器xray 的api接口
-                    "10843": ":3443" // 指向一个下行端口，完成骚操作
-                    
-                }
-            }
-        }
-  
-  ],
-
-  // 出站设置
   "outbounds": [
 
     //服务器2列表
