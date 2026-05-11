@@ -81,10 +81,7 @@
       // 最后的备份，上面全部失败时，用本机DNS查询
       "localhost"
     ]
-  }
-
-
-  ],
+  },
  "inbounds": [
   //dns入站rewrite
     {     
