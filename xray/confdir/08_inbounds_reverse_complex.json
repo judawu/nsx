@@ -1,7 +1,15 @@
 {
  
 	
-"inbounds": [     
+"inbounds": [  
+
+	{
+      "tag": "cmplex-reverse-in",
+      "listen": "0.0.0.0",
+      "port": 10832,
+      "protocol": "tunnel"
+      
+    },
     {
       "tag": "VLESS-ENCRYPTION-REALITY-MIDSA65",
       "listen": "0.0.0.0",
