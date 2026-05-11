@@ -1,0 +1,298 @@
+{
+
+  "outbounds": [
+
+    //服务器2列表
+    //xhttp上下行分离，p2.juda.dpdns.org 通过reality上行，x1.juda.autos通过tls进入nginx反代下行
+    //xhttp 不能有flow设置
+    {
+      "tag": "tunnel-dist-xray-xhttp-reality-1",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "YOUR_REMOTE_VPS_IP", // 替换成你的真实域名
+            "port": 10834,
+            "users": [
+              {
+                "id": "685973bb-697f-42fb-8a59-7061fc6b1e74",             
+                "encryption": "none",
+                "email": "vps@v3",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+       "streamSettings": {
+                 "network": "xhttp",
+                  "xhttpSettings": {
+                  "headers": {
+                        "Pragma": "no-cache",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
+                      },
+                    "host": "",
+                    "path": "/reality/xhttp",
+                    "mode": "auto",
+                    "xPaddingBytes": "100-1000",
+                    "noGRPCHeader": false, 
+                    "scMaxEachPostBytes": 1000000, // packet-up only
+                    "scMinPostsIntervalMs": 30, // packet-up, client only   
+                    "xmux": { // h2/h3 mainly, client only
+                          "maxConcurrency": "16-32",
+                          "maxConnections": 0,
+                          "cMaxReuseTimes": 0,
+                          "hMaxRequestTimes": "600-900",
+                          "hMaxReusableSecs": "1800-3000",
+                          "hKeepAlivePeriod": 0
+                      },
+                      "downloadSettings": { // client only
+                      "address": "your.ip", 
+                      "port": 443,
+                      "network": "xhttp",
+                       "xhttpSettings": {
+                        "host": "",
+                        "path": "/reality/xhttp",
+                        "mode": "auto"
+                      },
+                      "security": "tls",
+                      "tlsSettings": {
+                        "serverName": "YOUR_REMOTE_VPS_DOMAIN" , 
+                        "alpn": [
+                   //       "h3",
+                          "h2",
+                          "http/1.1"
+                          
+                        ],
+                        "fingerprint": "chrome",
+                        "allowInsecure": false // 禁止不安全证书,这需要为true，不然浏览器不认
+                      }
+              
+       
+                       }
+                            
+                  },
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                    "fingerprint": "chrome", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN", // 服务端 serverNames 之一
+                    "publicKey": "bWu6XAin-U14B6AqrzFCmMEakt_1DkMTVeLYIDpAhDI", // 服务端私钥对应的公钥
+                    "shortId": "101bab73", // 服务端 shortIds 之一
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+            }
+    },
+
+   //xhttp上下行分离，通过x1.juda.autos 3443 端口 eality上行，x1.juda.autos通过p2.juda.dpdns.org eality下行
+   {
+    "tag": "tunnel-dist-xray-xhttp-reality-2",
+    "protocol": "vless",
+			"settings": {
+				"address": "YOUR_REMOTE_VPS_IP",
+				"port": 10834,
+				"encryption": "none",
+				"id": "9e7512bf-b16b-4298-a2ce-aadd3e3c567c"
+         
+			
+			},
+      "streamSettings": {
+                 "network": "xhttp",
+                  "xhttpSettings": {
+                  "headers": {
+                        "Pragma": "no-cache",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
+                      },
+                    "host": "",
+                    "path": "/reality/xhttp",
+                    "mode": "auto",
+                    "xPaddingBytes": "100-1000",
+                    "noGRPCHeader": false, // stream-up/one, client only
+                //  "noSSEHeader": false, // server only
+                    "scMaxEachPostBytes": 1000000, // packet-up only
+                    "scMinPostsIntervalMs": 30, // packet-up, client only
+                   // "scMaxBufferedPosts": 30, // packet-up, server only
+                    //"scStreamUpServerSecs": "20-80", // stream-up, server only
+                    "xmux": { // h2/h3 mainly, client only
+                          "maxConcurrency": "16-32",
+                          "maxConnections": 0,
+                          "cMaxReuseTimes": 0,
+                          "hMaxRequestTimes": "600-900",
+                          "hMaxReusableSecs": "1800-3000",
+                          "hKeepAlivePeriod": 0
+                      },
+                      "downloadSettings": { // client only
+                      "address": "137.175.127.130", 
+                      "port": 443,
+                      "network": "xhttp",
+                       "xhttpSettings": {
+                        "host": "",
+                        "path": "/reality/xhttp",
+                        "mode": "auto"
+                      },
+                     "security": "reality",
+                    "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                   // "fingerprint": "randomizednoalpn", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                     "fingerprint": "chrome",
+                    "serverName": "YOUR_REMOTE_VPS_DIMAIN", // 服务端 serverNames 之一
+                    "publicKey": "Ga-7SNvxYJNcCvcuLbHwiOJNrQCBBMGgiSXRR_jTWHc", // 服务端私钥对应的公钥
+                    "shortId": "7cd361b0", // 服务端 shortIds 之一
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+       
+                       }
+                            
+                  },
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                   // "fingerprint": "randomizednoalpn", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                      "fingerprint": "chrome",
+                    "serverName": "www.OPENAI.com", // 服务端 serverNames 之一
+                    "publicKey": "bWu6XAin-U14B6AqrzFCmMEakt_1DkMTVeLYIDpAhDI", // 服务端私钥对应的公钥
+                    "shortId": "101bab73", // 服务端 shortIds 之一
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+            }
+    
+		},
+   //xhttp上下行分离，通过x1.juda.autos 3443 端口 eality上行，x1.juda.autos通过p2.juda.dpdns.org tls下行
+    {
+		"tag": "tunnel-dist-xray-xhttp-reality-3",
+    "protocol": "vless",
+			"settings": {
+				"address": "YOUR_REMOTE_VPS_IP",
+				"port": 10833,
+				"encryption": "mlkem768x25519plus.native.0rtt.pKkRjyqmzwCjoloChNRBk1UR7nNOFNsNrxcJZwJ9EkS8sDPM7qhsgFV9DfugRGpvG4IpNqQFoKVeGJap2nhvTCVR6GQZ0HxSS2e8F2RWNmZdPXcKcAt8yGN9TlaUsHY4xrl8tvsWaaMtfGmQ40pBqRqx9gcSrHqwJgWVvReIt-KPqhRnUhlYbHIzUpqn-XnOivUdDdAmpXybBSrL-7KTT2XCuHE-fEKoETMb6QqZBhONVYJ2gaxCP0UMX8gMb9XCN7lC4qs7JvINg8R2TLhC8GUzK6F6KJFsKIcou9uwUAByMrzL3tTP4jq1OTNExDfAFhlzJmY4-HMHJGOxzsJaUTmV3xYIfjF7C_MGheeh0hKJE1FOcjsjbddw8LoZOTFPootPRmjOoPcse9IeLEpa7QRk29NOF0oYr1mP-TbPUxu4bvo0XrqtrXZzo0QmcDyzkBM-MCRDuAoUw3Fjd0excRCaV5WIiQMSmEu8FARTQZemcmuvNQyd_wxldORUq3xDlEPJQ6BnTiU55kE5JXPGRFlCKhwOlOS3zjauQTQWxTN4nwsfpZulwFVlAvWs0jVsTuIVh6LJqgAEu2qEmsx-b3YvHoLPqEQLwgwRzKSo5OEJM9QC1aoJtmi_m_RwWHRGg_MXMhSFl3ov9eVRvNhK1nJTbSAus9MJcErMwikqt_pAW-WJpQG-7rNGlFcImyOLv0wHxRNBH0LFBXlkOFAvoKWqzzmb1_rJPWY0fqohNkXDp4sjV8eU1-h2_VGg-LfJV0ComopN4WiPRZgAR1tW-QYiXXwua0WOyQbQiwRYfWxNcZQQB7yMTDSJxbUui7e_uzJPawAhibVv8mCysietWQApYbCiCvvCcVsa2nSnh8KB3NJwTzQl52yE0OiHHrsvueF_EJK4duEe8lV90dwi-nSyvCkFxwaknctJnAcn9SuXNciMdThVJJA8TIjBTQJbkZWkBTFbSFzMpCd68CpOvstcy2LFijksoJUWpUJ2yHgzSvprm7d2kgaboWFITBoYfujFLZRjXQV982yBWERopwQQVNWvdKfK2ke_rnR8rQcHMLB9Yoan9JMWcHPGvqOpHIWmUno7rdRjBde18ucgrKTE6dq1QbulL5YXZOxmdqhcQXAUF1htydJtt_RAY8S9roB4ppkVnksN3GpvExxSgvSv7PpfnGU2Q9WKGNynLWeSReGV1DedrOO9sygD6nKHWMBRjcw8QmFTwICzNKa_F-yvAhis-oVh4BZ6h3hXo8CL3MZqtsUOcWYBXtFrtcBrzAjB3HQdBEZikaQhlWc1c8OrStK7neY0YSCNGNgPM5emqCJz-IcJadIX7WIKvdKszkKn8hMKR8sEWFQoxBa22FQ96vljedYmxOqA89IlSmG0sRwb3vQcpfugXUhutchE3aSzFVlcfMQSGNmDtbkWNoYD6EgDvyYM5YIu1rGGxTeO5Mmn-XFnwQE9mylqRcFMAxqfHDgVjiSEPecASmw-2yhv-BF6pKonmFCTf8HPWGKtMYZ2eOp2_6qYsZwTk8h1MAXR5pdq8xUpwUAB7RnP4pBuMViZ8Y6fllotUxONpd0",
+				"id": "d6a586cd-3ea2-45f2-9a7a-c957e2bdbb71"	
+			},
+      "streamSettings": {
+                 "network": "xhttp",
+                  "xhttpSettings": {
+                  "headers": {
+                        "Pragma": "no-cache",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
+                      },
+                    "host": "",
+                    "path": "/reality/xhttp",
+                    "mode": "auto",
+                    "xPaddingBytes": "100-1000",
+                    "noGRPCHeader": false, // stream-up/one, client only
+                    "scMaxEachPostBytes": 1000000, // packet-up only
+                    "scMinPostsIntervalMs": 30, // packet-up, client only
+                    "xmux": { // h2/h3 mainly, client only
+                          "maxConcurrency": "16-32",
+                          "maxConnections": 0,
+                          "cMaxReuseTimes": 0,
+                          "hMaxRequestTimes": "600-900",
+                          "hMaxReusableSecs": "1800-3000",
+                          "hKeepAlivePeriod": 0
+                      },
+                      "downloadSettings": { // client only
+                      "address": "YOUR_REMOTE_VPS_IP", 
+                      "port": 443,
+                      "network": "xhttp",
+                       "xhttpSettings": {
+                        "host": "",
+                        "path": "/reality/xhttp",
+                        "mode": "auto"
+                      },
+                      "security": "tls",
+                      "tlsSettings": {
+                        "serverName": "YOUR_REMOTE_VPS_DOMAIN" , 
+                        "alpn": [
+                   //       "h3",
+                          "h2",
+                          "http/1.1"
+                          
+                        ],
+                        "fingerprint": "chrome",
+                        "allowInsecure": false // 禁止不安全证书,这需要为true，不然浏览器不认
+                      }               
+                }
+                     
+                            
+                  },
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                   // "fingerprint": "randomizednoalpn", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                      "fingerprint": "chrome",
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN", // 服务端 serverNames 之一
+                    "publicKey": "tiapHof8aOr3vzcYINQMkql9AEKPqmo1jAL7zfpbyFQ", // 服务端私钥对应的公钥
+                    "shortId": "4f10451af6044d56", // 服务端 shortIds 之一
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+            }
+    
+		},
+      //反向代理出站1（简单版）
+  {
+			"protocol": "vless",
+			"settings": {
+				"address": "YOUR_REMOTE_VPS_IP",
+				"port": 3444,
+				"encryption": "mlkem768x25519plus.native.0rtt.2PcBa3Yz0zBdt4p8-PkJMzx9hIj2Ve-UmrnmZRPnpRk",
+				"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
+				"flow": "xtls-rprx-vision",
+				"reverse": {
+					"tag": "reverse-in-vless-simple"
+				}
+			}
+		},
+     //反向代理出站2（复杂版）
+    {
+    "protocol": "vless",
+			"settings": {
+				"address": "YOUR_REMOTE_VPS_IP",
+				"port": 3445,
+				"encryption": "mlkem768x25519plus.native.0rtt.2PcBa3Yz0zBdt4p8-PkJMzx9hIj2Ve-UmrnmZRPnpRk",
+				"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
+        "reverse": {
+					"tag": "reverse-in-vless-complex"
+				}
+			},
+      "streamSettings": {
+                 "network": "xhttp",
+                  "xhttpSettings": {
+                    "host": "",
+                    "path": "/reality/xhttp",
+                    "mode": "auto",
+                    "xPaddingBytes": "100-1000",
+                    "noGRPCHeader": false, 
+                    "scMaxEachPostBytes": 1000000, 
+                    "scMinPostsIntervalMs": 30, 
+                    "xmux": { // h2/h3 mainly, client only
+                          "maxConcurrency": "16-32",
+                          "maxConnections": 0,
+                          "cMaxReuseTimes": 0,
+                          "hMaxRequestTimes": "600-900",
+                          "hMaxReusableSecs": "1800-3000",
+                          "hKeepAlivePeriod": 0
+                      }                    
+                  },
+                "security": "reality",
+                "realitySettings": {
+                    "show": false, // 选填，若为 true，输出调试信息
+                    "fingerprint": "chrome", // 必填，使用 uTLS 库模拟客户端 TLS 指纹
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN", // 服务端 serverNames 之一
+                    "publicKey": "tiapHof8aOr3vzcYINQMkql9AEKPqmo1jAL7zfpbyFQ", // 服务端私钥对应的公钥
+                    "shortId": "4f10451af6044d56", // 服务端 shortIds 之一
+                  "mldsa65Verify": "8WVi6HQ01_4QeQXj3VnqTsCrLM30hIS9U7uwzrFohLnucc8yZM8t3gLfY0HHtnfqJH_Ua1eAiS0uAiU6ng3NMfEhLAFlqYFD_xbJf2rgLktiaX2ERZJSW722Psig1tjWMlsf4TCsNel0Fcft-8WKKRfzL4s2tXtTc-SX8GWR2yDrBwMyGxKFWPBDS6O9UOa_kNvdLUpu2y0CrNW7Qs5_NhDLlcJ_S6HAe-NuTpvZ6ISUbWgYsQAlGK_vnNNo5o9PdnV9YfbC_NLD4yELOYbR3oFxfXdU7h4t7cMkx_1LsW01jhpXhOsIMuVWfXSECr5R86WLOS7nolCeyk6V7ZzOVDWlj8Hxe_GaBOf6WVvG_bIboizC4_WrDM7g5niHCbNZlLzn-3u26BoA5P1LXKexRcWn_tkHjyMlIMOF8Xw4M_DRx36uHYEef619X8OhO5oHk7HT05FiU812uBj5oJysu9tRSZeK34gjLJebuYIN2zEHYNpC0ZSRWnys-AVoLA_kHEtc0dvRIswrRRvA2LxTxnU8VWiSnYRegMVFeczwXqr6IGxdMYCSN0n6BpcIaqiLcp5PPswr7D_gPuKSynCrpbpGbzVCdKvY1NioL5T8TD6YFWwPe3N_eC29NeccA4UQcg35x4QUnSspKItuWSCxubr0yVjOV1OeAS0PAShQbLcfeLWCsMZdvEcJaKcxBGIXScxF1C55pD-tYl2g2MeHckQevEtDLRPnE4_IOC3FCcI6kZi74QTdpbXPTMSIAXlbJJeKX4_5iR-l_QzH3cxEY2VhzCFgym29iwbrEiNfKmkMP0XFVxuZN04veULv0EVJXJZIYDtsFd4CzmhVWkhLgFsCfCEDGSByDuxQZ1-Rj78geMCqYOI3esk1ydkGaPmL1gtn46BI1pWenRRN83ShZdj8PtPb0YjlD-Wwj6WKksab4-Dc-O1HnzEob0n8mBBH1BoiuRh2irWepMfvStKCCOXt8s7g5S3fynkEN2ZYiC8uPvbXhG0_JKxJ8zhDpQUnyaydGFhBRAH43jkPTR7BHmDeVyfEEOZ5W43vsRWJcTfi7dU2alGbw2oWgLookTnOgMhtRS4Kd3wg5I5SMK_2f5EuUQ5ZUKGwgv4q_ewp7UDYnizGqswIfFDgH1a5CN5RdrZLGaEPRM9GNjR6xUc97EXiIW7EjD7ULoa8XuxAehjdlv7QdoF-XfMurccWtJqOfSDCYt-KfVIkXOcv7t7bn6g4sjC2T9tc_OzE4TC2J-wSzalhvDMNRR3zDxPXeeaTlOybk-0Wk8-8Ib2p4bLOGv-EgHWkuWyQLlZgMdKB27ye1hmiXw0JthI6m1NWaMj4dJpSrwDimjVIMNKyGFXt9rlgtSXODSqFA7rbTSYgU8gaFBGIfD31mIbpBKloXpxckDKq_6vTDTMGTqArDzAbIOFKWHO08I8PApWf--B_FTwDWbthKllvNH9wv1AxUNu8zFNYN93s1KFBX2wROvhgafmooxTfR1RpcKnST1ry-SQTuiSuXCxs0AyPIAYiNdomziZ2DJ86TYgIwRUS2RibEmURsRNkwwsL_LGv-CGUXMloLA8x91ocdu41g2Ft92wqPgFILA-8GzpGS1c5LtO-CJ6sM52V0_8b6DhJJpEo4vySYwtP9Rs8SUusr9ldGpDG_ySFk75XstXAw4BxpGhJOmDA0t_d2uJm0ABwSniSP57FI0lodzW0Z0UYAqINtUM4S1NlC2QD8EyAy5oD036QGdvdob9I42fpyHRmkdQ_HMLRQCKrfrB_Zc4W4NHGtskdz-9gyOaIbvTKGrcaDylME8UwoKp2TjrC4XdnlinOipL4Vlq6zUry_lx2PBKhYgTcLgY_vAPZvZ247xRRjP2s21mZiU04ZjRZlmbZWO3Ie9TcBhSyikQNmNxkTEtj_mFkjDV9vG8VKGVHbT50FvN9JgFnfqmMZdYVr0aCLkgjWnNnaHGeZfRrO5qCyI_KgMsCVRVxr97C0CJUKdT1r3nVFzxdDObyDM149i3KOB2AlLPyr7VloX6kPqHh6Cwr2htY2SDmWeUviXYHNr26jJKGGyeEuTXVmrSMRQgGfNDpYsQSjX5kkoliBhDkdJM_60VfUz6HXoq9qrzrUhnAEbveGTY58q1y0gJ_4_cE75gwQ0ZhYONg8cS770fjsI4euDvmyzf0h8TqZ3CRPuB-MC9ORxMxl71-dHcW3e0yUOKYJiTMCx_yoLizMQxqlw3xX4PWOHeZK2Mm7a_FRKGWwjutOFDxInDqfb_1P_OcMrCUHVx1vQUvhwEc9WJY3c3TIyf5OtuBtSqT5RIwZZH7Paf37hfg8rM_1BbbzMDQ82yjWSi8abIMBKlBJaViLWIYxIj5FdgwfHUCqBCRY1cNY5aCzIUcKM8NTP96FAS5fViw7Sdhvresq11nVmkEzbUFqzqJ7MxAuObj2YUGBziypY83__cRiyODGPk-ZfY4PuPS-1b0vFbiSSIu85AzuL8rTtosjXfGXOK8r2fw28_Sf3-PgNoHp_FMrLRiB7OdoI0VCEcSKZOm8WzX4oYCmwhPmaFRAgUWfCReRTH3gDVI5zRwhQa0_TQqqnxInmSQAQD3cQo",
+                    "spiderX": "/spiderx.block" // 爬虫初始路径与参数，建议每个客户端不同
+                }
+            }
+            },
+
+
+    //反向代理服务器（这里为了简单，采用了重定向功能到内部服务器（注意这个10845端口实际上在tag 为tunnel-src 的位置和服务器进行映射
+    {
+      "tag": "reverse-out-redirect",
+       "protocol": "direct",
+        "settings": {
+                "redirect": "127.0.0.1:10845"
+            }
+    }
+  ]
+}
