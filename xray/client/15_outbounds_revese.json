@@ -7,7 +7,7 @@
 			"protocol": "vless",
 			"settings": {
 				"address": "YOUR_REMOTE_VPS_IP",
-				"port": 3444,
+				"port": 3344,
 				"encryption": "mlkem768x25519plus.native.0rtt.2PcBa3Yz0zBdt4p8-PkJMzx9hIj2Ve-UmrnmZRPnpRk",
 				"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
 				"flow": "xtls-rprx-vision",
