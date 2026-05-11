@@ -18,7 +18,7 @@
           "yourIP"
         ],
         "outboundTag": "direct"
-      },
+      },simple
  
       {
         "domainMatcher": "hybrid",
@@ -110,6 +110,12 @@
           "simple-reverse-in"
         ],
         "outboundTag": "simple-reverse-out"
+      },
+      {
+        "inboundTag": [
+          "cmmplex-reverse-in"
+        ],
+        "outboundTag": "cmmplex-reverse-out"
       }
     ]
   }
