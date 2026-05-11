@@ -18,9 +18,8 @@
        // adblock
       {
         "address": "fakedns",
-        "domains": ["geosite:category-ads-all"],
-        "expectIPs": ["geosite:category-ads-all"]
-    
+        "domains": ["geosite:category-ads-all"]
+      
       },
       // 国外域名使用国外DNS查询
       {
@@ -82,17 +81,9 @@
       // 最后的备份，上面全部失败时，用本机DNS查询
       "localhost"
     ]
-  },
+  }
 
-   "fakedns": [
-    {
-      "ipPool": "198.18.0.0/15",
-      "poolSize": 65535
-    },
-    {
-      "ipPool": "fc00::/18",
-      "poolSize": 65535
-    }
+
   ],
  "inbounds": [
   //dns入站rewrite
