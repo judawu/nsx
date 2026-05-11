@@ -40,7 +40,7 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "target": "pre.yourdomain:443",
+          "target": "www.yourdomain:443",
           "xver": 0,
           "serverNames": [
             "tls.yourdomain",
