@@ -809,7 +809,7 @@ xray_config() {
                             exit 1
                         }
                         new_vless_decryption="$new_vless_decryption$(echo "$x25519_key_pair" | grep "PrivateKey" | awk '{print $2}')"
-                        new_vless_encryption="$new_vless_encryption$(echo "$x25519_key_pair" | grep "Password" | awk '{print $2}')"
+                        new_vless_encryption="$new_vless_encryption$(echo "$x25519_key_pair" | grep "Password" | awk '{print $3}')"
                     else
                         echoContent green "选择了 mlkem768"
                         mlkem768_key_pair=$(xray mlkem768 2>/dev/null) || {
