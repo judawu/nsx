@@ -159,10 +159,13 @@
             "streamSettings": {
                 "network": "grpc",
                 "grpcSettings": {
+                    "authority": "YOUR_REMOTE_VPS_DOMAIN",
                     "serviceName": "/reality/grpc/h2", // 与服务端一致
                     "multiMode": true,
                     "idle_timeout": 60,
-                    "health_check_timeout": 20
+                    "health_check_timeout": 20,
+                    "permit_without_stream": false,
+                    "initial_windows_size": 0
                 },
                 "security": "tls",
                 "tlsSettings": {
