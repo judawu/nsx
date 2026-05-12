@@ -32,6 +32,11 @@
             "dest": "/dev/shm/nsx/vlessws.sock",
             "xver": 0
           },
+           {
+            "path": "/trojanws",
+            "dest": "/dev/shm/nsx/trojanws.sock",
+            "xver": 0
+          },
           {
             "path": "/vmessws",
             "dest": "/dev/shm/nsx/vmessws.sock",
@@ -104,7 +109,7 @@
       "settings": {
         "users": [
           {
-            "email": "VLESS@splithttp",
+            "email": "vless@splithttp",
             "id": "c3c55d96-e8d5-41b5-b79d-fcafc1cb164c",
             "level": 0
           }
@@ -133,7 +138,9 @@
       "settings": {
         "users": [
           {
-            "id": "2c65bf80-35cb-491d-b057-fac6a3f74fa4"
+              "email": "vless@ws",
+              "id": "2c65bf80-35cb-491d-b057-fac6a3f74fa4"
+              "level": 0
           }
         ],
         "decryption": "none"
@@ -161,9 +168,10 @@
       "settings": {
         "users": [
           {
-            "id": "1f52cb64-23cc-46d7-aa4d-acf363097319",
-            "level": 0,
-            "email": "ws@vmess"
+              "email": "vmess@ws",
+              "id": "1f52cb64-23cc-46d7-aa4d-acf363097319",
+              "level": 0
+          
           }
         ],
         "decryption": "none"
@@ -184,12 +192,42 @@
       }
     },
     {
+      "tag": "TROJAN-WS",
+      "listen": "/dev/shm/nsx/trojanws.sock,0666",
+      "protocol": "trojan",
+      "settings": {
+        "users": [
+          {
+            "email": "trojan@ws",
+            "password": "trojan",
+            "level": 0
+          }
+        ],     
+      },
+      "streamSettings": {
+        "network": "websocket",
+        "wsSettings": {
+        "acceptProxyProtocol": false,
+          "path": "/trojanws"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
       "tag": "VLESS-HTTPUPGRADE",
       "listen": "/dev/shm/nsx/vlesshttpupgrade.sock,0666",
       "protocol": "vless",
       "settings": {
         "users": [
           {
+            "email": "vless@httpupgrade",
             "id": "850413a9-c769-4fa7-adae-c320fe5103b9"
           }
         ],
@@ -217,8 +255,8 @@
       "settings": {
         "users": [
           {
-            "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
             "email": "vless@grpc",
+            "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
             "level": 0
           }
         ],
