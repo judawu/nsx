@@ -9,11 +9,11 @@
     },
 
     {
-      "tag": "blackholeblock",
+      "tag": "block",
       "protocol": "blackhole",
       "settings": {
         "response": {
-          "type": "none"
+          "type": "http"
         }
       }
     }
