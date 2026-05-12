@@ -10,6 +10,7 @@
         "method": "2022-blake3-aes-128-gcm",
         "level": 0,
         "password": "QvofbfMIil7768oFAyTpyA==",
+		"email": "shadowsocks@xray",
         "network": "tcp,udp"
       }
     }
