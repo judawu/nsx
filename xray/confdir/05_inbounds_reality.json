@@ -62,17 +62,8 @@
           "shortIds": [
             "a8ccbfd4",
             "64f1914d508165d5"
-          ],
-          "limitFallbackUpload": {
-            "afterBytes": 0,
-            "bytesPerSec": 0,
-            "burstBytesPerSec": 0
-          },
-          "limitFallbackDownload": {
-            "afterBytes": 0,
-            "bytesPerSec": 0,
-            "burstBytesPerSec": 0
-          }
+          ]
+         
         }
        
       },
