@@ -17,16 +17,12 @@
                     "auth": "QvofbfMIil7768oFAyTpyA==" ,// Hysteria 密码,搭配 hysteria inbound 时将会被 users 覆盖
                     "udpIdleTimeout": 60,
                     "masquerade": {
-                      "type": "",
-                      "dir": "",
-                      "url": "",
-                      "rewriteHost": false,
-                      "insecure": false,
-                      "content": "",
+                      "type": "string",
+                      "content": "whoamI",
                       "headers": {
                         "key": "value"
                       },
-                      "statusCode": 0
+                    "statusCode": 404
                 },
                 "security": "tls",
                 "tlsSettings": {
