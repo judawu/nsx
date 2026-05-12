@@ -5,11 +5,15 @@
    //https://xtls.github.io/config/inbounds/shadowsocks.html
     {
       "tag": "socks-in",
+   
       "protocol": "socks",
       "listen": "127.0.0.1", // 这个是通过socks5协议做本地转发的地址
       "port": 10800, // 这个是通过socks5协议做本地转发的端口
       "settings": {
-        "udp": true
+        "auth": "noauth",
+        "udp": true,
+        "ip": "127.0.0.1", // 当开启 UDP 时，Xray 需要知道本机的 IP 地址,但是在经过一些经过 NAT 的系统时可能导致工作异常需要修改这个参数为正确的公网IP
+        "userLevel": 0
       },
       "sniffing": {
                 "enabled": true,
