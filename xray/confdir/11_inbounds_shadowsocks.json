@@ -31,7 +31,7 @@
         "network": "ws",
         "security": "none",
         "wsSettings": {
-        "path": "/shadowsocks/websocket"
+        "path": "/ss/ws"
         }
       },
       "sniffing": {
@@ -61,7 +61,7 @@
             "type": "http",
             "request": {
               "path": [
-                "/shadowsocks/tcp"
+                "/ss/tcp"
               ]
             }
           }
@@ -89,7 +89,7 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
-          "serviceName": "/shadowsocks/grpc" 
+          "serviceName": "/ss/grpc" 
         }
       },
       "sniffing": {
@@ -115,7 +115,7 @@
         "network": "h2",
         "security": "none",
         "httpSettings": {
-          "path": "/shadowsocks/http2"
+          "path": "/ss/h2"
         }
       },
       "sniffing": {
