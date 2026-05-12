@@ -59,8 +59,12 @@
           ],
           "certificates": [
             {
-              "certificateFile": "/usr/local/nsx/certs/tls.yourdomain.pem",
-              "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
+               "ocspStapling": 0,
+               "oneTimeLoading": false,
+               "usage": "encipherment",
+               "buildChain": false,
+               "certificateFile": "/usr/local/nsx/certs/tls.yourdomain.pem",
+               "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
             }
           ],
           "disableSystemRoot": true,
