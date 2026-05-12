@@ -155,14 +155,13 @@
       "listen": "/dev/shm/nsx/trojan_xhttp_reality.sock,0666",
       "protocol": "trojan",
       "settings": {
-        "clients": [
+        "users": [
           {
             "email": "trojan@xhttp.reality",
             "password": "4mzwTTgrJ/xU/D9q5jccnQ==",
             "level": 0
           }
         ],
-        "decryption": "none",
         "fallbacks": [
           {
             "dest": "www.harvard.edu:443",
