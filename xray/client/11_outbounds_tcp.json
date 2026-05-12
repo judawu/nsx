@@ -20,17 +20,19 @@
           }
         ]
       },
-      "streamSettings": {
+      "streamSettings": {  
         "network": "tcp",
-        "security": "tls",
+        "security": "tls",  //https://xtls.github.io/config/transports/tls.html
         "tlsSettings": {
+          "verifyPeerCertByName": "YOUR_REMOTE_VPS_DOMAIN",
           "serverName": "YOUR_REMOTE_VPS_DOMAIN" ,
            "alpn": [
             "http/1.1",
             "h2"
           ],
+          "echConfigList": "",
           "fingerprint": "chrome",
-          "allowInsecure": false // 禁止不安全证书,这需要为true，不然浏览器不认
+          "allowInsecure": false 
         }
       }
     },
