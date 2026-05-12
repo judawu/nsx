@@ -54,7 +54,7 @@
         "level": 0
       },
       "streamSettings": {
-        "network": "tcp",
+        "network": "raw",
         "security": "none",
         "tcpSettings": {
           "header": {
@@ -99,32 +99,7 @@
           "tls"
         ]
       }
-    },
-   {
-      "tag": "shadowsocks-h2",
-      "listen": "127.0.0.1",
-      "port": 4004,
-      "protocol": "shadowsocks",
-      "settings": {
-          "email": "shadowsocks@ss.tcp",
-          "method": "2022-blake3-aes-256-gcm",
-          "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
-          "level": 0
-      },
-      "streamSettings": {
-        "network": "h2",
-        "security": "none",
-        "httpSettings": {
-          "path": "/ss/h2"
-        }
-      },
-      "sniffing": {
-        "enabled": true,
-        "destOverride": [
-          "http",
-          "tls"
-        ]
-      }
-   }
+    }
+  
   ]
 }
