@@ -19,8 +19,8 @@
         "users": [
             {
             "email": "forward@reality.xhttp.vless",
-            "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51",
-			"flow": "xtls-rprx-vision
+            "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51"
+			
            },
            {
 	          "email": "reverse@reality.xhttp.vless",
