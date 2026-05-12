@@ -28,13 +28,28 @@
           "readBufferSize": 1,
           "writeBufferSize": 1
                    }
-                }
+                },
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "tls.yourdomain",
+          "rejectUnknownSni": true,
+          "allowInsecure": false,
+          "alpn": [    
+            "h2",
+            "http/1.1"
+          ],
+          "certificates": [
+            {
+               "certificateFile": "/usr/local/nsx/certs/tls.yourdomain.pem",
+               "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
+            }
+          ],
+          "disableSystemRoot": true,
+          "enableSessionResumption": false
+       
+                         }
         }
-    
-   
-
-    
-  
+     }  
   
   ]
 }
