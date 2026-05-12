@@ -12,14 +12,27 @@
             },
             "streamSettings": {
                 "network": "hysteria",
+                 "hysteriaSettings": {
+                    "version": 2,
+                    "auth": "QvofbfMIil7768oFAyTpyA==" ,// Hysteria 密码,搭配 hysteria inbound 时将会被 users 覆盖
+                    "udpIdleTimeout": 60,
+                    "masquerade": {
+                      "type": "",
+                      "dir": "",
+                      "url": "",
+                      "rewriteHost": false,
+                      "insecure": false,
+                      "content": "",
+                      "headers": {
+                        "key": "value"
+                      },
+                      "statusCode": 0
+                },
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": "10837" // SNI
                 },
-                "hysteriaSettings": {
-                    "version": 2,
-                    "auth": "QvofbfMIil7768oFAyTpyA==" // Hysteria 密码
-                },
+               
                 "finalmask": {
                     "udp": [
                         {
