@@ -1,1 +1,39 @@
 
+
+    //反向代理服务器（这里为了简单，采用了重定向功能到内部服务器（注意这个10845端口实际上在tag 为tunnel-src 的位置和服务器进行映射
+    //   https://xtls.github.io/config/outbounds/freedom.html
+    {
+      "tag": "reverse-out-redirect",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "AsIs",
+        "redirect": "127.0.0.1:10845",
+        "userLevel": 0,
+        "fragment": {
+          "packets": "tlshello",
+          "length": "100-200",
+          "interval": "10-20" // 单位ms
+        },
+        "noises": [
+          {
+            "type": "base64",
+            "packet": "7nQBAAABAAAAAAAABnQtcmluZwZtc2VkZ2UDbmV0AAABAAE=",
+            "delay": "10-16"
+          }
+        ],
+        "proxyProtocol": 0,
+        "finalRules": [
+         {
+			  "action": "block",
+			  "network": "tcp,udp",
+			  "port": "53,443",
+			  "ip": ["10.0.0.0/8", "2001:db8::/32"],
+			  "blockDelay": "30-90"
+			}
+          {
+            "action": "block",
+            "ip": ["geoip:cn"]
+          }
+        ]
+      }
+    }
