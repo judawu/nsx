@@ -1,0 +1,40 @@
+{
+"inbounds": [
+    {
+      "tag": "VLESS-TLS-TCP",
+      "listen": "9.9.9.9",
+      "port": 3345,
+      "protocol": "vless",
+      "decryption": "none",
+      "settings": {
+        "users": [
+          {
+            
+            "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
+            "email": "vless@tls.mkcp",
+            "flow": "xtls-rprx-vision",
+            "level": 0
+          }
+        ],
+     
+      "streamSettings": {
+        "network": "mkcp",
+        "kcpSettings": {
+          "mtu": 1350,
+          "tti": 20,
+          "uplinkCapacity": 5,
+          "downlinkCapacity": 20,
+          "congestion": false,
+          "readBufferSize": 1,
+          "writeBufferSize": 1
+                   }
+                }
+        }
+    
+   
+
+    
+  
+  
+  ]
+}
