@@ -1,9 +1,12 @@
-
-
+{
+  "outbounds": [
 {
       "tag": "direct",
        "settings": {
                 "domainStrategy": "ForceIPv4"
             },
       "protocol": "freedom"
-    },
+    }
+  ]
+}
+      
