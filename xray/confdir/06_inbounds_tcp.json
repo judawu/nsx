@@ -45,6 +45,9 @@
       },
       "streamSettings": {
         "network": "raw",
+        "rawSettings": {
+          "acceptProxyProtocol": false
+        },
         "security": "tls",
         "tlsSettings": {
           "serverName": "tls.yourdomain",
@@ -61,12 +64,11 @@
             }
           ],
           "disableSystemRoot": true,
+          "enableSessionResumption": false,
           "echServerKeys": "",
           "echConfigList": ""
-        },
-        "rawSettings": {
-          "acceptProxyProtocol": false
         }
+       
       },
       "sniffing": {
         "enabled": true,
