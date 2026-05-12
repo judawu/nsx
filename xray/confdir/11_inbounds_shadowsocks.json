@@ -1,6 +1,5 @@
 {
 "inbounds": [
-	//https://xtls.github.io/config/inbounds/shadowsocks.html
     {
       "tag": "UDP-SS",
       "protocol": "shadowsocks",
