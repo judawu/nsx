@@ -16,6 +16,7 @@
         ],
      
       "streamSettings": {
+        
         "network": "mkcp",
         "kcpSettings": {
           "mtu": 1350,
@@ -26,7 +27,18 @@
           "readBufferSize": 1,
           "writeBufferSize": 1
                    }
-                }
+                },
+        "security": "tls", 
+        "tlsSettings": {
+          "verifyPeerCertByName": "YOUR_REMOTE_VPS_DOMAIN",
+          "serverName": "YOUR_REMOTE_VPS_DOMAIN" ,
+           "alpn": [
+            "http/1.1",
+            "h2"
+          ],
+          "fingerprint": "chrome",
+          "allowInsecure": false 
+        }
         }
     
    
