@@ -4,7 +4,7 @@
 
      {
           
-           "tag": "proxy_vless_ws",
+           "tag": "vless_ws",
            "protocol": "vless",
             "settings": {
                 "vnext": [
