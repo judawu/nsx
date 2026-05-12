@@ -2,8 +2,6 @@
 "outbounds": [
     {
       "tag": "VLESS-TLS-MKCP",
-      "listen": "9.9.9.9",
-      "port": 3345,
       "protocol": "vless",
       "decryption": "none",
       "settings": {
