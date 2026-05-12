@@ -21,7 +21,7 @@
         ]
       },
       "streamSettings": {  
-        "network": "tcp",
+        "network": "raw",
         "security": "tls",  //https://xtls.github.io/config/transports/tls.html
         "tlsSettings": {
           "verifyPeerCertByName": "YOUR_REMOTE_VPS_DOMAIN",
