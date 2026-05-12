@@ -5,7 +5,7 @@
       "listen": "/dev/shm/nsx/xray_reality_proxy.sock,0666",
       "protocol": "vless",
       "settings": {
-        "clients": [
+        "users": [
           {
             "email": "vless@xtls.reality",
             "id": "2c8721ed-1eb6-4eb7-9c3d-3cf2605d8cb6",
@@ -90,7 +90,7 @@
       "listen": "/dev/shm/nsx/vless_xhttp_reality.sock,0666",
       "protocol": "vless",
       "settings": {
-        "clients": [
+        "users": [
           {
             "email": "vless@xhttp.reality",
             "id": "cbb18fe0-d766-4551-babd-f1c4c2338d15",
