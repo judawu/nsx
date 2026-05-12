@@ -3,7 +3,7 @@
   "outbounds": [
 
      {
-           "tag": "proxy_vless_httpupgrade",
+           "tag": "vless_httpupgrade",
             "protocol": "vless",
             "settings": {
                 "vnext": [
