@@ -6,6 +6,16 @@
                 "domainStrategy": "ForceIPv4"
             },
       "protocol": "freedom"
+    },
+
+    {
+      "tag": "blackholeblock",
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "none"
+        }
+      }
     }
   ]
 }
