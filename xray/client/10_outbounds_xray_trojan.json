@@ -9,7 +9,9 @@
           {
             "address": "YOUR_REMOTE_VPS_DOMAIN",
             "port": 443,
-            "password": "JylHd0TPTfQtuAVis3yV2g=="
+            "password": "JylHd0TPTfQtuAVis3yV2g==",
+            "email": "trojan@vless.reality.xhttp",
+            "level": 0
           }
         ]
       },
