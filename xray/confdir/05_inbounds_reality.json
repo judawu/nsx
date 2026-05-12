@@ -15,21 +15,9 @@
         ],
         "decryption": "none",
         "fallbacks": [
-          {
-            "path": "/vlesssplithttp",
-            "dest": "/dev/shm/nsx/vlesssplithttp.sock",
-            "xver": 0
-          },
-          {
-            "path": "/vlesshttpupgrade",
-            "dest": "/dev/shm/nsx/vlesshttpupgrade.sock",
-            "xver": 0
-          },
-          {
-            "path": "/vlessws",
-            "dest": "/dev/shm/nsx/vlessws.sock",
-            "xver": 0
-          },
+         
+        
+         
           {
             "path": "/vmessws",
             "dest": "/dev/shm/nsx/vmessws.sock",
