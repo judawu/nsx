@@ -19,7 +19,7 @@
         
          
           {
-            "path": "/vmessws",
+            "path": "/reality/grpc/h1",
             "dest": "/dev/shm/nsx/vmessws.sock",
             "xver": 0
           },
