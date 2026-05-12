@@ -38,6 +38,22 @@
             "xver": 0
           },
           {
+            "path": "/ss/ws",
+            "dest": "4001",
+          },
+          {
+            "path": "/ss/tcp",
+            "dest": "4002",
+          },
+          {
+            "path": "/ss/grpc",
+            "dest": "4003",
+          },
+          {
+            "path": "/ss/h2",
+            "dest": "4004",
+          },
+          {
             "dest": "/dev/shm/nsx/trojan_xhttp_reality.sock",
             "xver": 0
           }
