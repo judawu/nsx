@@ -1,14 +1,7 @@
 {
- // 出站设置
-  "outbounds": [
-    {
-      "tag": "direct",
-       "settings": {
-                "domainStrategy": "ForceIPv4"
-            },
-      "protocol": "freedom"
-    },
 
+  "outbounds": [
+ 
      {
       "tag": "proxy_vless_reality",
       "protocol": "vless",
