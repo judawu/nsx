@@ -20,7 +20,8 @@
                 "routeOnly": true
             }
     },
-   //  有少数APP不兼容socks协议，需要用http协议做转发，则可以用下面的端口
+
+  //  https://xtls.github.io/config/inbounds/http.html
     {
       "tag": "http-in",
       "protocol": "http",
