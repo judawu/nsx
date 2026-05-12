@@ -1,7 +1,6 @@
 {
 "inbounds": [
-
-
+    // vpsA <-> vpsB
     {
       "tag": "UDP-SS",
       "protocol": "shadowsocks",
@@ -11,9 +10,95 @@
         "method": "2022-blake3-aes-256-gcm",
         "level": 0,
         "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
-		"email": "shadowsocks@xray.shadowsocks",
-        "network": "tcp,udp"
+		"email": "shadowsocks@ss.udp",
+        "network": "udp"
       }
-    }
+    },
+    // Only listen on localhost, client-> nginx  layer 7  ssl handshake -> server
+ 
+	{
+      "tag": "ss-ws",
+      "listen": "127.0.0.1",
+      "port": 4001,
+      "protocol": "shadowsocks",
+      "settings": {
+        "email": "shadowsocks@ss.ws",
+        "method": "2022-blake3-aes-256-gcm",
+        "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
+        "level": 0
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+        "path": "/shadowsocks/websocket"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+	{
+      "tag": "ss-tcp",
+      "listen": "127.0.0.1",
+      "port": 4002,
+      "protocol": "shadowsocks",
+      "settings": {
+        "email": "shadowsocks@ss.tcp",
+        "method": "2022-blake3-aes-256-gcm",
+        "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
+        "level": 0
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "none",
+        "tcpSettings": {
+          "header": {
+            "type": "http",
+            "request": {
+              "path": [
+                "/shadowsocks/tcp"
+              ]
+            }
+          }
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+	{
+      "listen": "127.0.0.1", 
+      "port": 4003,
+      "protocol": "shadowsocks",
+      "settings": {
+          "email": "shadowsocks@ss.tcp",
+           "method": "2022-blake3-aes-256-gcm",
+          "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
+          "level": 0
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "security": "none",
+        "grpcSettings": {
+          "serviceName": "ssgrpc" 
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
   ]
 }
