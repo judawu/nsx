@@ -1,5 +1,5 @@
 {
- // 出站设置
+
   "outbounds": [
      {
       "tag": "proxy_xhttp_trojan",
