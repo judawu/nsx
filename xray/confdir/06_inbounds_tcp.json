@@ -126,8 +126,9 @@
         "decryption": "none"
       },
       "streamSettings": {
-        "network": "ws",
+        "network": "websocket",
         "wsSettings": {
+        "acceptProxyProtocol": false,
           "path": "/vlessws"
         }
       },
@@ -155,7 +156,7 @@
         "decryption": "none"
       },
       "streamSettings": {
-        "network": "ws",
+        "network": "websocket",
         "wsSettings": {
           "path": "/vmessws"
         }
