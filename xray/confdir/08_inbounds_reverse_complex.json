@@ -16,21 +16,21 @@
       "protocol": "vless",
       "settings": {
         "decryption": "none",
-        "clients": [
+        "users": [
             {
-            "email": "forward@vless.encrytion.reality.midsa65",
+            "email": "forward@reality.xhttp.vless",
             "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51"
-          },
+           },
            {
-	           "email": "reverse@vless.encrytion.reality.midsa65",
+	          "email": "reverse@reality.xhttp.vless",
              "id": "ac04551d-6ebf-4685-86e2-17c12491f7f4", 
               "reverse": {
 		       "tag": "complex-reverse-out"
-           }				
-                    }
+                         }				
+            }
 
-        ]
-          },
+               ]
+       },
       "streamSettings": {
         "network": "xhttp",
         "xhttpSettings": {
