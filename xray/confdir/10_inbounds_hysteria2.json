@@ -9,7 +9,7 @@
                 "version": 2,
 				  "users": [
 		          {
-		            "auth": "5783a3e7-e373-51cd-8642-c83782b807c5",
+		            "auth": "QvofbfMIil7768oFAyTpyA==",
 		            "level": 0,
 		            "email": "hysteria@hysteria,xray"
 		          }
@@ -17,6 +17,10 @@
             },
             "streamSettings": {
                 "network": "hysteria",
+				"hysteriaSettings": {
+                    "version": 2,
+                    "auth": "QvofbfMIil7768oFAyTpyA==" 
+                },
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": "tls.yourdomain", 
@@ -31,10 +35,7 @@
                         }
                     ] 
                 },
-                "hysteriaSettings": {
-                    "version": 2,
-                    "auth": "QvofbfMIil7768oFAyTpyA==" 
-                },
+              
                 "finalmask": {
                     "udp": [
                         {
