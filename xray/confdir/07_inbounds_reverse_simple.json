@@ -15,24 +15,24 @@
 	"port": 3344,
 	"protocol": "vless",
 	"settings": {
-	"decryption": "none",
-	"clients": [
-	{
-		"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
-		"flow": "xtls-rprx-vision",
-		
-		"reverse": {
-					"tag": "simple-reverse-out"
-					}
-	},
-	{
-		"id": "e4ca730a-3c33-404f-a80b-3f3ff22f62a6",
-		"flow": "xtls-rprx-vision",
-		"email": "simple-reverse-in@vless"
-	}
+		"decryption": "none",	
+		"users": [
+		{
+			"id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
+			"email": "reverse@simple.tunnel.vless.xray",
+			"flow": "xtls-rprx-vision",
+			"reverse": {
+						"tag": "simple-reverse-out"
+						}
+		},
+		{
+			"id": "e4ca730a-3c33-404f-a80b-3f3ff22f62a6",
+			"flow": "xtls-rprx-vision",
+			"email": "simple-reverse-in@vless"
+		}
 				]
 			}
-		}
+ }
    
   ]
 }
