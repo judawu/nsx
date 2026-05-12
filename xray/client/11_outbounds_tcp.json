@@ -2,7 +2,7 @@
 
   "outbounds": [
  {
-      "tag": "proxy_vless_tls_tcp",
+      "tag": "vless_tls_tcp",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -37,7 +37,6 @@
         }
       }
     },
-  
     {   
             "tag": "proxy_vless_splithttp",
             "protocol": "vless",
