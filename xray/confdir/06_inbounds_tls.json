@@ -132,7 +132,7 @@
       "listen": "/dev/shm/nsx/vless_tcp_http.sock,0666",
       "protocol": "vless",
       "settings": {
-        "clients": [
+        "users": [
           {
             "email": "vless@tcp.http",
             "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
@@ -169,7 +169,7 @@
       "listen": "/dev/shm/nsx/vmess_tcp_http.sock,0666",
       "protocol": "vmess",
       "settings": {
-        "clients": [
+        "users": [
           {
             "email": "vmess@tcp.http",
             "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
@@ -200,36 +200,6 @@
       }
     },
     
-    
-    {
-      "tag": "VLESS-SPLITHTTP",
-      "listen": "/dev/shm/nsx/vlesssplithttp.sock,0666",
-      "protocol": "vless",
-      "settings": {
-        "users": [
-          {
-            "email": "vless@splithttp",
-            "id": "c3c55d96-e8d5-41b5-b79d-fcafc1cb164c",
-            "level": 0
-          }
-        ],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "splithttp",
-        "splithttpSettings": {
-          "path": "/vlesssplithttp"
-        }
-      },
-      "sniffing": {
-        "enabled": true,
-        "destOverride": [
-          "http",
-          "tls",
-          "quic"
-        ]
-      }
-    },
     {
       "tag": "VLESS-WS",
       "listen": "/dev/shm/nsx/vlessws.sock,0666",
@@ -301,7 +271,13 @@
             "password": "trojan",
             "level": 0
           }
-        ],     
+        ], 
+        "fallbacks": [
+          {
+            "dest": "www.harvard.edu:443",
+            "xver": 0
+          }
+        ]
       },
       "streamSettings": {
         "network": "websocket",
@@ -319,34 +295,7 @@
         ]
       }
     },
-    {
-      "tag": "VLESS-HTTPUPGRADE",
-      "listen": "/dev/shm/nsx/vlesshttpupgrade.sock,0666",
-      "protocol": "vless",
-      "settings": {
-        "users": [
-          {
-            "email": "vless@httpupgrade",
-            "id": "850413a9-c769-4fa7-adae-c320fe5103b9"
-          }
-        ],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "httpupgrade",
-        "httpupgradeSettings": {
-          "path": "/vlesshttpupgrade"
-        }
-      },
-      "sniffing": {
-        "enabled": true,
-        "destOverride": [
-          "http",
-          "tls",
-          "quic"
-        ]
-      }
-    },
+   
       {
       "tag": "TROJAN-GRPC",
       "listen": "/dev/shm/nsx/trojan_grpc.sock,0666",
@@ -359,7 +308,12 @@
             "level": 0
           }
                 ],
-    
+        "fallbacks": [
+              {
+                "dest": "www.harvard.edu:443",
+                "xver": 0
+              }
+        ]
                  },
       "streamSettings": {
         "network": "grpc",
@@ -391,7 +345,7 @@
         }
       }
     },
-    {
+      {
       "tag": "VLESS-GRPC",
       "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
       "protocol": "vless",
@@ -422,6 +376,64 @@
           "quic"
         ]
       }
+    },
+     {
+      "tag": "VLESS-HTTPUPGRADE",
+      "listen": "/dev/shm/nsx/vlesshttpupgrade.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "users": [
+          {
+            "email": "vless@httpupgrade",
+            "id": "850413a9-c769-4fa7-adae-c320fe5103b9"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "httpupgrade",
+        "httpupgradeSettings": {
+          "path": "/vlesshttpupgrade"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    },
+    {
+      "tag": "VLESS-SPLITHTTP",
+      "listen": "/dev/shm/nsx/vlesssplithttp.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "users": [
+          {
+            "email": "vless@splithttp",
+            "id": "c3c55d96-e8d5-41b5-b79d-fcafc1cb164c",
+            "level": 0
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "splithttp",
+        "splithttpSettings": {
+          "path": "/vlesssplithttp"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
     }
+  
   ]
 }
