@@ -92,33 +92,34 @@
       "settings": {
         "users": [
           {
-            "email": "vless@xhttp.reality",
+           
             "id": "cbb18fe0-d766-4551-babd-f1c4c2338d15",
+            "email": "vless@xhttp.reality.1",
             "level": 0
           },
           {
             "id": "a9e117e1-a44a-44b2-8791-4083c9879fe0",
-            "email": "vps@v1",
+            "email": "vless@xhttp.reality.2",
             "level": 0
           },
           {
             "id": "518e1e77-33c9-48b8-867b-aa7c8ceff11d",
-            "email": "vps@v2",
+            "email": "vless@xhttp.reality.3",
             "level": 0
           },
           {
             "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51",
-            "email": "vps@v3",
+            "email": "vless@xhttp.reality.4",
             "level": 0
           },
           {
             "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
-            "email": "vps@v4",
+            "email": "vless@xhttp.reality.5",
             "level": 0
           },
             {
             "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
-            "email": "vps@v5",
+           "email": "vless@xhttp.reality.6",
             "level": 0
           }
         ],
