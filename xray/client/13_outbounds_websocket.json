@@ -1,0 +1,49 @@
+{
+
+  "outbounds": [
+
+     {
+          
+           "tag": "proxy_vless_ws",
+           "protocol": "vless",
+            "settings": {
+                "vnext": [
+                    {
+                        "address": "YOUR_REMOTE_VPS_DOMAIN",
+                        "port": 443,
+                        "users": [
+                            {
+                                "id": "3e0f8a38-7235-45f5-b3d0-92f0f22d3b24", // 与服务端一致
+                                "encryption": "none"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "websocket",
+                "wsSettings": {
+                    "acceptProxyProtocol": false,
+                    "path": "/vlessws?ed=2560", // 与服务端一致，建议增加 ?ed=2560 以启用 0-RTT 降低延迟
+                    "host": "YOUR_REMOTE_VPS_DOMAIN",
+                    "headers": {
+                      "User-Agent": [
+                                      "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36",
+                                      "Mozilla/5.0 (iPhone; CPU iPhone OS 10_0_2 like Mac OS X) AppleWebKit/601.1 (KHTML, like Gecko) CriOS/53.0.2785.109 Mobile/14A456 Safari/601.1.46"
+                                    ]
+                              },
+                    "heartbeatPeriod": 10
+              
+                  },
+                "security": "tls",
+                "tlsSettings": {
+                  "serverName": "YOUR_REMOTE_VPS_DOMAIN",
+                
+                    "fingerprint": "chrome"
+                }
+            }
+        },
+   
+ 
+  ]
+  }
