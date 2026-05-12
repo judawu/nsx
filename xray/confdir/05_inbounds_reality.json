@@ -43,6 +43,12 @@
       },
       "streamSettings": {
         "network": "raw",
+        "rawSettings": {
+          "acceptProxyProtocol": false,
+          "header": {
+            "type": "none"
+          }
+        },
         "security": "reality",
         "realitySettings": {
           "show": false,
@@ -71,10 +77,8 @@
             "a8ccbfd4",
             "64f1914d508165d5"
           ]
-        },
-        "rawSettings": {
-          "acceptProxyProtocol": false
         }
+       
       },
       "sniffing": {
         "enabled": true,
