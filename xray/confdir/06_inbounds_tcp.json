@@ -43,6 +43,32 @@
             "xver": 0
           },
           {
+            "path": "/vmesstcp",
+            "dest": "/dev/shm/nsx/vmess_tcp_http.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vlesstcp",
+            "dest": "/dev/shm/nsx/vless_tcp_http.sock",
+            "xver": 0
+          },
+          {
+            "path": "/trojan/grpc",
+            "dest": "/dev/shm/nsx/trojan_grpc.sock",
+            "xver": 0
+          },
+          {
+            "path": "/vmess/grpc",
+            "dest": "/dev/shm/nsx/vmess_grpc.sock",
+            "xver": 0
+          },
+           {
+            "path": "/reality/grpc/h1",
+            "dest": "dev/shm/nsx/nginx_grpc_vless.sock",
+            "xver": 0
+          },
+      
+          {
             "path": "/ss/ws",
             "dest": "4001",
           },
@@ -101,6 +127,79 @@
         ]
       }
     },
+    {
+      "tag": "VLESS-TCP-HTTP",
+      "listen": "/dev/shm/nsx/vless_tcp_http.sock,0666",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@tcp.http",
+            "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
+            "level": 0
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "none",
+        "rawSettings": {
+          "acceptProxyProtocol": false,
+          "header": {
+            "type": "http",
+            "request": {
+              "path": [
+                "/vlesstcp"
+              ]
+            }
+          }
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    {
+      "tag": "VMESS-TCP-HTTP",
+      "listen": "/dev/shm/nsx/vmess_tcp_http.sock,0666",
+      "protocol": "vmess",
+      "settings": {
+        "clients": [
+          {
+            "email": "vmess@tcp.http",
+            "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
+            "level": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "none",
+        "tcpSettings": {
+          "acceptProxyProtocol": true,
+          "header": {
+            "type": "http",
+            "request": {
+              "path": [
+                "/vmtcp"
+            }
+          }
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    
     
     {
       "tag": "VLESS-SPLITHTTP",
@@ -246,6 +345,50 @@
           "tls",
           "quic"
         ]
+      }
+    },
+      {
+      "tag": "TROJAN-GRPC",
+      "listen": "/dev/shm/nsx/trojan_grpc.sock,0666",
+      "protocol": "trojan",
+      "settings": {
+        "users": [
+          {
+            "email": "trojan@grpc",
+            "password": "77dd376e-9a71-4c25-a882-25baf0674c32",
+            "level": 0
+          }
+                ],
+    
+                 },
+      "streamSettings": {
+        "network": "grpc",
+        "security": "none",
+        "grpcSettings": {
+          "serviceName": "/trojan/grpc"
+                         }
+                        },
+   
+    },
+     {
+      "tag": "vmess-grpc",
+      "listen": "/dev/shm/nsx/vmess_grpc.sock,0666",
+      "protocol": "vmess",
+      "settings": {
+        "users": [
+          {
+            "email": "vmess@grpc",
+            "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
+            "level": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "security": "none",
+        "grpcSettings": {
+          "serviceName": "/vmess/grpc"
+        }
       }
     },
     {
