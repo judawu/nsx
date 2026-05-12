@@ -64,7 +64,7 @@
     //反向代理服务器（这里为了简单，采用了重定向功能到内部服务器（注意这个10845端口实际上在tag 为tunnel-src 的位置和服务器进行映射
     {
       "tag": "reverse-out-redirect",
-       "protocol": "direct",
+       "protocol": "freedom",
         "settings": {
                 "redirect": "127.0.0.1:10845"
             }
