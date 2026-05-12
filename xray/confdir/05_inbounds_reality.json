@@ -16,11 +16,9 @@
         "decryption": "none",
         "fallbacks": [
          
-        
-         
           {
             "path": "/reality/grpc/h1",
-            "dest": "/dev/shm/nsx/vmessws.sock",
+            "dest": "/dev/shm/nsx/nginx_grpc_vless.sock",
             "xver": 0
           },
           {
