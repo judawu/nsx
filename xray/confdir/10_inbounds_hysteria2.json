@@ -6,7 +6,14 @@
             "port": 10837,
             "protocol": "hysteria",
             "settings": {
-                "version": 2
+                "version": 2,
+				  "users": [
+		          {
+		            "auth": "5783a3e7-e373-51cd-8642-c83782b807c5",
+		            "level": 0,
+		            "email": "hysteria@hysteria,xray"
+		          }
+        ]
             },
             "streamSettings": {
                 "network": "hysteria",
