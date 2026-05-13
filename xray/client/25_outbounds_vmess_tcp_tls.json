@@ -1,22 +1,20 @@
 {
-
-
   "outbounds": [
     {
       "tag": "vmess_tcp_tls",
       "protocol": "vmess",
       "settings": {
-        "address": "example.com",
+        "address": "YOUR_REMOTE_VPS_DOMAIN",
         "port": 443,
         "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
         "security": "auto"
       },
        "streamSettings": {
-        "network": "tcp",
+        "network": "raw",
         "tcpSettings": {
           "header": {
             "request": {
-              "path": ["/vmtc"]
+              "path": ["/vmesstcp"]
             },
             "type": "http"
           }
