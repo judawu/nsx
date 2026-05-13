@@ -190,6 +190,7 @@
             }
           }
         }
+       }
       },
       "sniffing": {
         "enabled": true,
