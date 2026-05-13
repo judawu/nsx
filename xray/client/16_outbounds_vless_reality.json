@@ -3,7 +3,7 @@
   "outbounds": [
  
      {
-      "tag": "vless_reality",
+      "tag": "vless_reality_vision",
       "protocol": "vless",
       "settings": {
         "vnext": [
