@@ -3,7 +3,7 @@
 
   "outbounds": [
     {
-      "tag": "ws_trojan",
+      "tag": "ws_trojan_tls",
       "protocol": "trojan",
       "settings": {
         "servers": [
