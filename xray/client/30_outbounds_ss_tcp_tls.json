@@ -18,7 +18,7 @@
         "tcpSettings": {
           "header": {
             "request": {
-              "path": ["/sstc"]
+              "path": ["/ss/tcp"]
             },
             "type": "http"
           }
