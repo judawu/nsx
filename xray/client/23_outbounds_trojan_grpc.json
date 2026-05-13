@@ -1,0 +1,32 @@
+{
+
+
+  "outbounds": [
+    {
+      "tag": "trojan_grpc",
+      "protocol": "trojan",
+      "settings": {
+        "servers": [
+       {
+            "address": "YOUR_REMOTE_VPS_DOMAIN",
+            "port": 443,
+            "password": "JylHd0TPTfQtuAVis3yV2g==",
+            "email": "trojan@vless.reality.xhttp",
+            "level": 0
+          }
+        ]
+      },
+       "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "/trojan/grpc"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "fingerprint": "chrome"
+        }
+      }
+    }
+  ]
+}
