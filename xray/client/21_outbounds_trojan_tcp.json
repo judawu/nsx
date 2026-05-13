@@ -1,0 +1,29 @@
+{
+
+
+  "outbounds": [
+    {
+      "protocol": "trojan",
+      "settings": {
+        "servers": [
+          {
+            "address": "example.com",
+            "port": 443,
+            "password": "desdemona99"
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/trojanws?ed=2560"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "fingerprint": "chrome"
+        }
+      }
+    }
+  ]
+}
