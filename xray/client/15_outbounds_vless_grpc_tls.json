@@ -3,7 +3,7 @@
   "outbounds": [
 
      {
-           "tag": "vless_grpc",
+           "tag": "vless_grpc_tls",
            "protocol": "vless",
             "settings": {
                 "vnext": [
