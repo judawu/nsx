@@ -3,7 +3,7 @@
 
   "outbounds": [
     {
-      "tag": "trojan_grpc",
+      "tag": "trojan_grpc_tls",
       "protocol": "trojan",
       "settings": {
         "servers": [
