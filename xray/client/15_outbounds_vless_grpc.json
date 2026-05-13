@@ -3,7 +3,7 @@
   "outbounds": [
 
      {
-           "tag": "proxy_grpc_vless_tcp",
+           "tag": "vless_grpc",
            "protocol": "vless",
             "settings": {
                 "vnext": [
