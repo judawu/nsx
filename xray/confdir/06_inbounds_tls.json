@@ -177,20 +177,20 @@
           }
         ]
       },
-      "streamSettings": {
-        "network": "tcp",
+     "streamSettings": {
+        "network": "raw",
         "security": "none",
-        "tcpSettings": {
-          "acceptProxyProtocol": true,
+        "rawSettings": {
+          "acceptProxyProtocol": false,
           "header": {
             "type": "http",
             "request": {
               "path": [
-                "/vmtcp"
+                "/vmesstcp"
+              ]
             }
           }
         }
-       }
       },
       "sniffing": {
         "enabled": true,
