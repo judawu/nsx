@@ -1,7 +1,7 @@
 {
  "outbounds": [
     {   
-            "tag": "vless_splithttp",
+            "tag": "vless_splithttp_tls",
             "protocol": "vless",
             "settings": {
                 "vnext": [
