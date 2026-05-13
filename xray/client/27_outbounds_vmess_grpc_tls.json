@@ -1,0 +1,24 @@
+{
+  "outbounds": [
+    {
+      "tag": "vmess_grpc_tls",
+      "protocol": "vmess",
+      "settings": {
+        "address": "YOUR_REMOTE_VPS_DOMAIN",
+        "port": 443,
+        "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
+        "security": "auto"
+      },
+        "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "vmess/grpc"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "fingerprint": "chrome"
+        }
+      }
+  ]
+}
