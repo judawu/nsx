@@ -1,0 +1,29 @@
+{
+  "outbounds": [
+    {
+      "tag": "ss_grpc_tls",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "YOUR_REMOTE_VPS_DOMAIN",
+            "port": 443,
+            "method": "2022-blake3-aes-256-gcm",
+            "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "/ss/grpc"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "fingerprint": "chrome"
+        }
+      }
+    }
+  ]
+}
