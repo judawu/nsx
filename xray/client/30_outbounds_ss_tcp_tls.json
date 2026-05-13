@@ -6,7 +6,7 @@
       "settings": {
         "servers": [
           {
-            "address": "example.com",
+            "address": "YOUR_REMOTE_VPS_DOMAIN",
             "port": 443,
             "method": "2022-blake3-aes-256-gcm",
             "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
