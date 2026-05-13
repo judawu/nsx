@@ -2,7 +2,7 @@
 
   "outbounds": [
      {
-      "tag": "xhttp_trojan",
+      "tag": "TROJAN_XHTTP",
       "protocol": "trojan",
        "settings": {
         "servers": [
