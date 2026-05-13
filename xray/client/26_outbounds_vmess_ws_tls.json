@@ -1,0 +1,25 @@
+{
+  "outbounds": [
+    {
+      "tag": "vmess_ws_tls",
+      "protocol": "vmess",
+      "settings": {
+        "address": "YOUR_REMOTE_VPS_DOMAIN",
+        "port": 443,
+        "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
+        "security": "auto"
+      },
+       "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/vmessws?ed=2560"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "fingerprint": "chrome"
+        }
+      }
+    }
+  ]
+}
