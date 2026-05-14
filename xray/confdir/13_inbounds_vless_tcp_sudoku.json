@@ -2,7 +2,7 @@
 
   "inbounds": [
     {
-      "tag": "vless-in",
+      "tag": "vless-tcp-sudoku",
       "listen": "0.0.0.0",
       "port": 10061,
       "protocol": "vless",
@@ -22,7 +22,7 @@
         {
           "type": "sudoku",
           "settings": {
-            "password": "same-secret",
+            "password": "eokBfwBmQ9zEdusYk1757CRLC/Pi5F2kOGBY63Ah2tM=",
             "ascii": "prefer_entropy",
             "customTables": [
               "xpxvvpvv",
