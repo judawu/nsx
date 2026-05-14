@@ -3,7 +3,7 @@
 	{
             "tag": "IN-Hysteria2",
             "listen": "0.0.0.0",
-            "port": 10837,
+            "port": 4010,
             "protocol": "hysteria",
             "settings": {
                 "version": 2,
