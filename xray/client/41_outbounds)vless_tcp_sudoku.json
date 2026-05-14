@@ -1,0 +1,51 @@
+{
+
+  "outbounds": [
+    {
+      "tag": "vless-tcp-sudoku",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
+            "email": "finalmask@vless.tcp.sudoku"
+          }
+        ],
+        "encryption": "mlkem768x25519plus.native.600s.sVs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk"
+      },
+      "streamSettings": {
+        "network": "raw",
+        "finalmask": {
+           "tcp": [
+        {
+          "type": "sudoku",
+          "settings": {
+            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
+            "ascii": "prefer_entropy",
+            "customTables": [
+              "xpxvvpvv",
+              "vxpvxvvp",
+              "pxvvxvvp",
+              "vpxvxvpv",
+              "xvpvvxpv",
+              "vvxpxpvv"
+            ],
+            "paddingMin": 2,
+            "paddingMax": 7
+          }
+        }
+      ],
+      "udp": [
+        {
+          "type": "sudoku",
+          "settings": {
+            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
+            "ascii": "prefer_ascii"
+          }
+        }
+      ]
+        }
+      }
+    }
+  ]
+}
