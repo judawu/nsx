@@ -111,11 +111,7 @@
        
        "outboundTag": "block"
       },
-      {
-        "ruleTag": "geosite-ad",
-        "domain": ["geosite:category-ads-all"],
-        "outboundTag": "block-out",
-      },
+  
 
       //  默认规则
       // 在Xray中，任何不符合上述路由规则的流量，都会默认使用【第一个outbound（5.1）】的设置，所以一定要把转发VPS的outbound放第一个
