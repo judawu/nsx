@@ -53,46 +53,48 @@
             {
             "type": "mkcp-aes128gcm",
             "settings": {
-               "password": "your-password"
+               "password": "QvofbfMIil7768oFAyTpyA=="
             }
           },
           {
+            "type": "noise",
+            "settings": {
+                  "reset": 0,
+                  "noise": [
+                    {
+                      "rand": "1-8192",
+                      "randRange": "0-255",
+                      "type": "base64",
+                      "delay": "10-20"
+                    }
+                  ]
+                }
+          },
+            {
             "type": "salamander",
             "settings": {
-              "password": "0123"
+              "password": "QvofbfMIil7768oFAyTpyA=="
             }
           },
-          {
-            "type": "salamander",
+             {
+            "type": "sudoku",
             "settings": {
-              "password": "3210"
+             "password": "",
+              "ascii": "",
+            
+              "customTable": "", 
+              "customTables": [""],
+            
+              "paddingMin": 0, 
+              "paddingMax": 0 
             }
-          },
-         
-          {
-            "type": "aesgcm128",
-            "settings": {
-              "psk": "321"
-            }
-          },
+          },  
             {
               "type": "xicmp",
               "settings": {
                 "id": 1234
               },
-             {
-              "type": "header-dtls"
-            },
-            {
-              "type": "mkcp-original"
-            },
-            {
-              "type": "mkcp-aes128gcm",
-              "settings": {
-                "password": "123"
-              }
-            }
-            }
+       
           ]
         }
         "security": "tls",
