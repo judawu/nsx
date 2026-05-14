@@ -5,6 +5,8 @@
       "tag": "vless-tcp-sudoku",
       "protocol": "vless",
       "settings": {
+        "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+        "port": 4014,
         "vnext": [
           {
             "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
