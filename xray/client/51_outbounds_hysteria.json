@@ -19,14 +19,14 @@
                 },
                 "hysteriaSettings": {
                     "version": 2,
-                    "auth": "114514" // Hysteria 密码
+                    "auth": "QvofbfMIil7768oFAyTpyA==" // Hysteria 密码
                 },
                 "finalmask": {
                     "udp": [
                         {
                             "type": "salamander",
                             "settings": {
-                                "password": "114514" // salamander 混淆密码
+                                "password": "QvofbfMIil7768oFAyTpyA==" // salamander 混淆密码
                             }
                         }
                     ],
