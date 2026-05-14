@@ -36,15 +36,6 @@
             "paddingMax": 7
           }
         }
-      ],
-      "udp": [
-        {
-          "type": "sudoku",
-          "settings": {
-            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
-            "ascii": "prefer_ascii"
-          }
-        }
       ]
         }
       }
