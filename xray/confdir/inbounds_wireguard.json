@@ -1,0 +1,31 @@
+{
+ 
+  "inbounds": [
+    {
+      "tag": "wg-in",
+      "listen": "0.0.0.0",
+      "port": 4007,
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "4886d27320c3eda9a9de83a2eeb85b91d6feae92aa7ca030f0d7137c2354c643",
+        "peers": [
+          {
+            "publicKey": "cb5f25b2f3ea0040e4ddfac4ca09d52019d9f4be833db6916d7db226a9bae26c"
+          }
+        ]
+      },
+      "streamSettings": {
+        "finalmask": {
+          "udp": [
+            {
+              "type": "salamander",
+              "settings": {
+                "password": "1234"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
