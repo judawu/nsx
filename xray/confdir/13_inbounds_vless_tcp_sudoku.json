@@ -4,7 +4,7 @@
     {
       "tag": "vless-tcp-sudoku",
       "listen": "0.0.0.0",
-      "port": 4004,
+      "port": 4010,
       "protocol": "vless",
       "settings": {
         "clients": [
