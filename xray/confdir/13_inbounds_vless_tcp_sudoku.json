@@ -1,0 +1,44 @@
+{
+
+  "inbounds": [
+    {
+      "tag": "vless-in",
+      "listen": "0.0.0.0",
+      "port": 10061,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "uuid",
+            "email": "client@local"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "finalmask": {
+          "tcp": [
+        {
+          "type": "sudoku",
+          "settings": {
+            "password": "same-secret",
+            "ascii": "prefer_entropy",
+            "customTables": [
+              "xpxvvpvv",
+              "vxpvxvvp",
+              "pxvvxvvp",
+              "vpxvxvpv",
+              "xvpvvxpv",
+              "vvxpxpvv"
+            ],
+            "paddingMin": 0,
+            "paddingMax": 3
+          }
+        }
+      ]
+        }
+      }
+    }
+  ]
+}
