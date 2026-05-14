@@ -751,6 +751,12 @@ xray_config() {
                 alpn=$(echo "$alpn" | jq -r 'join(",")')
             fi
             alpn=$(url_encode "$alpn")
+          
+            pcn=$(xray tls ping $sni 2>/dev/null | grep "Cert's leaf SHA256" | awk '{print $5}')) || {
+                    echoContent red "错误: 无法生成 pinnedPeerCertSha256"
+                    pcn=''
+                }
+            echoContent green "sni=$sni,alpn=$alpn,可以使用xray tls ping $sni输出远程证书的 SHA256 散列值$pcn"
             read -p "是否开启tls Encrypted Client Hello？: " tls_ech < /dev/tty
             if [[  "$tls_ech" == "y" ]]; then
                  echServerKeys_Config=$(xray tls ech --serverName "$sni" 2>/dev/null) || {
@@ -767,7 +773,7 @@ xray_config() {
                     echoContent red "错误: 无法更新 echServerKeys"
                     exit 1
                 }
-                url="$url&security=tls&fp=chrome&sni=$sni&alpn=$alpn&ech=$echConfigList"           
+                url="$url&security=tls&fp=chrome&sni=$sni&alpn=$alpn&ech=$echConfigList&pcn=$pcn"           
             else
                 echoContent green "\n不启用 Encrypted Client Hello"
                 url="$url&security=tls&fp=chrome&sni=$sni&alpn=$alpn" 
