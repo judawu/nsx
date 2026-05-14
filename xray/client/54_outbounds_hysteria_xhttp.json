@@ -5,7 +5,7 @@
             "protocol": "hysteria",
             "settings": {
                 "address": "YOUT_REMOTE_VPS_IP",
-                "port": 4010,
+                "port": 4013,
                 "version": 2
             },
             "streamSettings": {
