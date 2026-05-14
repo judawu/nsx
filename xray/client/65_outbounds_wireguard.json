@@ -9,7 +9,7 @@
         "peers": [
           {
             "publicKey": "bacc8f85656bc591995fa5c0fb5e8f23a75671f4b46851fbb53da1e859ac0331",
-            "endpoint": "127.0.0.1:1081"
+            "endpoint": "YOUR_REMOTE_VPS_IP:4007"
           }
         ],
         "noKernelTun": true
