@@ -17,7 +17,6 @@
                     },
             "streamSettings": {
                 "network": "raw",
-		
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": "pre.yourdomain", 
@@ -31,22 +30,6 @@
                              "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
                         }
                     ] 
-                },
-              
-                "finalmask": {
-                    "udp": [
-                        {
-                            "type": "salamander",
-                            "settings": {
-                                "password": "QvofbfMIil7768oFAyTpyA==" 
-                            }
-                        }
-                    ], 
-                    "quicParams": {
-                        "congestion": "brutal",
-                        "brutalUp": "100 mbps",
-                        "brutalDown": "100 mbps" 
-                    }
                 }
             }
         }
