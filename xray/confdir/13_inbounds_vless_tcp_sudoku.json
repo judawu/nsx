@@ -16,9 +16,9 @@
         "decryption": "mlkem768x25519plus.native.600s.sOOsZm_JGu4g995Dq55l4W4nL79iOqfDYD834Q_NtXU"
       },
       "streamSettings": {
-        "network": "tcp",
+        "network": "raw",
         "finalmask": {
-          "tcp": [
+           "tcp": [
         {
           "type": "sudoku",
           "settings": {
@@ -32,8 +32,17 @@
               "xvpvvxpv",
               "vvxpxpvv"
             ],
-            "paddingMin": 0,
-            "paddingMax": 3
+            "paddingMin": 2,
+            "paddingMax": 7
+          }
+        }
+      ],
+      "udp": [
+        {
+          "type": "sudoku",
+          "settings": {
+            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
+            "ascii": "prefer_ascii"
           }
         }
       ]
