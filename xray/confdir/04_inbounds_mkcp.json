@@ -103,7 +103,8 @@
               "type": "xdns",
               "settings": {
                 "domain": "pre.yourdomain"
-           }
+                           }
+          }
           ]
         }
         "security": "tls",
