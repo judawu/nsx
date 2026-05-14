@@ -108,7 +108,13 @@
           "domain:cookielaw.org",
           "domain:right.com"
         ],
+       
        "outboundTag": "block"
+      },
+      {
+        "ruleTag": "geosite-ad",
+        "domain": ["geosite:category-ads-all"],
+        "outboundTag": "block-out",
       },
 
       //  默认规则
