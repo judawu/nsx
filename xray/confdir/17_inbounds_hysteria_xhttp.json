@@ -1,0 +1,48 @@
+{
+"inbounds": [
+	{
+            "tag": "hysteria-xhttp",
+            "listen": "0.0.0.0",
+            "port": 4014,
+            "protocol": "hysteria",
+            "settings": {
+                "version": 2,
+  				  "users": [
+  		          {
+  		            "auth": "QvofbfMIil7768oFAyTpyA==",
+  		            "level": 0,
+  		            "email": "hysteria@hysteria,xray"
+        		          }
+                ]
+                    },
+            "streamSettings": {
+                "network": "xhttp",
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "pre.yourdomain", 
+                    "alpn": [
+                        "h3"
+                    ], 
+                    "certificates": [
+                        {
+                            "usage": "encipherment",
+                             "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
+                             "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
+                        }
+                    ] 
+                },
+              
+                "finalmask": {
+                    "quicParams": {
+                        "congestion": "reno",
+                        "udpHop": {
+                        "ports": "20000-21000",
+                        "interval": "5-10"
+                      }
+                    }
+                }
+            }
+        }
+   
+  ]
+}
