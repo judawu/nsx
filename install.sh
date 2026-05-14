@@ -638,7 +638,7 @@ xray_config() {
   
     echoContent yellow "提取所有 inbounds\n"
     # 遍历每个 inbound
-    jq -c '.inbounds[] | select(.settings.clients)' "$TEMP_FILE" | while IFS= read -r inbound; do
+    jq -c '.inbounds[] | select(.settings.users)' "$TEMP_FILE" | while IFS= read -r inbound; do
         url=""
         tag=$(echo "$inbound" | jq -r '.tag')
         protocol=$(echo "$inbound" | jq -r '.protocol')
@@ -676,9 +676,10 @@ xray_config() {
                 path=$(url_encode "$path")
                 url="$url&path=$path"
                 ;;
-            "kcp")
-                seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed')
-                url="$url&seed=$seed"
+            "mkcp")
+                mtu=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.mtu')
+                tti=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.tti')
+                url="$url&mtu=$mtu&tti=$tti"
                 ;;
             *)
                 ;;
@@ -833,7 +834,7 @@ xray_config() {
                 fi
             fi
             echoContent green "\n处理 vless 和 vmess 的 id 替换，用 xray uuid 生成新 UUID"
-            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+            clients=$(echo "$inbound" | jq -c '.settings.users[]')
             client_index=0
             echo "$clients" | while IFS= read -r client; do
                 old_id=$(echo "$client" | jq -r '.id')
@@ -856,7 +857,7 @@ xray_config() {
                 echoContent yellow "\n替换 $client_index UUID, $tag: $old_id -> $new_id\n"
                 # 更新 id
                 jq --arg tag "$tag" --arg old_id "$old_id" --arg new_id "$new_id" \
-                    '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.id == $old_id)).id = $new_id' \
+                    '(.inbounds[] | select(.tag == $tag) | .settings.users[] | select(.id == $old_id)).id = $new_id' \
                     "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                     echoContent red "错误: 无法更新 UUID"
                     exit 1
@@ -875,7 +876,7 @@ xray_config() {
         # 处理 trojan 和 shadowsocks 的 password 替换
         if [[ "$protocol" == "trojan"  ]]; then
             echoContent green "\n处理 trojan  的 password 替换，用 openssl rand -base64 16 生成新密码"
-            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+            clients=$(echo "$inbound" | jq -c '.settings.users[]')
             client_index=0
             echo "$clients" | while IFS= read -r client; do
                 old_password=$(echo "$client" | jq -r '.password')
@@ -884,7 +885,7 @@ xray_config() {
                 echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password\n"
                 # 更新 password
                 jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
-                    '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.password == $old_password)).password = $new_password' \
+                    '(.inbounds[] | select(.tag == $tag) | .settings.users[] | select(.password == $old_password)).password = $new_password' \
                     "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                     echoContent red "错误: 无法更新 password"
                     exit 1
@@ -1426,7 +1427,7 @@ generateSubscriptions() {
                 XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
                 > "$XRAY_SUB_FILE"
         # 提取所有 inbounds
-        jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF" | while IFS= read -r inbound; do
+        jq -c '.inbounds[] | select(.settings.users)' "$XRAY_CONF" | while IFS= read -r inbound; do
             tag=$(echo "$inbound" | jq -r '.tag')
             protocol=$(echo "$inbound" | jq -r '.protocol')
             port=$(echo "$inbound" | jq -r '.port // "443"')
@@ -1513,7 +1514,7 @@ generateSubscriptions() {
             fi
 
             # 处理 clients
-            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+            clients=$(echo "$inbound" | jq -c '.settings.users[]')
             echo "$clients" | while IFS= read -r client; do
                 email=$(echo "$client" | jq -r '.email // "unknown"')
                 SUB_LINK=""
