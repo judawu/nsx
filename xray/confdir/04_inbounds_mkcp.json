@@ -70,31 +70,40 @@
                   ]
                 }
           },
-            {
+          {
             "type": "salamander",
             "settings": {
               "password": "QvofbfMIil7768oFAyTpyA=="
             }
           },
-             {
+          {
             "type": "sudoku",
-            "settings": {
-             "password": "",
-              "ascii": "",
-            
-              "customTable": "", 
-              "customTables": [""],
-            
-              "paddingMin": 0, 
-              "paddingMax": 0 
-            }
+             "settings": {
+            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
+            "ascii": "prefer_entropy",
+            "customTables": [
+              "xpxvvpvv",
+              "vxpvxvvp",
+              "pxvvxvvp",
+              "vpxvxvpv",
+              "xvpvvxpv",
+              "vvxpxpvv"
+            ],
+            "paddingMin": 2,
+            "paddingMax": 7
+                     }
           },  
-            {
+          {
               "type": "xicmp",
               "settings": {
-                "id": 1234
+                 "listenIp": "0.0.0.0",
+                  "id": 0
               },
-       
+           {
+              "type": "xdns",
+              "settings": {
+                "domain": "pre.yourdomain"
+           }
           ]
         }
         "security": "tls",
