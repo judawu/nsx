@@ -1,1 +1,58 @@
 
+{
+"inbounds": [
+	{
+            "tag": "vless-hysteria2",
+            "listen": "0.0.0.0",
+            "port": 4011,
+            "protocol": "hysteria",
+            "settings": {
+              "version": 2,
+              "clients": [
+                {
+                  "auth": "5783a3e7-e373-51cd-8642-c83782b807c5",
+                  "email": "vless@hysteria"
+                }
+              ]
+            }
+            "streamSettings": {
+                "network": "hysteria",
+			        	"hysteriaSettings": {
+                    "version": 2,
+                    "auth": "QvofbfMIil7768oFAyTpyA==" 
+                },
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "pre.yourdomain", 
+                    "alpn": [
+                        "h3"
+                    ], 
+                    "certificates": [
+                        {
+                            "usage": "encipherment",
+                             "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
+                             "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
+                        }
+                    ] 
+                },
+              
+                "finalmask": {
+                    "udp": [
+                        {
+                            "type": "salamander",
+                            "settings": {
+                                "password": "QvofbfMIil7768oFAyTpyA==" 
+                            }
+                        }
+                    ], 
+                    "quicParams": {
+                        "congestion": "brutal",
+                        "brutalUp": "100 mbps",
+                        "brutalDown": "100 mbps" 
+                    }
+                }
+            }
+        }
+   
+  ]
+}
