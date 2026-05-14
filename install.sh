@@ -681,6 +681,10 @@ xray_config() {
                 tti=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.tti')
                 url="$url&mtu=$mtu&tti=$tti"
                 ;;
+             "hysteria")
+                auth=$(echo "$inbound" | jq -r '.streamSettings.hysteriaSettings.auth')
+                url="$url&auth=$auth"
+                ;;
             *)
                 ;;
         esac
