@@ -1,7 +1,7 @@
 {
     "outbounds": [
         {
-            "tag": "hysteria",
+            "tag": "hysteria-xhttp",
             "protocol": "hysteria",
             "settings": {
                 "address": "YOUT_REMOTE_VPS_IP",
