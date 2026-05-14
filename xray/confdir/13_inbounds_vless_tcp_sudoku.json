@@ -9,8 +9,8 @@
       "settings": {
         "clients": [
           {
-            "id": "uuid",
-            "email": "client@local"
+            "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
+            "email": "finalmask@vless.tcp.sudoku"
           }
         ],
         "decryption": "none"
