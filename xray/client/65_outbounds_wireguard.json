@@ -1,0 +1,31 @@
+{
+ 
+  "outbounds": [
+    {
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "e033637bda4eeaed6b5ccf99da283e1003daece5ced305e8b06aa163f0320479",
+        "address": ["10.1.1.1", "fd59:7153:2388:b5fd:0000:0000:1234:0001"],
+        "peers": [
+          {
+            "publicKey": "bacc8f85656bc591995fa5c0fb5e8f23a75671f4b46851fbb53da1e859ac0331",
+            "endpoint": "127.0.0.1:1081"
+          }
+        ],
+        "noKernelTun": true
+      },
+      "streamSettings": {
+        "finalmask": {
+          "udp": [
+            {
+              "type": "salamander",
+              "settings": {
+                "password": "1234"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
