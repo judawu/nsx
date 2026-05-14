@@ -97,6 +97,7 @@
               "settings": {
                  "listenIp": "0.0.0.0",
                   "id": 0
+                    }
               },
            {
               "type": "xdns",
