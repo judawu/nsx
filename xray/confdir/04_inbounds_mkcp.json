@@ -5,16 +5,15 @@
       "listen": "0.0.0.0",
       "port": 4006,
       "protocol": "vless",
-      "decryption": "mlkem768x25519plus.native.600s.QF7VqEesOxnLT0oHtg2gKdlXjJIl-umgDGdAXLjgaEA",
       "settings": {
         "users": [
           {
-            
-            "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
-            "email": "vless@tls.mkcp",  
-       
+            "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
+            "email": "finalmask@vless.mkcp"
           }
         ],
+        "decryption": "mlkem768x25519plus.native.600s.QF7VqEesOxnLT0oHtg2gKdlXjJIl-umgDGdAXLjgaEA"
+      },
      
       "streamSettings": {
         "network": "mkcp",
