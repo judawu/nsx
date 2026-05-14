@@ -2,8 +2,8 @@
 "inbounds": [
     {
       "tag": "VLESS-TLS-MKCP",
-      "listen": "9.9.9.9",
-      "port": 3345,
+      "listen": "0.0.0.0",
+      "port": 4006,
       "protocol": "vless",
       "decryption": "none",
       "settings": {
@@ -29,24 +29,88 @@
           "writeBufferSize": 1
                    }
                 },
+        "finalmask": {
+
+          "udp": [
+            {
+            "type": "header-wechat"
+           },
+           {
+            "type": "header-dtls"
+           },
+           {
+            "type": "header-srtp"
+           },
+           {
+            "type": "header-utp"
+           },
+           {
+            "type": "header-wireguard"
+           },
+            {
+            "type": "mkcp-original"
+           },
+            {
+            "type": "mkcp-aes128gcm",
+            "settings": {
+               "password": "your-password"
+            }
+          },
+          {
+            "type": "salamander",
+            "settings": {
+              "password": "0123"
+            }
+          },
+          {
+            "type": "salamander",
+            "settings": {
+              "password": "3210"
+            }
+          },
+         
+          {
+            "type": "aesgcm128",
+            "settings": {
+              "psk": "321"
+            }
+          },
+            {
+              "type": "xicmp",
+              "settings": {
+                "id": 1234
+              },
+             {
+              "type": "header-dtls"
+            },
+            {
+              "type": "mkcp-original"
+            },
+            {
+              "type": "mkcp-aes128gcm",
+              "settings": {
+                "password": "123"
+              }
+            }
+            }
+          ]
+        }
         "security": "tls",
         "tlsSettings": {
-          "serverName": "tls.yourdomain",
+          "serverName": "pre.yourdomain",
           "rejectUnknownSni": true,
-          "allowInsecure": false,
           "alpn": [    
             "h2",
             "http/1.1"
           ],
           "certificates": [
             {
-               "certificateFile": "/usr/local/nsx/certs/tls.yourdomain.pem",
-               "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
+               "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
+               "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
             }
           ],
           "disableSystemRoot": true,
           "enableSessionResumption": false
-       
                          }
         }
      }  
