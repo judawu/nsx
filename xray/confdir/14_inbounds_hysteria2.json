@@ -1,7 +1,7 @@
 {
 "inbounds": [
 	{
-            "tag": "IN-Hysteria2",
+            "tag": "hysteria-hysteria2",
             "listen": "0.0.0.0",
             "port": 4010,
             "protocol": "hysteria",
