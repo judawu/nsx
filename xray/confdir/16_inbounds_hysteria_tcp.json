@@ -3,7 +3,7 @@
 	{
             "tag": "hysteria-tcp",
             "listen": "0.0.0.0",
-            "port": 4010,
+            "port": 4013,
             "protocol": "hysteria",
             "settings": {
                 "version": 2,
