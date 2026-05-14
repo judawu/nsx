@@ -1,0 +1,55 @@
+{
+"inbounds": [
+	{
+            "tag": "hysteria-tcp",
+            "listen": "0.0.0.0",
+            "port": 4010,
+            "protocol": "hysteria",
+            "settings": {
+                "version": 2,
+  				  "users": [
+  		          {
+  		            "auth": "QvofbfMIil7768oFAyTpyA==",
+  		            "level": 0,
+  		            "email": "hysteria@hysteria,xray"
+        		          }
+                ]
+                    },
+            "streamSettings": {
+                "network": "raw",
+		
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "pre.yourdomain", 
+                    "alpn": [
+                        "h3"
+                    ], 
+                    "certificates": [
+                        {
+                            "usage": "encipherment",
+                             "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
+                             "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
+                        }
+                    ] 
+                },
+              
+                "finalmask": {
+                    "udp": [
+                        {
+                            "type": "salamander",
+                            "settings": {
+                                "password": "QvofbfMIil7768oFAyTpyA==" 
+                            }
+                        }
+                    ], 
+                    "quicParams": {
+                        "congestion": "brutal",
+                        "brutalUp": "100 mbps",
+                        "brutalDown": "100 mbps" 
+                    }
+                }
+            }
+        }
+   
+  ]
+}
