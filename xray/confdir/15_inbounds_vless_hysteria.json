@@ -4,6 +4,8 @@
 	{
          "tag": "vless-hysteria2",
           "protocol": "vless",
+		   "listen": "0.0.0.0",
+           "port": 4014,
 		  "settings": {
 			"clients": [
 			  {
