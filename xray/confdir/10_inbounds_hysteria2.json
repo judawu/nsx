@@ -23,15 +23,15 @@
                 },
                 "security": "tls",
                 "tlsSettings": {
-                    "serverName": "tls.yourdomain", 
+                    "serverName": "pre.yourdomain", 
                     "alpn": [
                         "h3"
                     ], 
                     "certificates": [
                         {
                             "usage": "encipherment",
-                             "certificateFile": "/usr/local/nsx/certs/tls.yourdomain.pem",
-                             "keyFile": "/usr/local/nsx/certs/tls.yourdomain.key"
+                             "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
+                             "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
                         }
                     ] 
                 },
