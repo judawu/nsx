@@ -1,0 +1,39 @@
+{
+    "outbounds": [
+        {
+            "tag": "hysteria-tcp",
+            "protocol": "hysteria",
+            "settings": {
+                "address": "YOUT_REMOTE_VPS_IP",
+                "port": 4012,
+                "version": 2
+            },
+            "streamSettings": {
+                "network": "raw",
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "YOUT_REMOTE_VPS_DOMAIN" ,// SNI
+                   "alpn": ["h3"],
+                   "pinnedPeerCertSha256": "31647e1d6374d36b96cf139584f5a7cbd88c120a806db919820002c95d98480f"
+                // xray tls ping 
+                },
+               
+                "finalmask": {
+                    "udp": [
+                        {
+                            "type": "salamander",
+                            "settings": {
+                                "password": "QvofbfMIil7768oFAyTpyA==" // salamander 混淆密码
+                            }
+                        }
+                    ],
+                    "quicParams": {
+                        "congestion": "bbr", // 可改为 brutal，若如此做请自行修改下面宽带
+                        "brutalUp": "30 mbps",
+                        "brutalDown": "100 mbps"
+                    }
+                }
+            }
+        }
+    ]
+}
