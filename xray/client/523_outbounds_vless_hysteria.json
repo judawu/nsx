@@ -3,11 +3,20 @@
         {
             "tag": "vless-hysteria",
             "protocol": "vless",
-            "settings": {
-                "address": "YOUT_REMOTE_VPS_IP",
-                "port": 4010,
-                "version": 2
-            },
+             "settings": {
+                "vnext": [
+                  {
+                    "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+                    "port": 4011,
+                    "users": [
+                      {
+                        "id": "808cf3a7-f4e0-4f11-8975-e4a2c2302805", // 和服务器端的一致   
+                        "encryption": "none"
+                      }
+                    ]
+                  }
+                ]
+              },
             "streamSettings": {
                 "network": "hysteria",
                 "security": "tls",
