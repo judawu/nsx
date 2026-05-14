@@ -6,15 +6,21 @@
      
       "decryption": "mlkem768x25519plus.native.0rtt.ovCnB9IrNQPVzlQlWCjCdLAHrNkVabFpTyN7C_5Xnjo",
       "settings": {
-        "users": [
+        "vnext": [
           {
-            
-            "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
-            "email": "vless@tls.mkcp",
-            "flow": "xtls-rprx-vision",
-            "level": 0
+            "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+            "port": 443,
+            "users": [
+              {
+                "id": "808cf3a7-f4e0-4f11-8975-e4a2c2302805", // 和服务器端的一致
+                "flow": "xtls-rprx-vision",      
+                "encryption": "none",
+                "level": 0
+              }
+            ]
           }
-        ],
+        ]
+      },
      
       "streamSettings": {
         
