@@ -5,16 +5,20 @@
       "tag": "vless-tcp-sudoku",
       "protocol": "vless",
       "settings": {
-        
-        "vnext": [
-          "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
-           "port": 4014,
+         "vnext": [
           {
-            "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
-            "email": "finalmask@vless.tcp.sudoku"
+            "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
+            "port": 4010,
+            "users": [
+              {
+                "id": "c342b3aa-144b-4c47-950b-f35a3bce1257", 
+                 "encryption": "mlkem768x25519plus.native.600s.sVs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk"
+          
+              }
+            ]
           }
         ],
-        "encryption": "mlkem768x25519plus.native.600s.sVs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk"
+     
       },
       "streamSettings": {
         "network": "raw",
