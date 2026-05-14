@@ -106,7 +106,7 @@
                            }
           }
           ]
-        }
+        },
         "security": "tls",
         "tlsSettings": {
           "serverName": "pre.yourdomain",
