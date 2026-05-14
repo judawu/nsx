@@ -13,7 +13,7 @@
             "email": "finalmask@vless.tcp.sudoku"
           }
         ],
-        "decryption": "none"
+        "decryption": "mlkem768x25519plus.native.600s.sOOsZm_JGu4g995Dq55l4W4nL79iOqfDYD834Q_NtXU"
       },
       "streamSettings": {
         "network": "tcp",
@@ -22,7 +22,7 @@
         {
           "type": "sudoku",
           "settings": {
-            "password": "mlkem768x25519plus.native.600s.+-/*xxxx",
+            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
             "ascii": "prefer_entropy",
             "customTables": [
               "xpxvvpvv",
