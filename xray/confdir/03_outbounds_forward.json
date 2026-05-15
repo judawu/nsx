@@ -18,10 +18,19 @@
       },
       "streamSettings": {
         "sockopt": {
+          "acceptProxyProtocol": false,
+          "mark": 0,
+          "penetrate": false,
+          "tcpKeepAliveIdle": 300,
+          "tcpKeepAliveInterval": 0,
+          "tcpMaxSeg": 1440,
           "tcpMptcp": true,
-          "tcpNoDelay": true
+          "tcpUserTimeout":10000,
+          "tcpWindowClamp": 6000,
+          "v6only": false
         }
       }
+
     },
    
     {
@@ -37,10 +46,18 @@
           }
         ]
       },
-      "streamSettings": {
+        "streamSettings": {
         "sockopt": {
+          "acceptProxyProtocol": false,
+          "mark": 0,
+          "penetrate": false,
+          "tcpKeepAliveIdle": 300,
+          "tcpKeepAliveInterval": 0,
+          "tcpMaxSeg": 1440,
           "tcpMptcp": true,
-          "tcpNoDelay": true
+          "tcpUserTimeout":10000,
+          "tcpWindowClamp": 6000,
+          "v6only": false
         }
       }
     },
@@ -57,10 +74,18 @@
           }
         ]
       },
-      "streamSettings": {
+       "streamSettings": {
         "sockopt": {
+          "acceptProxyProtocol": false,
+          "mark": 0,
+          "penetrate": false,
+          "tcpKeepAliveIdle": 300,
+          "tcpKeepAliveInterval": 0,
+          "tcpMaxSeg": 1440,
           "tcpMptcp": true,
-          "tcpNoDelay": true
+          "tcpUserTimeout":10000,
+          "tcpWindowClamp": 6000,
+          "v6only": false
         }
       }
     },
@@ -77,10 +102,18 @@
           }
         ]
       },
-      "streamSettings": {
+        "streamSettings": {
         "sockopt": {
+          "acceptProxyProtocol": false,
+          "mark": 0,
+          "penetrate": false,
+          "tcpKeepAliveIdle": 300,
+          "tcpKeepAliveInterval": 0,
+          "tcpMaxSeg": 1440,
           "tcpMptcp": true,
-          "tcpNoDelay": true
+          "tcpUserTimeout":10000,
+          "tcpWindowClamp": 6000,
+          "v6only": false
         }
       }
     }
