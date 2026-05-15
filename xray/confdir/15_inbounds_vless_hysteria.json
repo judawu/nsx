@@ -53,27 +53,23 @@
                         }
                     ], 
                     "quicParams": {
-                        "congestion": "brutal",
-                        "brutalUp": "100 mbps",
-                        "brutalDown": "100 mbps" ,
-						"debug": false,
-			            "disablePathMTUDiscovery": false,
-			            "initConnectionReceiveWindow": 8388608,
-			            "initStreamReceiveWindow": 20971520,
-			            "keepAlivePeriod": 10,
-			            "maxConnectionReceiveWindow": 8388600,
-			            "maxIdleTimeout": 30,
-			            "maxIncomingStreams": 1024,
-			            "maxStreamReceiveWindow": 20971520,
+			            "congestion": "brutal",
+			            "debug": false,
+			            "brutalUp": "60 mbps",
+			            "brutalDown": "100 mbps",
 			            "udpHop": {
-			              "interval": {
-			                "From": 5,
-			                "Left": 5,
-			                "Right": 10,
-			                "To": 10
-						              },
-			              "ports": "20000-50000"
-			            }
+			              "ports": "20000-50000",
+			              "interval": "5-10"
+			                       },
+			            "initStreamReceiveWindow": 8388608,
+			            "maxStreamReceiveWindow": 8388608,
+			            "initConnectionReceiveWindow": 20971520,
+			            "maxConnectionReceiveWindow": 20971520,
+			            "maxIdleTimeout": 30,
+			            "keepAlivePeriod": 0,
+			            "disablePathMTUDiscovery": false,
+			            "maxIncomingStreams": 1024
+			          }
 
 
                     }
