@@ -25,7 +25,7 @@
                     "10845": "YOUR_REMOTE_VPS_IP:10849",// 这个指向了远程的一份web服务器
                     "10846": ":10849" ,// overrides port only
                     "10847": "YOUR_REMOTE_VPS_IP:80",// overrides address and port
-                    "10844": ":8888", // 指向服务器xray 的api接口
+                    "10844": ":8888", // 指向client xray 的api接口
                     "10843": ":3443" // 指向一个下行端口，完成骚操作
                     
                           },
