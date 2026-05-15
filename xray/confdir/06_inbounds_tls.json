@@ -220,7 +220,8 @@
         "network": "websocket",
         "wsSettings": {
         "acceptProxyProtocol": false,
-          "path": "/vlessws"
+        "path": "/vlessws",
+        "heartbeatPeriod": 10
         }
       },
       "sniffing": {
@@ -250,7 +251,8 @@
       "streamSettings": {
         "network": "websocket",
         "wsSettings": {
-          "path": "/vmessws"
+          "path": "/vmessws",
+          "heartbeatPeriod": 10
         }
       },
       "sniffing": {
@@ -285,7 +287,8 @@
         "network": "websocket",
         "wsSettings": {
         "acceptProxyProtocol": false,
-          "path": "/trojanws"
+          "path": "/trojanws",
+           "heartbeatPeriod": 10
         }
       },
       "sniffing": {
