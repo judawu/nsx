@@ -1905,6 +1905,20 @@ updateConfig() {
                  .
               end
             )' "$XRAY_CONF" > "$TMP_CONF"
+        echoContent green "合并中hysteria传输层的quicParams下面的udpHop的interval会不正确被替换，需要修改"
+        TMP_CONF="${XRAY_CONF}.tmp"
+        
+        jq 'walk(
+              if type == "object" 
+                 and has("quicParams") 
+                 and (.quicParams | type == "object") 
+                 and (.quicParams | has("udpHop"))
+              then 
+                 .quicParams.udpHop.interval = "5-10"
+              else 
+                 .
+              end
+            )' "$XRAY_CONF" > "$TMP_CONF"
         
         if [ $? -ne 0 ]; then
             echoContent red "错误: jq 删除 port 失败，无法更新 $XRAY_CONF"
