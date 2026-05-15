@@ -34,15 +34,70 @@
          "skipFallback": false
       },
  
-      "94.140.14.59",
-      "45.90.28.0",
-      "45.90.30.0",
-      "146.112.61.108",
-      "185.220.100.240",
-      "185.220.101.240",
-      "8.8.4.4",
-      "1.1.1.1",
-      "localhost"
+      {
+        "address": "94.140.14.59",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+      {
+        "address": "45.90.28.0",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+      {
+        "address": "45.90.30.0",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+     {
+        "address": "146.112.61.108",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+      {
+        "address": "185.220.100.240",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+      {
+        "address": "185.220.101.240",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+     {
+        "address": "8.8.4.4",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+      {
+        "address": "1.1.1.1",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      },
+      {
+        "address": "localhost",
+        "finalQuery": false,
+        "port": 53,
+        "skipFallback": false,
+        "timeoutMs": 0
+      }
+
     ],
     "queryStrategy": "UseIP",
     "disableCache": false,
