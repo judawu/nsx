@@ -6,15 +6,15 @@
       "port": 4006,
       "protocol": "vless",
       "settings": {
-        "users": [
-          {
-            "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
-            "email": "finalmask@vless.mkcp"
-          }
-        ],
-        "decryption": "mlkem768x25519plus.native.600s.QF7VqEesOxnLT0oHtg2gKdlXjJIl-umgDGdAXLjgaEA"
+            "users": [
+              {
+                "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
+                "email": "finalmask@vless.mkcp"
+              }
+            ],
+            "decryption": "mlkem768x25519plus.native.600s.QF7VqEesOxnLT0oHtg2gKdlXjJIl-umgDGdAXLjgaEA"
       },
-     
+   
       "streamSettings": {
         "network": "mkcp",
         "kcpSettings": {
@@ -24,18 +24,16 @@
           "downlinkCapacity": 20,
           "congestion": true,
           "readBufferSize": 1,
-          "writeBufferSize": 1
-                   }
+          "writeBufferSize": 1              
                 },
         "finalmask": {
-
           "udp": [
             {
             "type": "header-wechat"
-           },
+            },
            {
             "type": "header-dtls"
-           },
+            },
            {
             "type": "header-srtp"
            },
@@ -45,14 +43,14 @@
            {
             "type": "header-wireguard"
            },
-            {
+           {
             "type": "mkcp-original"
            },
-            {
+           {
             "type": "mkcp-aes128gcm",
             "settings": {
                "password": "QvofbfMIil7768oFAyTpyA=="
-            }
+                        }
           },
           {
             "type": "noise",
@@ -86,10 +84,10 @@
               "vpxvxvpv",
               "xvpvvxpv",
               "vvxpxpvv"
-            ],
+                             ],
             "paddingMin": 2,
             "paddingMax": 7
-                     }
+                          }
           },  
           {
               "type": "xicmp",
@@ -97,7 +95,7 @@
                  "listenIp": "0.0.0.0",
                   "id": 0
                     }
-              },
+           },
            {
               "type": "xdns",
               "settings": {
@@ -113,13 +111,13 @@
           "alpn": [    
             "h2",
             "http/1.1"
-          ],
+                 ],
           "certificates": [
             {
                "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
                "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
             }
-          ],
+                          ],
           "disableSystemRoot": true,
           "enableSessionResumption": false
                          }
