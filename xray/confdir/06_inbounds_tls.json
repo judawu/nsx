@@ -323,7 +323,7 @@
         "grpcSettings": {
           "serviceName": "/trojan/grpc"
                          }
-                        },
+                        }
    
     },
      {
