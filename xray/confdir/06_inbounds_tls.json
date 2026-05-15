@@ -209,8 +209,9 @@
         "users": [
           {
               "email": "vless@ws",
-              "id": "2c65bf80-35cb-491d-b057-fac6a3f74fa4"
+              "id": "2c65bf80-35cb-491d-b057-fac6a3f74fa4".
               "level": 0
+            
           }
         ],
         "decryption": "none"
@@ -386,7 +387,8 @@
         "users": [
           {
             "email": "vless@httpupgrade",
-            "id": "850413a9-c769-4fa7-adae-c320fe5103b9"
+            "id": "850413a9-c769-4fa7-adae-c320fe5103b9",
+            "level": 0
           }
         ],
         "decryption": "none"
