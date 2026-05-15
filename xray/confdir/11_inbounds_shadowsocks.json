@@ -89,7 +89,9 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
-          "serviceName": "/ss/grpc" 
+          "serviceName": "/ss/grpc" ,
+		  "health_check_timeout": 20,
+          "idle_timeout": 60
         }
       },
       "sniffing": {
