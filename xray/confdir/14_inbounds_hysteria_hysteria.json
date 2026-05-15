@@ -13,8 +13,8 @@
 		            "level": 0,
 		            "email": "hysteria@hysteria,xray"
 		          }
-        ]
-            },
+                   ]
+                        },
             "streamSettings": {
                 "network": "hysteria",
 				"hysteriaSettings": {
@@ -49,7 +49,7 @@
 			            "congestion": "force-brutal",
 			            "debug": false,
 			            "brutalUp": "60 mbps",
-			            "brutalDown": 0,
+			            "brutalDown": "100 mbps",
 			            "udpHop": {
 			              "ports": "20000-50000",
 			              "interval": "5-10"
