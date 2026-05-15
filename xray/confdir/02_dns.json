@@ -3,23 +3,7 @@
     "tag": "dns_inbound",
 
     "servers": [
-      {
-        "address":  "127.0.0.1", 
-        "domains": ["geosite:category-ads-all"]
-    
-      },
-      "quic+local://dns.adguard.com",
-      "tcp+local://94.140.14.49:53",
-      "94.140.14.59",
-      "45.90.28.0",
-      "45.90.30.0",
-      "146.112.61.108",
-      "185.220.100.240",
-      "185.220.101.240",
-      "8.8.8.8",
-      "8.8.4.4",
-      "1.1.1.1",
-      {
+       {
         "address": "8.8.8.8",
         "port": 53,
         "domains": [
@@ -30,9 +14,35 @@
         ],
         "skipFallback": false
       },
-    
-     
-      "localhost"
+      {
+        "address":  "127.0.0.1", 
+         "port": 53,
+         "domains": ["geosite:category-ads-all"],
+         "finalQuery": true,
+         "skipFallback": true
+      },
+      {
+        "address":   "quic+local://dns.adguard.com",
+        "port": 443,    
+         "finalQuery": false,
+         "skipFallback": false
+      },
+      {
+        "address": "tcp+local://94.140.14.49:53",
+        "port": 53,    
+         "finalQuery": false,
+         "skipFallback": false
+      },
+ 
+      "94.140.14.59:53",
+      "45.90.28.0:53",
+      "45.90.30.0:53",
+      "146.112.61.108:53",
+      "185.220.100.240:53",
+      "185.220.101.240:53",
+      "8.8.4.4:53",
+      "1.1.1.1:53",
+      "localhost:53"
     ],
     "queryStrategy": "UseIP",
     "disableCache": false,
