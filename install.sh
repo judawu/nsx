@@ -898,10 +898,10 @@ xray_config() {
                     *) echoContent green "默认($ss_method)he" ;;
             esac
             read -p "输入 shadowsocks password 默认($ss_password),fox example : ($ss_new_password) " ss_new_new_password < /dev/tty
-            if [[ -z "$ss_new_new_address" ]]; then
-                ss_new_new_address="$ss_address"         
+            if [[ -z "$ss_new_new_password" ]]; then
+                ss_new_new_password="$ss_password"         
             fi
-            jq --arg tag "$tag" --arg ss_new_address "$ss_new_address" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
+            jq --arg tag "$tag" --arg ss_new_address "$ss_new_address" --arg ss_new_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_new_password" \
                 '(.outbounds[] | select(.tag == $tag)) |= (.settings.servers[0].address = $ss_new_address | .settings.servers[0].port = ($ss_new_port | tonumber) | .settings.servers[0].password = $ss_new_password | .settings.servers[0].method = $ss_method)' \
                 "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
                 echoContent red "错误: 无法更新 $tag"
