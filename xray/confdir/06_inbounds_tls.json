@@ -324,7 +324,7 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
-          "serviceName": "/trojan/grpc".
+          "serviceName": "/trojan/grpc",
          "health_check_timeout": 20,
           "idle_timeout": 60
                          }
