@@ -64,21 +64,21 @@
           },
            {
             "path": "/reality/grpc/h1",
-            "dest": "dev/shm/nsx/nginx_grpc_vless.sock",
+            "dest": "/dev/shm/nsx/nginx_grpc_vless.sock",
             "xver": 0
           },
       
           {
             "path": "/ss/ws",
-            "dest": "4001"
+            "dest": 4001
           },
           {
             "path": "/ss/tcp",
-            "dest": "4002"
+            "dest": 4002
           },
           {
             "path": "/ss/grpc",
-            "dest": "4003"
+            "dest": 4003
           },
      
           {
