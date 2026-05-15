@@ -19,7 +19,14 @@
                 "network": "hysteria",
 			        	"hysteriaSettings": {
                     "version": 2,
-                    "auth": "QvofbfMIil7768oFAyTpyA==" 
+                    "auth": "QvofbfMIil7768oFAyTpyA==" ,
+					"masquerade": {
+			            "insecure": false,
+			            "rewriteHost": false,
+			            "statusCode": 404
+			          },
+         			 "udpIdleTimeout": 10
+
                 },
                 "security": "tls",
                 "tlsSettings": {
