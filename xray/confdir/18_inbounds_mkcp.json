@@ -60,7 +60,7 @@
                     {
                       "rand": "1-8192",
                       "randRange": "0-255",
-                      "type": "base64",
+                      "type": "array",
                       "delay": "10-20"
                     }
                   ]
