@@ -48,7 +48,12 @@
                     "quicParams": {
                         "congestion": "brutal",
                         "brutalUp": "100 mbps",
-                        "brutalDown": "100 mbps" 
+                        "brutalDown": "100 mbps" ,
+						"udpHop": { 
+                           "ports": "20000-50000",
+                           "interval": "5-10"                    
+                        }
+
                     }
                 }
             }
