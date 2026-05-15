@@ -53,7 +53,7 @@
 			            "disablePathMTUDiscovery": false,
 			            "initConnectionReceiveWindow": 8388608,
 			            "initStreamReceiveWindow": 20971520,
-			            "keepAlivePeriod": 0,
+			            "keepAlivePeriod": 10,
 			            "maxConnectionReceiveWindow": 8388600,
 			            "maxIdleTimeout": 30,
 			            "maxIncomingStreams": 1024,
