@@ -867,9 +867,9 @@ xray_config() {
           tag=$(echo "$outbound" | jq -r '.tag')
           protocol=$(echo "$outbound" | jq -r '.protocol')
           ss_address=$(echo "$outbound"  | jq -r '.settings.servers[0].address')
-          ss_port=$(echo "$outbound" | jq -r '.settings..servers[0].port')
+          ss_port=$(echo "$outbound" | jq -r '.settings.servers[0].port')
           ss_method=$(echo "$outbound"  | jq -r '.settings.servers[0].method')
-          ss_password=$(echo "$outbound" | jq -r '.settings..servers[0].password')
+          ss_password=$(echo "$outbound" | jq -r '.settings.servers[0].password')
           read -p "输入 shadowsocks port 默认($ss_port): " ss_new_port < /dev/tty
           if [[ -z "$ss_new_port" ]]; then
                 ss_new_port="$ss_port"
