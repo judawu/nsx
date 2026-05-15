@@ -22,7 +22,7 @@
                     "10849": "YOUR_REMOTE_VPS_IP:10830",// server xray 的api接口10830
                     "10850": ":443", // overrides port only
                     "10851": "YOUR_REMOTE_VPS_IP:443", // overrides address and port
-                    "10845": "YOUR_REMOTE_VPS_IP:10849",// 这个指向了远程的一份web服务器
+                    "10845": "YOUR_REMOTE_VPS_IP:18080",// 这个指向了远程的一份web服务器blog
                     "10846": ":10849" ,// overrides port only
                     "10847": "YOUR_REMOTE_VPS_IP:80",// overrides address and port
                     "10844": ":10810", // 指向client xray 的api接口
