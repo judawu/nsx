@@ -10,108 +10,103 @@
             "port": 4006,
             "users": [
               {
-                "id": "808cf3a7-f4e0-4f11-8975-e4a2c2302805", // 和服务器端的一致
-               
-                "encryption": "mlkem768x25519plus.native.0rtt.ovCnB9IrNQPVzlQlWCjCdLAHrNkVabFpTyN7C_5Xnjo",
-         
+                "id": "808cf3a7-f4e0-4f11-8975-e4a2c2302805", // 和服务器端的一致           
+                "encryption": "mlkem768x25519plus.native.0rtt.ovCnB9IrNQPVzlQlWCjCdLAHrNkVabFpTyN7C_5Xnjo"    
               }
             ]
           }
         ]
       },
      
-      "streamSettings": {
-        
+      "streamSettings": {        
         "network": "mkcp",
         "kcpSettings": {
-          "mtu": 1350,
-          "tti": 20,
-          "uplinkCapacity": 5,
-          "downlinkCapacity": 20,
-          "congestion": true,
-          "readBufferSize": 1,
-          "writeBufferSize": 1
-                   }
-                },
-           "finalmask": {
-
-          "udp": [
-            {
-            "type": "header-wechat"
-           },
-           {
-            "type": "header-dtls"
-           },
-           {
-            "type": "header-srtp"
-           },
-           {
-            "type": "header-utp"
-           },
-           {
-            "type": "header-wireguard"
-           },
-            {
-            "type": "mkcp-original"
-           },
-            {
-            "type": "mkcp-aes128gcm",
-            "settings": {
-               "password": "QvofbfMIil7768oFAyTpyA=="
-            }
-          },
-          {
-            "type": "noise",
-            "settings": {
-                  "reset": 0,
-                  "noise": [
-                    {
-                      "rand": "1-8192",
-                      "randRange": "0-255",
-                      "type": "base64",
-                      "delay": "10-20"
-                    }
-                  ]
+              "mtu": 1350,
+              "tti": 20,
+              "uplinkCapacity": 5,
+              "downlinkCapacity": 20,
+              "congestion": true,
+              "readBufferSize": 1,
+              "writeBufferSize": 1                      
+                  },
+        "finalmask": {
+              "udp": [
+                {
+                "type": "header-wechat"
+               },
+               {
+                "type": "header-dtls"
+               },
+               {
+                "type": "header-srtp"
+               },
+               {
+                "type": "header-utp"
+               },
+               {
+                "type": "header-wireguard"
+               },
+                {
+                "type": "mkcp-original"
+               },
+                {
+                "type": "mkcp-aes128gcm",
+                "settings": {
+                   "password": "QvofbfMIil7768oFAyTpyA=="
                 }
-          },
-          {
-            "type": "salamander",
-            "settings": {
-              "password": "QvofbfMIil7768oFAyTpyA=="
-            }
-          },
-          {
-            "type": "sudoku",
-             "settings": {
-            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
-            "ascii": "prefer_entropy",
-            "customTables": [
-              "xpxvvpvv",
-              "vxpvxvvp",
-              "pxvvxvvp",
-              "vpxvxvpv",
-              "xvpvvxpv",
-              "vvxpxpvv"
-            ],
-            "paddingMin": 2,
-            "paddingMax": 7
-                     }
-          },  
-          {
-              "type": "xicmp",
-              "settings": {
-                 "listenIp": "0.0.0.0",
-                  "id": 0
+              },
+              {
+                "type": "noise",
+                "settings": {
+                      "reset": 0,
+                      "noise": [
+                        {
+                          "rand": "1-8192",
+                          "randRange": "0-255",
+                          "type": "base64",
+                          "delay": "10-20"
+                        }
+                      ]
                     }
               },
-           {
-              "type": "xdns",
-              "settings": {
-                "domain": "pre.yourdomain"
-                           }
-          }
-          ]
-        },
+              {
+                "type": "salamander",
+                "settings": {
+                  "password": "QvofbfMIil7768oFAyTpyA=="
+                }
+              },
+              {
+                "type": "sudoku",
+                 "settings": {
+                "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
+                "ascii": "prefer_entropy",
+                "customTables": [
+                  "xpxvvpvv",
+                  "vxpvxvvp",
+                  "pxvvxvvp",
+                  "vpxvxvpv",
+                  "xvpvvxpv",
+                  "vvxpxpvv"
+                ],
+                "paddingMin": 2,
+                "paddingMax": 7
+                         }
+              },  
+              {
+                  "type": "xicmp",
+                  "settings": {
+                     "listenIp": "0.0.0.0",
+                      "id": 0
+                        }
+                  },
+               {
+                  "type": "xdns",
+                  "settings": {
+                    "domain": "pre.yourdomain"
+                               }
+              }
+              ]
+          },
         "security": "tls", 
         "tlsSettings": {
           "verifyPeerCertByName": "YOUR_REMOTE_VPS_DOMAIN",
@@ -119,11 +114,11 @@
            "alpn": [
             "http/1.1",
             "h2"
-          ],
+                   ],
           "fingerprint": "chrome",
           "allowInsecure": false 
                        }
         }
-  }
+      }
   ]
 }
