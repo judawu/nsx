@@ -908,7 +908,7 @@ xray_config() {
                 exit 1
             }
             echoContent green "Shadowsocks configuration for  $tag updated successfully"
-       while
+       done
        
     fi
     # 替换原始文件
