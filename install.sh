@@ -895,9 +895,11 @@ xray_config() {
                     ss_method="2022-blake3-chacha20-poly1305" 
                     ss_new_password=$(openssl rand -base64 32)
                     ;;
-                    *) echoContent green "默认($ss_method)he" ;;
+                    *) echoContent green "默认($ss_method)" 
+                       ss_new_password="$ss_password"     
+                    ;;
             esac
-            read -p "输入 shadowsocks password 默认($ss_password),fox example : ($ss_new_password) " ss_new_new_password < /dev/tty
+            read -p "输入 shadowsocks password 默认($ss_password),生成 : ($ss_new_password) " ss_new_new_password < /dev/tty
             if [[ -z "$ss_new_new_password" ]]; then
                 ss_new_new_password="$ss_password"         
             fi
