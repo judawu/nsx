@@ -752,7 +752,7 @@ xray_config() {
             fi
             alpn=$(url_encode "$alpn")
                
-            pcn=$(xray tls ping "$sni" 2>/dev/null | grep "Cert's leaf SHA256" | awk '{print $5}')) || {
+            pcn=$(xray tls ping "$sni" 2>/dev/null | grep "Cert's leaf SHA256" | awk '{print $5}') || {
                     echoContent red "错误: 无法生成 pinnedPeerCertSha256"
                     pcn=""
                 }
