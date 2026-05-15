@@ -49,10 +49,25 @@
                         "congestion": "brutal",
                         "brutalUp": "100 mbps",
                         "brutalDown": "100 mbps" ,
-						"udpHop": { 
-                           "ports": "20000-50000",
-                           "interval": "5-10"                    
-                        }
+						"debug": false,
+			            "disablePathMTUDiscovery": false,
+			            "initConnectionReceiveWindow": 8388608,
+			            "initStreamReceiveWindow": 20971520,
+			            "keepAlivePeriod": 0,
+			            "maxConnectionReceiveWindow": 8388600,
+			            "maxIdleTimeout": 30,
+			            "maxIncomingStreams": 1024,
+			            "maxStreamReceiveWindow": 20971520,
+			            "udpHop": {
+			              "interval": {
+			                "From": 5,
+			                "Left": 5,
+			                "Right": 10,
+			                "To": 10
+						              },
+			              "ports": "20000-50000"
+			            }
+
 
                     }
                 }
