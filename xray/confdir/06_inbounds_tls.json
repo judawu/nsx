@@ -366,7 +366,7 @@
         "security": "none",
         "grpcSettings": {
           "serviceName": "/reality/grpc/h1|h2",
-          "multiMode": true,
+          "multiMode": true
          
         }
       },
