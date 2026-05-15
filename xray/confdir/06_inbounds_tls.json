@@ -321,7 +321,9 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
-          "serviceName": "/trojan/grpc"
+          "serviceName": "/trojan/grpc".
+         "health_check_timeout": 20,
+          "idle_timeout": 60
                          }
                         }
    
@@ -343,7 +345,9 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
-          "serviceName": "/vmess/grpc"
+          "serviceName": "/vmess/grpc",
+          "health_check_timeout": 20,
+          "idle_timeout": 60
         }
       }
     },
@@ -366,7 +370,10 @@
         "security": "none",
         "grpcSettings": {
           "serviceName": "/reality/grpc/h1|h2",
-          "multiMode": true
+          "multiMode": true,
+          "health_check_timeout": 20,
+          "idle_timeout": 60
+
          
         }
       },
