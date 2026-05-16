@@ -4,7 +4,7 @@
     {
       "tag": "simple-reverse-in",
       "listen": "0.0.0.0",
-      "port": 4433,
+      "port": 5544,
       "protocol": "tunnel"
       
     },
@@ -12,7 +12,7 @@
 {
   "tag": "vless_simple_tunnel_reverse",
 	"listen": "0.0.0.0",
-	"port": 3344,
+	"port": 4455,
 	"protocol": "vless",
 	"settings": {
 		"decryption": "none",	
