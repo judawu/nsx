@@ -27,22 +27,7 @@
     }
   },
   "outbounds": [
-    {
-      "tag": "direct",
-      "domainStrategy": "UseIP",
-      "protocol": "freedom"
-    },
-    {
-      "protocol": "freedom",
-      "settings": {
-        "redirect": "www.harvard.edu:443"
-      },
-      "tag": "ad-block"
-    },
-    {
-      "tag": "block",
-      "protocol": "blackhole"
-    }
+   
 
   ]
 }
