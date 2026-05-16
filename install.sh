@@ -1588,13 +1588,15 @@ generateSubscriptions() {
                         params="$params&path=$path"
                     fi
                     ;;
-                "kcp")
-                    seed=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.seed // empty')
-                    if [[ -n "$seed" ]]; then
-                       # seed=$(url_encode "$seed")
-                        params="$params&seed=$seed"
-                    fi
-                    ;;
+                 "mkcp")
+                    mtu=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.mtu')
+                    tti=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.tti')
+                    params="$params&mtu=$mtu&tti=$tti"
+                  ;;
+                "hysteria")
+                   auth=$(echo "$inbound" | jq -r '.streamSettings.hysteriaSettings.auth')
+                   params="$params&auth=$auth"
+                ;;
                 *)
                     ;;
             esac
@@ -1644,10 +1646,9 @@ generateSubscriptions() {
                         password=$(echo "$client" | jq -r '.password')
                         SUB_LINK="trojan://$password@$SUB_DOMAIN:$port?$params#$tag"
                         ;;
-                    "shadowsocks")
-                        password=$(echo "$client" | jq -r '.password')
-                        method=$(echo "$inbound" | jq -r '.settings.method // "aes-256-gcm"')
-                        SUB_LINK="ss://$(echo -n "$method:$password" | base64 -w 0)@$SUB_DOMAIN:$port#$tag"
+                     "hysteria")
+                        auth=$(echo "$client" | jq -r '.auth')
+                        SUB_LINK="hysteria://$auth@$SUB_DOMAIN:$port?$params#$tag"
                         ;;
                     *)
                         echoContent yellow "Unsupported protocol: $protocol for tag: $tag, skipping."
