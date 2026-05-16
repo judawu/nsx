@@ -567,12 +567,15 @@ xray_config() {
                 headertype=$(echo "$inbound" | jq -r '.rawSettings.header.type')
                 headerhost=$(echo "$inbound" | jq -r '.rawSettings.header.request.host[0]')
                 headerpath=$(echo "$inbound" | jq -r '.rawSettings.header.request.path[0]')
+                headerhost=$(url_encode "$headerhost")
+                headerpath=$(url_encode "$headerpath")
                 url="$url&headertype=$headertype&headerhost=$headerhost&headerpath=$headerpath"
                 ;;
             "grpc")
                 authority=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.authority')
                 serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
                 serviceName=$(url_encode "$serviceName")
+                authority=$(url_encode "$authority")
                 url="$url&serviceName=$serviceName&authority=$authority"
                 ;;
             "ws")
@@ -874,18 +877,28 @@ xray_config() {
              url="?type=$network"
 
              case "$network" in
-             "grpc")
-                serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
+              "raw")
+                headertype=$(echo "$ss_inbound" | jq -r '.rawSettings.header.type')
+                headerhost=$(echo "$ss_inbound" | jq -r '.rawSettings.header.request.host[0]')
+                headerpath=$(echo "$ss_inbound" | jq -r '.rawSettings.header.request.path[0]')
+                headerhost=$(url_encode "$headerhost")
+                headerpath=$(url_encode "$headerpath")
+                url="$url&headertype=$headertype&headerhost=$headerhost&headerpath=$headerpath"
+                ;;
+            "grpc")
+                authority=$(echo "$ss_inbound" | jq -r '.streamSettings.grpcSettings.authority')
+                serviceName=$(echo "$ss_inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
                 serviceName=$(url_encode "$serviceName")
+                authority=$(url_encode "$authority")
                 url="$url&serviceName=$serviceName"
                 ;;
             "ws")
-                path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path')
+                path=$(echo "$ss_inbound" | jq -r '.streamSettings.wsSettings.path')
                 path=$(url_encode "$path")
                 url="$url&path=$path"
                 ;;
             "xhttp")
-                xhttpSettings=$(echo "$inbound" | jq -r '.streamSettings.xhttpSettings')
+                xhttpSettings=$(echo "$ss_inbound" | jq -r '.streamSettings.xhttpSettings')
                 host=$(echo "$xhttpSettings" | jq -r '.host // empty')
                 path=$(echo "$xhttpSettings" | jq -r '.path')
                 host=$(url_encode "$host")
@@ -893,22 +906,23 @@ xray_config() {
                 url="$url&host=$host&path=$path"
                 ;;
             "splithttp")
-                path=$(echo "$inbound" | jq -r '.streamSettings.splithttpSettings.path')
+                path=$(echo "$ss_inbound" | jq -r '.streamSettings.splithttpSettings.path')
                 path=$(url_encode "$path")
                 url="$url&path=$path"
                 ;;
             "httpupgrade")
-                path=$(echo "$inbound" | jq -r '.streamSettings.httpupgradeSettings.path')
+                path=$(echo "$ss_inbound" | jq -r '.streamSettings.httpupgradeSettings.path')
                 path=$(url_encode "$path")
                 url="$url&path=$path"
                 ;;
             "mkcp")
-                mtu=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.mtu')
-                tti=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.tti')
+                mtu=$(echo "$ss_inbound" | jq -r '.streamSettings.kcpSettings.mtu')
+                tti=$(echo "$ss_inbound" | jq -r '.streamSettings.kcpSettings.tti')
                 url="$url&mtu=$mtu&tti=$tti"
                 ;;
              "hysteria")
-                auth=$(echo "$inbound" | jq -r '.streamSettings.hysteriaSettings.auth')
+                auth=$(echo "$ss_inbound" | jq -r '.streamSettings.hysteriaSettings.auth')
+                auth=$(url_encode "$auth")
                 url="$url&auth=$auth"
                 ;;
             *)
@@ -941,7 +955,11 @@ xray_config() {
                     ss_method="2022-blake3-chacha20-poly1305" 
                     ss_new_password=$(openssl rand -base64 32)
                     ;;
-                    *) echoContent green "默认($ss_method)he" ;;
+                    *) 
+                    echoContent green "默认($ss_method)"
+                    ss_new_password="$ss_password"
+                    ;;
+                    
             esac
             echoContent green "\n更新 $tag:\n"
             jq --arg tag "$ss_tag"  --arg ss_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
