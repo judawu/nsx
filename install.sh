@@ -570,9 +570,10 @@ xray_config() {
                 url="$url&headertype=$headertype&headerhost=$headerhost&headerpath=$headerpath"
                 ;;
             "grpc")
+                authority=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.authority')
                 serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
                 serviceName=$(url_encode "$serviceName")
-                url="$url&serviceName=$serviceName"
+                url="$url&serviceName=$serviceName&authority=$authority"
                 ;;
             "ws")
                 path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path')
