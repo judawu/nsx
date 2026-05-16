@@ -73,6 +73,19 @@
             }
           },
           {
+              "type": "xicmp",
+              "settings": {
+                 "listenIp": "0.0.0.0",
+                  "id": 0
+                    }
+           },
+           {
+              "type": "xdns",
+              "settings": {
+                "domain": "pre.yourdomain"
+                           }
+          },
+          {
             "type": "sudoku",
              "settings": {
             "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
@@ -88,20 +101,8 @@
             "paddingMin": 2,
             "paddingMax": 7
                           }
-          },  
-          {
-              "type": "xicmp",
-              "settings": {
-                 "listenIp": "0.0.0.0",
-                  "id": 0
-                    }
-           },
-           {
-              "type": "xdns",
-              "settings": {
-                "domain": "pre.yourdomain"
-                           }
           }
+        
           ]
         },
         "security": "tls",
