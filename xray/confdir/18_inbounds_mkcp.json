@@ -6,7 +6,7 @@
       "port": 4006,
       "protocol": "vless",
       "settings": {
-            "users": [
+            "clients": [
               {
                 "id": "ce1ad100-4f8b-11f1-bddd-2ccf67f03e7d",
                 "email": "finalmask@vless.mkcp"
