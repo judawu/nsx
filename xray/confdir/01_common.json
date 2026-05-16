@@ -4,7 +4,7 @@
     "access": "/usr/local/nsx/log/xray_access.log",
     "error": "/usr/local/nsx/log/xray_error.log",
     "dnsLog": false,
-    "loglevel": "debug",
+    "loglevel": "warning",
     "maskAddress": "quarter" 
   },
 
