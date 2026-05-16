@@ -325,8 +325,9 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
+          "authority": "tls.yourdomain",
           "serviceName": "/trojan/grpc",
-         "health_check_timeout": 20,
+          "health_check_timeout": 20,
           "idle_timeout": 60
                          }
                         }
@@ -349,6 +350,7 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
+          "authority": "tls.yourdomain",
           "serviceName": "/vmess/grpc",
           "health_check_timeout": 20,
           "idle_timeout": 60
@@ -373,6 +375,7 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
+          "authority": "tls.yourdomain",
           "serviceName": "/reality/grpc/h1|h2",
           "multiMode": true,
           "health_check_timeout": 20,
