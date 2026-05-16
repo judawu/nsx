@@ -828,6 +828,34 @@ xray_config() {
             done
         fi
 
+        if [[ "$protocol" == "hysteria"  ]]; then
+            echoContent green "\n处理 hysteria  的 auth 替换，用 openssl rand -base64 16 生成新密码"
+            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
+            client_index=0
+            echo "$clients" | while IFS= read -r client; do
+                old_password=$(echo "$client" | jq -r '.auth')
+                new_password=$(openssl rand -base64 16)  
+                new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"  
+          
+                echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password\n"
+                # 更新 password
+                jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
+                    '(.inbounds[] | select(.tag == $tag) | .settings.clients[] | select(.auth == $old_password)).auth = $new_password' \
+                    "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+                    echoContent red "错误: 无法更新 auth"
+                    exit 1
+                }
+                echo "$new_url" >> "$XRAY_SUB_FILE"
+                echoContent skyblue "\n生成 $protocol 订阅链接: $new_url"
+                if command -v qrencode &> /dev/null; then
+                    qrencode -t ANSIUTF8 "$new_url" || echoContent red "生成二维码失败: $new_url"
+                else
+                    echoContent yellow "警告: qrencode 未安装，跳过二维码生成"
+                fi
+                ((client_index++))
+            done
+        fi
+
     done
 
     read -p "是否设置inbounds shadowsocks: " in_ss < /dev/tty
