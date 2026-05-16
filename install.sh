@@ -2360,7 +2360,7 @@ restartServices() {
     sudo systemctl stop nginx xray sing-box
     if [ ! -d "$SHM_DIR" ]; then
             echoContent yellow "创建目录 $SHM_DIR..."
-            mkdir -p "$SHM_DIRR"
+            mkdir -p "$SHM_DIR"
         fi
     echoContent yellow "清理$SHM_DIR/."
     sudo rm -rf "$SHM_DIR"/*
