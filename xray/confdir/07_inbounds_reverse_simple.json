@@ -22,7 +22,7 @@
 			"email": "reverse@simple.tunnel.vless",
 			"flow": "xtls-rprx-vision",
 			"reverse": {
-						"tag": "simple-reverse-out",
+						"tag": "simple-reverse-out"
 				        
 						}
 		},
