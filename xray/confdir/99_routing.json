@@ -46,6 +46,7 @@
       },
       {
         "ruleTag": "cn-ip",
+        "network": "tcp",
         "ip": [
           "geoip:cn"
         ],
