@@ -1,7 +1,7 @@
 {
   "api": {
     "tag": "api",
-     "listen": "127.0.0.1:10830",
+     "listen": "127.0.0.1:8888",
     "services": [
       "HandlerService",
       "LoggerService",
