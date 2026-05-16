@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# NSX 安装管理加博爱
+# NSX 安装管理
 # Project directory: /usr/local/nsx
 # Supports Docker and local installation, certificate management, and configuration management
-
+# version=1.0.0
 # Set language
 export LANG=en_US.UTF-8
 
