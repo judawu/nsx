@@ -97,7 +97,8 @@
           "serverName": "tls.yourdomain",
           "rejectUnknownSni": true,
           "allowInsecure": false,
-          "alpn": [    
+          "alpn": [ 
+            "h3",
             "h2",
             "http/1.1"
           ],
