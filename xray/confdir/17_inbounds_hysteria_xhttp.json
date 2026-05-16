@@ -16,23 +16,7 @@
                 ]
                     },
             "streamSettings": {
-                "network": "xhttp",
-                "security": "tls",
-                "tlsSettings": {
-                    "serverName": "pre.yourdomain", 
-                    "alpn": [
-                        "h3"
-                    ], 
-                    "certificates": [
-                        {
-                            
-                             "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
-                             "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
-                        }
-                    ] 
-                },
-              
-                "finalmask": {
+				 "finalmask": {
 					  "congestion": "reno",
 					  "debug": false,
 					  "brutalUp": "60 mbps",
@@ -49,7 +33,24 @@
 					  "keepAlivePeriod": 0,
 					  "disablePathMTUDiscovery": false,
 					  "maxIncomingStreams": 1024
-					}
+					},
+                "network": "xhttp",
+                "security": "tls",
+                "tlsSettings": {
+                    "serverName": "pre.yourdomain", 
+                    "alpn": [
+                        "h3"
+                    ], 
+                    "certificates": [
+                        {
+                            
+                             "certificateFile": "/usr/local/nsx/certs/pre.yourdomain.pem",
+                             "keyFile": "/usr/local/nsx/certs/pre.yourdomain.key"
+                        }
+                    ] 
+                }
+              
+               
                 
             }
         }
