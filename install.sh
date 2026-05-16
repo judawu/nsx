@@ -1440,7 +1440,7 @@ generateSubscriptions() {
                 XRAY_SUB_FILE="${SUBSCRIBE_DIR}/xray_sub.txt"
                 > "$XRAY_SUB_FILE"
         # 提取所有 inbounds
-        jq -c '.inbounds[] | select(.settings.users)' "$XRAY_CONF" | while IFS= read -r inbound; do
+        jq -c '.inbounds[] | select(.settings.clients)' "$XRAY_CONF" | while IFS= read -r inbound; do
             tag=$(echo "$inbound" | jq -r '.tag')
             protocol=$(echo "$inbound" | jq -r '.protocol')
             port=$(echo "$inbound" | jq -r '.port // "443"')
@@ -1527,7 +1527,7 @@ generateSubscriptions() {
             fi
 
             # 处理 clients
-            clients=$(echo "$inbound" | jq -c '.settings.users[]')
+            clients=$(echo "$inbound" | jq -c '.settings.clients[]')
             echo "$clients" | while IFS= read -r client; do
                 email=$(echo "$client" | jq -r '.email // "unknown"')
                 SUB_LINK=""
