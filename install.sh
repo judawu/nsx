@@ -1905,6 +1905,10 @@ updateConfig() {
                  .
               end
             )' "$XRAY_CONF" > "$TMP_CONF"
+           mv "$TMP_CONF" "$XRAY_CONF" || {
+            echoContent red "错误: 无法覆盖 $XRAY_CONF"
+            exit 1
+        }
         echoContent green "合并中hysteria传输层的quicParams下面的udpHop的interval会不正确被替换，需要修改"
         TMP_CONF="${XRAY_CONF}.tmp"
         
