@@ -34,6 +34,7 @@
 				//		  "disablePathMTUDiscovery": false,
 				//		  "maxIncomingStreams": 1024
 				//		},
+				//finalmask not be merge to config.json???
                 "network": "xhttp",
 				"xhttpSettings": {
 		          "host": "",
