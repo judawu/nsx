@@ -28,6 +28,19 @@
                 },
         "finalmask": {
           "udp": [
+              {
+              "type": "xicmp",
+              "settings": {
+                 "listenIp": "0.0.0.0",
+                  "id": 0
+                    }
+           },
+           {
+              "type": "xdns",
+              "settings": {
+                "domain": "pre.yourdomain"
+                           }
+          },
             {
             "type": "header-wechat"
             },
@@ -72,19 +85,7 @@
               "password": "QvofbfMIil7768oFAyTpyA=="
             }
           },
-          {
-              "type": "xicmp",
-              "settings": {
-                 "listenIp": "0.0.0.0",
-                  "id": 0
-                    }
-           },
-           {
-              "type": "xdns",
-              "settings": {
-                "domain": "pre.yourdomain"
-                           }
-          },
+        
           {
             "type": "sudoku",
              "settings": {
