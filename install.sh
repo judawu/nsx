@@ -563,7 +563,12 @@ xray_config() {
         url="$url?type=$network"
 
         case "$network" in
-        
+              "raw")
+                headertype=$(echo "$inbound" | jq -r '.rawSettings.header.type')
+                headerhost=$(echo "$inbound" | jq -r '.rawSettings.header.request.host[0]')
+                headerpath=$(echo "$inbound" | jq -r '.rawSettings.header.request.path[0]')
+                url="$url&headertype=$headertype&headerhost=$headerhost&headerpath=$headerpath"
+                ;;
             "grpc")
                 serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
                 serviceName=$(url_encode "$serviceName")
