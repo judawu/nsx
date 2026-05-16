@@ -7,7 +7,7 @@
             "protocol": "hysteria",
             "settings": {
                 "version": 2,
-  				  "users": [
+  				  "clients": [
   		          {
   		            "auth": "QvofbfMIil7768oFAyTpyA==",
   		            "level": 0,
