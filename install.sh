@@ -564,9 +564,9 @@ xray_config() {
 
         case "$network" in
               "raw")
-                headertype=$(echo "$inbound" | jq -r '.rawSettings.header.type')
-                headerhost=$(echo "$inbound" | jq -r '.rawSettings.header.request.host[0]')
-                headerpath=$(echo "$inbound" | jq -r '.rawSettings.header.request.path[0]')
+                headertype=$(echo "$inbound" | jq -r '.streamSettings.rawSettings.header.type')
+                headerhost=$(echo "$inbound" | jq -r '.streamSettings.rawSettings.header.request.host[0]')
+                headerpath=$(echo "$inbound" | jq -r '.streamSettings.rawSettings.header.request.path[0]')
                 headerhost=$(url_encode "$headerhost")
                 headerpath=$(url_encode "$headerpath")
                 url="$url&headertype=$headertype&headerhost=$headerhost&headerpath=$headerpath"
@@ -878,9 +878,9 @@ xray_config() {
 
              case "$network" in
               "raw")
-                headertype=$(echo "$ss_inbound" | jq -r '.rawSettings.header.type')
-                headerhost=$(echo "$ss_inbound" | jq -r '.rawSettings.header.request.host[0]')
-                headerpath=$(echo "$ss_inbound" | jq -r '.rawSettings.header.request.path[0]')
+                headertype=$(echo "$ss_inbound" | jq -r '.streamSettings.rawSettings.header.type')
+                headerhost=$(echo "$ss_inbound" | jq -r '.streamSettings.rawSettings.header.request.host[0]')
+                headerpath=$(echo "$ss_inbound" | jq -r '.streamSettings.rawSettings.header.request.path[0]')
                 headerhost=$(url_encode "$headerhost")
                 headerpath=$(url_encode "$headerpath")
                 url="$url&headertype=$headertype&headerhost=$headerhost&headerpath=$headerpath"
