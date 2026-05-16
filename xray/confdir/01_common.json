@@ -25,10 +25,6 @@
       "statsOutboundUplink": true,
       "statsOutboundDownlink": true
     }
-  },
-  "outbounds": [
-   
-
-  ]
+  }
 }
  
