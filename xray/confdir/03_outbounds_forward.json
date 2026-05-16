@@ -25,7 +25,7 @@
         "servers": [
           {
             "address": "107.174.131.113",
-            "port": 10836,
+            "port": 4444,
             "method": "2022-blake3-aes-128-gcm",
             "password": "QvofbfMIil7768oFAyTpyA=="
           }
@@ -55,7 +55,7 @@
         "servers": [
           {
             "address": "104.219.214.2",
-            "port": 10836,
+            "port": 4444,
             "method": "2022-blake3-aes-128-gcm",
             "password": "QvofbfMIil7768oFAyTpyA=="
           }
@@ -83,7 +83,7 @@
         "servers": [
           {
             "address": "107.149.143.173",
-            "port": 10836,
+            "port": 4444,
             "method": "2022-blake3-aes-128-gcm",
             "password": "QvofbfMIil7768oFAyTpyA=="
           }
@@ -111,7 +111,7 @@
         "servers": [
           {
             "address": "107.148.54.116",
-            "port": 10836,
+            "port": 4444,
             "method": "2022-blake3-aes-128-gcm",
             "password": "QvofbfMIil7768oFAyTpyA=="
           }
