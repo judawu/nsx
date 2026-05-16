@@ -35,6 +35,24 @@
 					  "maxIncomingStreams": 1024
 					},
                 "network": "xhttp",
+				"xhttpSettings": {
+		          "host": "",
+		          "path": "/reality/xhttp",
+		          "mode": "auto",
+		          "xPaddingBytes": "100-1000",
+		          "scMaxEachPostBytes": 1000000,
+		          "scMinPostsIntervalMs": 30, 
+		          "scMaxBufferedPosts": 30, 
+		          "scStreamUpServerSecs": "20-80",
+		           "xmux": { 
+		            "maxConcurrency": "16-32",
+		            "maxConnections": 0,
+		            "cMaxReuseTimes": 0,
+		            "hMaxRequestTimes": "600-900",
+		            "hMaxReusableSecs": "1800-3000",
+		            "hKeepAlivePeriod": 0
+		               }
+		        },
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": "pre.yourdomain", 
