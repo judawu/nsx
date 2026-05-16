@@ -828,12 +828,64 @@ xray_config() {
             done
         fi
 
+    done
 
-        # 处理 shadowsock  的 password 替换
-        if [[ "$protocol" == "shadowsocks"  ]]; then
-            echoContent green "\n处理 shadowsocks  的 password 替换，用 openssl rand -base64 生成新密码"
-            ss_method=$(echo "$inbound"  | jq -r '.settings.method')
-            ss_password=$(echo "$inbound" | jq -r '.settings.password')
+    read -p "是否设置inbounds shadowsocks: " in_ss < /dev/tty
+    if [[ -z "$in_ss" ]]; then
+        echoContent green "xray配置文件里面的nbounds shadowsocks保持默认"
+    else
+       jq -c '.inbounds[] | select(.protocol=="shadowsocks")' "$TEMP_FILE" | while IFS= read -r ss_inbound; do
+             client_index=0
+             network=$(echo "$ss_inbound" | jq -r '.streamSettings.network // "tcp"')
+             url="?type=$network"
+
+             case "$network" in
+             "grpc")
+                serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
+                serviceName=$(url_encode "$serviceName")
+                url="$url&serviceName=$serviceName"
+                ;;
+            "ws")
+                path=$(echo "$inbound" | jq -r '.streamSettings.wsSettings.path')
+                path=$(url_encode "$path")
+                url="$url&path=$path"
+                ;;
+            "xhttp")
+                xhttpSettings=$(echo "$inbound" | jq -r '.streamSettings.xhttpSettings')
+                host=$(echo "$xhttpSettings" | jq -r '.host // empty')
+                path=$(echo "$xhttpSettings" | jq -r '.path')
+                host=$(url_encode "$host")
+                path=$(url_encode "$path")
+                url="$url&host=$host&path=$path"
+                ;;
+            "splithttp")
+                path=$(echo "$inbound" | jq -r '.streamSettings.splithttpSettings.path')
+                path=$(url_encode "$path")
+                url="$url&path=$path"
+                ;;
+            "httpupgrade")
+                path=$(echo "$inbound" | jq -r '.streamSettings.httpupgradeSettings.path')
+                path=$(url_encode "$path")
+                url="$url&path=$path"
+                ;;
+            "mkcp")
+                mtu=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.mtu')
+                tti=$(echo "$inbound" | jq -r '.streamSettings.kcpSettings.tti')
+                url="$url&mtu=$mtu&tti=$tti"
+                ;;
+             "hysteria")
+                auth=$(echo "$inbound" | jq -r '.streamSettings.hysteriaSettings.auth')
+                url="$url&auth=$auth"
+                ;;
+            *)
+                ;;
+            esac
+            
+            echoContent green "\n处理 shadowsocks  $client_index 的 password 替换，用 openssl rand -base64 生成新密码"
+            ss_tag=$(echo "$ss_inbound"  | jq -r '.tag')
+            ss_port=$(echo "$ss_inbound"  | jq -r '.port')
+            ss_method=$(echo "$ss_inbound"  | jq -r '.settings.method')
+            ss_password=$(echo "$ss_inbound" | jq -r '.settings.password')
             read -p "输入 shadowsocks method 默认($ss_method) 0=2022-blake3-aes-128-gcm, 1=2022-blake3-aes-256-gcm, 2=2022-blake3-chacha20-poly1305: " ss_method_option < /dev/tty
             case "$ss_method_option" in
                     0) 
@@ -851,21 +903,29 @@ xray_config() {
                     *) echoContent green "默认($ss_method)he" ;;
             esac
             echoContent green "\n更新 $tag:\n"
-            jq --arg tag "$tag"  --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
+            jq --arg tag "$ss_tag"  --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
             '(.inbounds[] | select(.tag == $tag))  | .settings.password = $ss_new_password | .settings.method = $ss_method)' \
             "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
             echoContent red "错误: 无法更新 shadowsocks inbound"
             exit 1
             }
-                     
-        fi
-    done
+            new_url="ss://$ss_method:$ss_password@$LOCAL_IP:$ss_port$url#$ss_tag"
+            echoContent skyblue "\n生成 $protocol 订阅链接: $new_url"
+            if command -v qrencode &> /dev/null; then
+                    qrencode -t ANSIUTF8 "$new_url" || echoContent red "生成二维码失败: $new_url"
+            else
+                    echoContent yellow "警告: qrencode 未安装，跳过二维码生成"
+            fi
+            ((client_index++))
+        done
+    fi
 
      read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
     if [[ -z "$split_ss" ]]; then
         echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
     else
        jq -c '.outbounds[] | select(.protocol=="shadowsocks")' "$TEMP_FILE" | while IFS= read -r outbound; do
+          client_index=0
           tag=$(echo "$outbound" | jq -r '.tag')
           protocol=$(echo "$outbound" | jq -r '.protocol')
           ss_address=$(echo "$outbound"  | jq -r '.settings.servers[0].address')
@@ -912,6 +972,7 @@ xray_config() {
                 exit 1
             }
             echoContent green "Shadowsocks configuration for  $tag updated successfully"
+            ((client_index++))
        done
        
     fi
