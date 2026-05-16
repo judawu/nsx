@@ -6,7 +6,7 @@
 	{
       "tag": "cmplex-reverse-in",
       "listen": "0.0.0.0",
-      "port": 10832,
+      "port": 3344,
       "protocol": "tunnel"    
     },
     {
