@@ -563,6 +563,7 @@ xray_config() {
         url="$url?type=$network"
 
         case "$network" in
+        
             "grpc")
                 serviceName=$(echo "$inbound" | jq -r '.streamSettings.grpcSettings.serviceName')
                 serviceName=$(url_encode "$serviceName")
@@ -806,7 +807,8 @@ xray_config() {
             echo "$clients" | while IFS= read -r client; do
                 old_password=$(echo "$client" | jq -r '.password')
                 new_password=$(openssl rand -base64 16)  
-                new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"      
+                new_url="$protocol://$new_password@$YOURDOMAIN:$port$url#$tag"  
+          
                 echoContent yellow "\n替换 $client_index password $tag: $old_password -> $new_password\n"
                 # 更新 password
                 jq --arg tag "$tag" --arg old_password "$old_password" --arg new_password "$new_password" \
