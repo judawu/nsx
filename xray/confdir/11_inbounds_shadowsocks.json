@@ -89,6 +89,7 @@
         "network": "grpc",
         "security": "none",
         "grpcSettings": {
+		  "authority": "tls.yourdomain",
           "serviceName": "/ss/grpc" ,
 		  "health_check_timeout": 20,
           "idle_timeout": 60
