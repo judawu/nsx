@@ -16,7 +16,7 @@
       "protocol": "vless",
       "settings": {
         "decryption": "none",
-        "users": [
+        "clients": [
             {
             "email": "forward@reality.xhttp.vless",
             "id": "e25033eb-6080-4a50-bf50-1eaaca13dc51"
