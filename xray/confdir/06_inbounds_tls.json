@@ -5,7 +5,7 @@
       "listen": "/dev/shm/nsx/xray_tls_proxy.sock,0666",
       "protocol": "vless",
       "settings": {
-        "users": [
+        "clients": [
           {
             
             "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
@@ -132,7 +132,7 @@
       "listen": "/dev/shm/nsx/vless_tcp_http.sock,0666",
       "protocol": "vless",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "vless@tcp.http",
             "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
@@ -169,7 +169,7 @@
       "listen": "/dev/shm/nsx/vmess_tcp_http.sock,0666",
       "protocol": "vmess",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "vmess@tcp.http",
             "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
@@ -206,7 +206,7 @@
       "listen": "/dev/shm/nsx/vlessws.sock,0666",
       "protocol": "vless",
       "settings": {
-        "users": [
+        "clients": [
           {
               "email": "vless@ws",
               "id": "2c65bf80-35cb-491d-b057-fac6a3f74fa4",
@@ -238,7 +238,7 @@
       "listen": "/dev/shm/nsx/vmessws.sock,0666",
       "protocol": "vmess",
       "settings": {
-        "users": [
+        "clients": [
           {
               "email": "vmess@ws",
               "id": "1f52cb64-23cc-46d7-aa4d-acf363097319",
@@ -269,7 +269,7 @@
       "listen": "/dev/shm/nsx/trojanws.sock,0666",
       "protocol": "trojan",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "trojan@ws",
             "password": "trojan",
@@ -306,7 +306,7 @@
       "listen": "/dev/shm/nsx/trojan_grpc.sock,0666",
       "protocol": "trojan",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "trojan@grpc",
             "password": "77dd376e-9a71-4c25-a882-25baf0674c32",
@@ -336,7 +336,7 @@
       "listen": "/dev/shm/nsx/vmess_grpc.sock,0666",
       "protocol": "vmess",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "vmess@grpc",
             "id": "90e4903e-66a4-45f7-abda-fd5d5ed7f797",
@@ -359,7 +359,7 @@
       "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
       "protocol": "vless",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "vless@grpc",
             "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
@@ -394,7 +394,7 @@
       "listen": "/dev/shm/nsx/vlesshttpupgrade.sock,0666",
       "protocol": "vless",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "vless@httpupgrade",
             "id": "850413a9-c769-4fa7-adae-c320fe5103b9",
@@ -423,7 +423,7 @@
       "listen": "/dev/shm/nsx/vlesssplithttp.sock,0666",
       "protocol": "vless",
       "settings": {
-        "users": [
+        "clients": [
           {
             "email": "vless@splithttp",
             "id": "c3c55d96-e8d5-41b5-b79d-fcafc1cb164c",
