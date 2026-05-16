@@ -886,6 +886,13 @@ xray_config() {
             ss_port=$(echo "$ss_inbound"  | jq -r '.port')
             ss_method=$(echo "$ss_inbound"  | jq -r '.settings.method')
             ss_password=$(echo "$ss_inbound" | jq -r '.settings.password')
+            read -p "输入 shadowsocks port 默认($ss_port): " ss_new_port < /dev/tty
+            if [[ -z "$ss_new_port" ]]; then
+                    ss_new_port="$ss_port"
+            elif ! [[ "$ss_new_port" =~ ^[0-9]+$ ]] || [[ "$ss_new_port" -lt 1 || "$ss_new_port" -gt 65535 ]]; then
+                    echoContent red "错误: 端口号必须在1-65535之间"
+                    exit 1
+            fi
             read -p "输入 shadowsocks method 默认($ss_method) 0=2022-blake3-aes-128-gcm, 1=2022-blake3-aes-256-gcm, 2=2022-blake3-chacha20-poly1305: " ss_method_option < /dev/tty
             case "$ss_method_option" in
                     0) 
@@ -903,8 +910,8 @@ xray_config() {
                     *) echoContent green "默认($ss_method)he" ;;
             esac
             echoContent green "\n更新 $tag:\n"
-            jq --arg tag "$ss_tag"  --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
-            '(.inbounds[] | select(.tag == $tag))  | .settings.password = $ss_new_password | .settings.method = $ss_method)' \
+            jq --arg tag "$ss_tag"  --arg ss_port "$ss_new_port" --arg ss_method "$ss_method" --arg ss_new_password "$ss_new_password" \
+            '(.inbounds[] | select(.tag == $tag)) |= (.port = $ss_port | .settings.password = $ss_new_password | .settings.method = $ss_method)' \
             "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
             echoContent red "错误: 无法更新 shadowsocks inbound"
             exit 1
