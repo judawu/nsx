@@ -968,7 +968,7 @@ xray_config() {
             echoContent red "错误: 无法更新 shadowsocks inbound"
             exit 1
             }
-            new_url="ss://$ss_method:$ss_password@$LOCAL_IP:$ss_port$url#$ss_tag"
+            new_url="ss://$ss_method:$ss_new_password@$LOCAL_IP:$ss_new_port$url#$ss_tag"
             echo "$new_url" >> "$XRAY_SUB_FILE"
             echoContent skyblue "\n生成 $protocol 订阅链接: $new_url"
             if command -v qrencode &> /dev/null; then
