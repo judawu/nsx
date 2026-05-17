@@ -121,7 +121,7 @@
 
    
     {
-      "tag": "dns-out",  
+      "tag": "dnsOut",  
       "protocol": "dns",
       "settings": {
         "network":"tcp",
