@@ -46,6 +46,7 @@
           "geosite:tiktok"],
         "skipFallback": true,
         "queryStrategy": "UseIPv4",
+        "tag":"specialDNS"
        
       },
      
