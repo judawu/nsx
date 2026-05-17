@@ -91,7 +91,7 @@
         "security": "none",
         "grpcSettings": {
 		  "authority": "tls.yourdomain",
-          "serviceName": "/ss/grpc" ,
+          "serviceName": "/ss/grpc/h2|h1" ,
 		  "health_check_timeout": 20,
           "idle_timeout": 60
         }
