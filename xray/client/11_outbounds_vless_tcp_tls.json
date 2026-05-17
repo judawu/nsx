@@ -26,8 +26,9 @@
           "verifyPeerCertByName": "YOUR_REMOTE_VPS_DOMAIN",
           "serverName": "YOUR_REMOTE_VPS_DOMAIN" ,
            "alpn": [
-            "http/1.1",
-            "h2"
+            "h3",
+            "h2",
+            "http/1.1"
           ],
          // pinnedPeerCertSha256: "".
           "echConfigList": "https://1.1.1.1/dns-query",
