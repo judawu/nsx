@@ -1,6 +1,8 @@
 {
  "outbounds": [
-    {   
+    { 
+
+     //  nginx ->  /vlesssplithttp
             "tag": "vless_splithttp_tls",
             "protocol": "vless",
             "settings": {
@@ -25,14 +27,14 @@
                 },
                 "security": "tls",
                 "tlsSettings": {
-                    "serverName": "YOUR_REMOTE_VPS_DOMAIN",
+                    "serverName": "YOUR_REMOTE_VPS_DOMAIN",  //nginx domain name
                      "alpn": [
                         "h3",
                         "h2",
                         "http/1.1"
                     ],
-                    "fingerprint": "chrome" ,
-                    "allowInsecure": false // 禁止不安全证书
+                    "fingerprint": "chrome" 
+                
                 }
             }
            
