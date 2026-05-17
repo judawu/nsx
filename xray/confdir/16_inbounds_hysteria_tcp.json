@@ -36,13 +36,34 @@
 				            "paddingMax": 7
 				          }
 				        }
-				      ]
+							   
+				      ],
+						    "quicParams": {
+					            "congestion": "bbr",
+					            "debug": true,
+					            "brutalUp": "60 mbps",
+					            "brutalDown":"60 mbps",
+					            "udpHop": {
+					              "ports": "20000-50000",
+					              "interval": "5-10"
+					            },
+					            "initStreamReceiveWindow": 8388608,
+					            "maxStreamReceiveWindow": 8388608,
+					            "initConnectionReceiveWindow": 20971520,
+					            "maxConnectionReceiveWindow": 20971520,
+					            "maxIdleTimeout": 30,
+					            "keepAlivePeriod": 0,
+					            "disablePathMTUDiscovery": false,
+					            "maxIncomingStreams": 1024
+					          }
 				        },
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": "pre.yourdomain", 
                     "alpn": [
-                        "h3"
+                        "h3",
+						"h2",
+                        "http/1.1"
                     ], 
                     "certificates": [
                         {
