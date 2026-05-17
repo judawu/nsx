@@ -17,7 +17,7 @@
         "fallbacks": [
          
           {
-            "path": "/reality/grpc/h1",
+            "path": "/reality/grpc",
             "dest": "/dev/shm/nsx/nginx_grpc_vless.sock",
             "xver": 0
           },
