@@ -3,7 +3,7 @@
 "inbounds": [
     {
       "tag": "simple-reverse-in",
-      "listen": "0.0.0.0",
+      "listen": "129.0.0.1",
       "port": 5544,
       "protocol": "tunnel"
       
