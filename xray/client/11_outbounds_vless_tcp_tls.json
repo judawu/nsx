@@ -30,7 +30,7 @@
             "h2",
             "http/1.1"
           ],
-         // pinnedPeerCertSha256: "".
+         // "pinnedPeerCertSha256": "".
           "echConfigList": "https://1.1.1.1/dns-query",
           "fingerprint": "chrome",
           "allowInsecure": false 
