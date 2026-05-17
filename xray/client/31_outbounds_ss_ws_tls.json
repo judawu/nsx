@@ -20,7 +20,12 @@
         },
         "security": "tls",
         "tlsSettings": {
-          "allowInsecure": false,
+           "serverName": "YOUR_REMOTE_VPS_DOMAIN",
+           "alpn": [
+            "h3",
+            "h2",
+            "http/1.1"
+          ],
           "fingerprint": "chrome"
         }
       }
