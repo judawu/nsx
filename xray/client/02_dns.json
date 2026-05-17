@@ -56,7 +56,7 @@
         "domains": [
            "geosite:cn",
            "geosite:private",
-           "geosite:apple",
+           "geosite:apple"
         ],
         "queryStrategy": "UseIPv4",
         "tag":"localDNS"
