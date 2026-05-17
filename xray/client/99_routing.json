@@ -125,15 +125,19 @@
       ],      
         "outboundTag": "direct"
       },
-     
+
+      {
+        "inboundTag": [
+         "http-in"
+        ],
+        "outboundTag": "proxy",
+        "ruleTag": "httpProxy"
+      },
       {
         "domain": [
          "geosite:geolocation-!cn"
         ],
-    
         "outboundTag": "proxy"
-     
-
       },
    //隧道路由（端口转发）
     {
