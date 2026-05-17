@@ -70,9 +70,9 @@
       {
      
         "domain": [
-         "geosite:category-ads-all",
-         "m.baidu.com",
-         "geoip:private",
+          "geosite:category-ads-all",
+          "m.baidu.com",
+      
           "regexp:^.*\\.doubleclick\\.net$",
           "regexp:^(?:pagead2\\.googlesyndication\\.com|s\\.youtube\\.com)$" ,
           "domain:notifications-pa.googleapis.com",
@@ -94,10 +94,15 @@
         ],
         "outboundTag": "block"
       },
-
- 
-  {
-        "type": "field",
+      {
+        "inboundTag": [
+         "localDNS"
+        ],
+        "outboundTag": "direct",
+        "ruleTag": "localDNSDirect"
+      },
+  
+    {
         "ip": [
           "127.0.0.1",
           "223.5.5.5",
@@ -111,6 +116,8 @@
        {
         "domain": [
         "geosite:cn",
+        "geosite:private",
+        "geosite:apple",
         "domain:apple.com",
         "domain:office.com",
         "domain:office.net",
@@ -123,7 +130,8 @@
         "domain:microsoft.com",
         "outlook.com"
       ],      
-        "outboundTag": "direct"
+        "outboundTag": "direct",
+        "ruleTag": "domainDirect"
       },
 
       {
