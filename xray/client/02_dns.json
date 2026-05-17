@@ -3,8 +3,8 @@
  
   
   "dns": {
-    "tag": "dns_inbound",
-    "queryStrategy": "UseIP",
+    "tag": "dnsQuery",
+    "queryStrategy": "UseIPv4",
     "disableCache": false,
     "serveStale": false,
     "serveExpiredTTL": 0,
@@ -18,7 +18,8 @@
        // adblock
       {
         "address": "fakedns",
-        "domains": ["geosite:category-ads-all"]
+        "domains": ["geosite:category-ads-all"],
+         "tag":"adblockDNS"
       
       },
       // 国外域名使用国外DNS查询
@@ -26,7 +27,11 @@
         "address": "tcp+local://94.140.14.49:53",
         "domains": ["geosite:geolocation-!cn"]	
       },
-   
+      {
+         "address": "https://1.1.1.1/dns-query",
+         "queryStrategy": "UseIPv4",
+         "tag":"defaultDNS"
+       },
       {
       "address": "8.8.8.8",
       "port": 53,
@@ -40,19 +45,20 @@
           "geosite:netflix",
           "geosite:tiktok"],
         "skipFallback": true,
-        "queryStrategy": "UseIPv4"
+        "queryStrategy": "UseIPv4",
+       
       },
-      // {
-      //   "address": "https://1.1.1.1/dns-query",
-      //   "domains": ["geosite:openai"],
-      //   "skipFallback": true,
-      //   "queryStrategy": "UseIPv6"
-      // },
+     
       // 国内域名使用国内DNS查询，并期待返回国内的IP，若不是国内IP则舍弃，用下一个查询
       {
         "address": "223.5.5.5",
-        "domains": ["geosite:cn"],
-        "expectIPs": ["geoip:cn"]
+        "domains": [
+           "geosite:cn",
+           "geosite:private",
+           "geosite:apple",
+        ],
+        "queryStrategy": "UseIPv4",
+        "tag":"localDNS"
       },
 
     
@@ -83,16 +89,17 @@
     ]
   },
  "inbounds": [
+
   //dns入站rewrite
     {     
       "tag": "dns-rewrite",
       "listen": "127.0.0.1",
       "port": 10853,
-      "protocol": "dokodemo-door",
+      "protocol": "tunnel",
       "settings": {
-          "rewriteaddress": "223.5.5.5",
-          "rewriteport": 53,
-          "network": "udp"
+          "rewriteNetwork": "udp",
+          "rewriteAddress": "1.1.1.1",
+          "rewritePort": 53
             } 
     },
 
@@ -100,7 +107,7 @@
       "tag": "dns-in",
       "listen": "127.0.0.1",
       "port": 5353,
-      "protocol": "dokodemo-door",
+      "protocol": "tunnel",
        "sniffing": {
         "enabled": true,
         "destOverride": ["fakedns"], // 使用 "fakedns"，或与其它 sniffer 搭配使用
@@ -111,16 +118,20 @@
 
   "outbounds": [
     //dns出站
+
+   
     {
       "tag": "dns-out",  
       "protocol": "dns",
       "settings": {
-        "nonIPQuery": "drop" // 若不写此字段，将使用默认值 "drop"，阻止非 A 和 AAAA 记录查询，若设置为 "skip"，则允许非 A 和 AAAA 记录查询
-            },
-      "proxySettings": {
-          "tag": "direct" // 当 "nonIPQuery" 设置为 "skip" 时，若不写此字段，将使用本地网络出站；若设置此字段，将使用对应 "tag" 出站，目的地址对应 "dns-in" 中的 "settings" 字段的内容
-                        }
-      } 
+        "network":"tcp",
+        "nonIPQuery": "reject"    },
+       "streamSettings": {
+           "sockopt": {
+          "dialerProxy": "proxy"
+        
+                  }
+      }
     
   ]
 }
