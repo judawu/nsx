@@ -31,10 +31,24 @@
                         }
                     ],
                     "quicParams": {
-                        "congestion": "bbr", // 可改为 brutal，若如此做请自行修改下面宽带
-                        "brutalUp": "30 mbps",
-                        "brutalDown": "100 mbps"
-                    }
+                        "brutalDown": "100 mbps",
+                        "brutalUp": "60 mbps",
+                        "congestion": "force-brutal",
+                        "debug": false,
+                        "disablePathMTUDiscovery": false,
+                        "initConnectionReceiveWindow": 20971520,
+                        "initStreamReceiveWindow": 8388608,
+                        "keepAlivePeriod": 0,
+                        "maxConnectionReceiveWindow": 20971520,
+                        "maxIdleTimeout": 30,
+                        "maxIncomingStreams": 1024,
+                        "maxStreamReceiveWindow": 8388608,
+                        "udpHop": {
+                          "interval": "5-10",
+                          "ports": "20000-50000"
+                        }
+                      }
+
                 }
             }
         }
