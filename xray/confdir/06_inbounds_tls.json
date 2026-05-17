@@ -326,7 +326,7 @@
         "security": "none",
         "grpcSettings": {
           "authority": "tls.yourdomain",
-          "serviceName": "/trojan/grpc",
+          "serviceName": "/trojan/grpc/h2|h1",
           "health_check_timeout": 20,
           "idle_timeout": 60
                          }
@@ -351,12 +351,13 @@
         "security": "none",
         "grpcSettings": {
           "authority": "tls.yourdomain",
-          "serviceName": "/vmess/grpc",
+          "serviceName": "/vmess/grpc/h2|h1",
           "health_check_timeout": 20,
           "idle_timeout": 60
         }
       }
     },
+    //grpc only support nginx ->
       {
       "tag": "VLESS-GRPC",
       "listen": "/dev/shm/nsx/nginx_grpc_vless.sock,0666",
@@ -376,7 +377,7 @@
         "security": "none",
         "grpcSettings": {
           "authority": "tls.yourdomain",
-          "serviceName": "/reality/grpc/h1|h2",
+          "serviceName": "/reality/grpc/h1|h2", 
           "multiMode": true,
           "health_check_timeout": 20,
           "idle_timeout": 60
