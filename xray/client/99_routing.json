@@ -23,8 +23,14 @@
       {
        "port":"53",
        "inboundTag": ["tunIn"],   
+        "outboundTag": "dnsOut",
+        "ruleTag": "dnsOut"
+       },
+      {
+       "port":"853",
+       "inboundTag": ["tunIn"],   
         "outboundTag": "proxy",
-        "ruleTag": "dnsQuery"
+        "ruleTag": "dnsDoT"
        },
 
          //api出站回流
