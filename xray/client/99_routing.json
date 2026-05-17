@@ -65,8 +65,6 @@
              "outboundTag": "redirect-out",
              "ruleTag": "mitm"
             },
-
-      // 域名屏蔽
       {
         "domain": [
           "geosite:category-ads-all",
@@ -86,10 +84,11 @@
         "outboundTag": "block",
         "ruleTag": "knownAd"
         },   
-      {
+     
+     {
         "protocol": [
           "bittorrent"
-        ],
+              ],
         "outboundTag": "block"
       },
       {
