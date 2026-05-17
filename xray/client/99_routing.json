@@ -86,7 +86,7 @@
           "domain:right.com"
         ],
         "outboundTag": "block",
-        "ruleTag": "know-ad",
+        "ruleTag": "know-ad"
       },   
       {
         "protocol": [
