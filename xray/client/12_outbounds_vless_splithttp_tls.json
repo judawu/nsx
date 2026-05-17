@@ -3,40 +3,58 @@
     { 
 
      //  nginx ->  /vlesssplithttp
-            "tag": "vless_splithttp_tls",
-            "protocol": "vless",
-            "settings": {
-                "vnext": [
-                    {
-                        "address": "YOUR_REMOTE_VPS_DOMAIN",
-                        "port": 443,
-                        "users": [
-                            {
-                                "id": "759cd425-52bc-4c7a-be70-a0a3a12cc1c3", // 与服务端一致
-                                "encryption": "none"
-                            }
-                        ]
-                    }
-                ]
-            },
-            "streamSettings": {
-                "network": "splithttp",
-                "splithttpSettings": {
-                    "path": "/vlesssplithttp", // 与服务端一致
-                    "host": "YOUR_REMOTE_VPS_DOMAIN" // 若 "address": "" 中填的是 VPS 的 IP，此处必须填 Nginx 配置中 server_name 的值，否则会因在 Nginx 配置中启用了 ssl_reject_handshake 而连接失败
-                },
-                "security": "tls",
-                "tlsSettings": {
-                    "serverName": "YOUR_REMOTE_VPS_DOMAIN",  //nginx domain name
-                     "alpn": [
-                        "h3",
-                        "h2",
-                        "http/1.1"
-                    ],
-                    "fingerprint": "chrome" 
-                
-                }
-            }
+      "tag": "vless_splithttp_tls",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "YOUR_REMOTE_VPS_DOMAIN",
+            "port": 443,
+            "users": [
+              {
+                "id": "cf47c557-9c7b-4d6b-8147-7f4560a6398b",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "splithttp",
+        "security": "tls",
+          "splithttpSettings": {
+          "host": "YOUR_REMOTE_VPS_DOMAIN", 
+          "noGRPCHeader": false,
+          "noSSEHeader": false,
+          "path": "/vlesssplithttp",
+          "scMaxBufferedPosts": 30,
+          "scMaxEachPostBytes": 10000000,
+          "scMinPostsIntervalMs": 30,
+          "scStreamUpServerSecs": "20-80",
+          "serverMaxHeaderBytes": 0,
+          "uplinkChunkSize": 0,
+          "xPaddingBytes": "100-1000",
+          "xPaddingObfsMode": false,
+          "xmux": {
+            "cMaxReuseTimes": 0,
+            "hKeepAlivePeriod": 0,
+            "hMaxRequestTimes": "600-900",
+            "hMaxReusableSecs": "1800-3000",
+            "maxConcurrency": "16-32",
+            "maxConnections": 0
+          }
+        },
+
+        "tlsSettings": {
+          "alpn": [
+             "h3",
+             "h2",
+             "http/1.1"
+                ], 
+          "serverName": "YOUR_REMOTE_VPS_DOMAIN",   
+          "fingerprint": "chrome"
+                          }
+                     }
            
         }
   
