@@ -8,7 +8,7 @@
          "vnext": [
           {
             "address": "YOUR_REMOTE_VPS_DOMAIN", // 替换成你的真实域名
-            "port": 4010,
+            "port": 4010, //这个端口可以通过ｎginx 进行中转port10814 
             "users": [
               {
                 "id": "c342b3aa-144b-4c47-950b-f35a3bce1257", 
