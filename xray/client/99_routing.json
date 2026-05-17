@@ -22,13 +22,13 @@
        
       {
        "port":"53",
-       "inboundTag": ["tunIn"],   
+       "inboundTag": ["tun-in"],   
         "outboundTag": "dnsOut",
         "ruleTag": "dnsOut"
        },
       {
        "port":"853",
-       "inboundTag": ["tunIn"],   
+       "inboundTag": ["tun-in"],   
         "outboundTag": "proxy",
         "ruleTag": "dnsDoT"
        },
