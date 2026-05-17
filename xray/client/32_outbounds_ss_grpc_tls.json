@@ -1,6 +1,7 @@
 {
   "outbounds": [
     {
+      //only support nginx ->
       "tag": "ss_grpc_tls",
       "protocol": "shadowsocks",
       "settings": {
