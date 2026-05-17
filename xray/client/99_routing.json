@@ -39,7 +39,7 @@
           "api-in"
         ],
         "outboundTag": "api",
-        "type": "field"
+        "ruleTag": "api"
       },
       //mitm
        {
@@ -63,59 +63,16 @@
                     "e-hentai.org"
                 ],
                 "outboundTag": "redirect-out"
+             "ruleTag": "mitm"
             },
 
       // 域名屏蔽
       {
-        "type": "field",
-        "domain": ["geosite:category-ads-all"],
-        "outboundTag": "block"
-      },
-        {
-        "type": "field",
-        "domain": ["m.baidu.com"],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "protocol": [
-          "bittorrent"
-        ],
-        "outboundTag": "block"
-      },
-
-    // {
-    //     "port": "853",
-    //     "network": "tcp",
-    //     "outboundTag": "block"
-    // },
-    // {
-    //     "port": "443,853",
-    //     "network": "udp",
-    //     "outboundTag": "block"
-    // },
- 
-  {
-        "type": "field",
-        "ip": [
-          "127.0.0.1"
-        ],
-        "outboundTag": "direct"
-  },
-  //不允许私有ip出站
-  {
-        "type": "field",
-        "ip": [
-          "geoip:private"
-        ],
-        "outboundTag": "block"
-  },
-      //广告过滤
-      {
-        "domainMatcher": "hybrid",
-        "type": "field",
-        "ruleTag": "know-ad",
+     
         "domain": [
+         "geosite:category-ads-all",
+         "m.baidu.com",
+         "geoip:private",
           "regexp:^.*\\.doubleclick\\.net$",
           "regexp:^(?:pagead2\\.googlesyndication\\.com|s\\.youtube\\.com)$" ,
           "domain:notifications-pa.googleapis.com",
@@ -128,30 +85,33 @@
           "domain:cookielaw.org",
           "domain:right.com"
         ],
-       
-       "outboundTag": "block"
-      },
-  
-
-      //  默认规则
-      // 在Xray中，任何不符合上述路由规则的流量，都会默认使用【第一个outbound（5.1）】的设置，所以一定要把转发VPS的outbound放第一个
-      // 3.6 走国内"223.5.5.5"的DNS查询流量分流走direct出站
+        "outboundTag": "block",
+        "ruleTag": "know-ad",
+      },   
       {
-        "type": "field",
-        "ip": ["223.5.5.5","114.114.114.114"],
-        "outboundTag": "direct"
+        "protocol": [
+          "bittorrent"
+        ],
+        "outboundTag": "block"
       },
 
-   //出站分流1
-      {
+ 
+  {
         "type": "field",
-        "domain": ["www.linkedin.com"],      
-        "outboundTag": "proxy_xhttp_reality"
+        "ip": [
+          "127.0.0.1",
+          "223.5.5.5",
+          "114.114.114.114",
+          "geoip:cn", 
+          "geoip:private"
+        ],
+        "outboundTag": "direct",
+        "ruleTag": "cnipDirect"
       },
-      //出站分流2
        {
-        "type": "field",
         "domain": [
+        "geosite:cn",
+        "domain:apple.com",
         "domain:office.com",
         "domain:office.net",
         "domain:office365.com",
@@ -165,54 +125,15 @@
       ],      
         "outboundTag": "direct"
       },
-      //出站分流3
-      {
-                "ip": [
-                    "1.1.1.1"
-                ],
-                "outboundTag": "proxy_xhttp_reality"
-            },
-      ////出站分流4 国内域名直连
-      {
-        "type": "field",
-        "domain": ["geosite:cn"],
-        "outboundTag": "direct"
-      },
-      //出站分流5 国内IP直连
-      {
-        "type": "field",
-        "ip": ["geoip:cn", "geoip:private"],
-        "outboundTag": "direct"
-      },
-      //出站分流6 国外域名代理
-      {
-        "type": "field",
-        "domain": ["geosite:geolocation-!cn"],
-      //选择出站代理
-        "outboundTag": "proxy_xhttp_reality"
      
-     //  从singbox 选择
-     //  "outboundTag": "proxy_trojan_singbox"
-     //  "outboundTag": "proxy_shadowsocks_singbox"
-     //  "outboundTag": "proxy_vless_reality_singbox"
-     //   "outboundTag": "proxy_vless_reality_grpc_singbox"
-     //   "outboundTag": "proxy_vless_tcp_singbox"
-     //  从xray选择
-     // "outboundTag": "proxy_vless_reality"
-     //  "outboundTag": "proxy_xhttp_trojan"
+      {
+        "domain": [
+         "geosite:geolocation-!cn"
+        ],
+    
+        "outboundTag": "proxy"
+     
 
-
-        //下面要启用不安全证书，不然会连不上, 重新上传正确的域名证书就可以了
-       //  "outboundTag": "proxy_vless_tls_tcp"
-       //  "outboundTag": "proxy_trojan_tls_tcp"      
-       //   "outboundTag": "proxy_vless_splithttp"
-       //  "outboundTag": "proxy_vless_ws"
-        // "outboundTag": "proxy_vless_httpupgrade"
-       // "outboundTag": "proxy_grpc_vless_tcp"
-       //"outboundTag": "proxy_udp_shadowsocks"
-
- 
-      //   "outboundTag": "proxy_udp_vless_mkcp"
       },
    //隧道路由（端口转发）
     {
