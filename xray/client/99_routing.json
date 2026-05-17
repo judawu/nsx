@@ -62,7 +62,7 @@
                 "domain": [
                     "e-hentai.org"
                 ],
-                "outboundTag": "redirect-out",
+               "outboundTag": "redirect-out",
              "ruleTag": "mitm"
             },
 
