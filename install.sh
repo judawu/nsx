@@ -2555,6 +2555,7 @@ configufw(){
     sudo systemctl enable ufw
     sudo ufw allow 80
     sudo ufw allow 443
+    sudo ufw allow 843
     sudo ufw allow 53
     sudo ufw allow 853
     sudo ufw allow 5353
