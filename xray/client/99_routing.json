@@ -62,17 +62,15 @@
                 "domain": [
                     "e-hentai.org"
                 ],
-               "outboundTag": "redirect-out",
+             "outboundTag": "redirect-out",
              "ruleTag": "mitm"
             },
 
       // 域名屏蔽
       {
-     
         "domain": [
           "geosite:category-ads-all",
-          "m.baidu.com",
-      
+          "m.baidu.com",   
           "regexp:^.*\\.doubleclick\\.net$",
           "regexp:^(?:pagead2\\.googlesyndication\\.com|s\\.youtube\\.com)$" ,
           "domain:notifications-pa.googleapis.com",
@@ -84,10 +82,10 @@
           "domain:hubspotusercontent-na1.ne",
           "domain:cookielaw.org",
           "domain:right.com"
-        ],
+             ],
         "outboundTag": "block",
-        "ruleTag": "know-ad"
-      },   
+        "ruleTag": "knownAd"
+        },   
       {
         "protocol": [
           "bittorrent"
