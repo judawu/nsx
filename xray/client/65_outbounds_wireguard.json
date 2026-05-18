@@ -2,25 +2,36 @@
  
   "outbounds": [
     {
-      "protocol": "wireguard",
-      "settings": {
-        "secretKey": "e033637bda4eeaed6b5ccf99da283e1003daece5ced305e8b06aa163f0320479",
+       "tag": "wg",
+       "protocol": "wireguard",
+       "settings": {
+        "secretKey": "2Duk8DJtEUzznuiATNTW/acO+GqXLuAokX34a/6cLXg=",　　　// 这是客户端private key,通过xray wg -i "客户端private key"获得publickey给服务器
         "address": ["10.1.1.1", "fd59:7153:2388:b5fd:0000:0000:1234:0001"],
         "peers": [
           {
-            "publicKey": "bacc8f85656bc591995fa5c0fb5e8f23a75671f4b46851fbb53da1e859ac0331",
-            "endpoint": "YOUR_REMOTE_VPS_IP:4007"
+            "publicKey": "Qe6Uj2jLK/XyrP02Sd2QSYaFoYi4N6CWKeOmwL85Qmw=",  //　这是服务器publickey,通过xray wg -i "服务器private key"获得
+              "keepAlive": 300, // optional, default 0
+            "endpoint": "YOUR_SERVER_IP:10813"  //这个端口可以通过ｎginx进行中转,实际端口4007
+            
           }
         ],
-        "noKernelTun": true
+        "noKernelTun": false,
+        "mtu": 1420,
+        "reserved": [
+          1,
+          2,
+          3
+        ],
+        "workers": 2,
+        "domainStrategy": "ForceIP"
       },
-      "streamSettings": {
+       "streamSettings": {
         "finalmask": {
           "udp": [
-            {
+               {
               "type": "salamander",
               "settings": {
-                "password": "1234"
+                "password": "QvofbfMIil7768oFAyTpyA=="
               }
             }
           ]
