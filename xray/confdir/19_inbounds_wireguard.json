@@ -7,12 +7,16 @@
       "port": 4007,
       "protocol": "wireguard",
       "settings": {
-        "secretKey": "4886d27320c3eda9a9de83a2eeb85b91d6feae92aa7ca030f0d7137c2354c643",
+        "secretKey": "AKKlp0mgqz9QoYGFy329W3sp6Oj7DhbKWvdvF9837Go=",  //xray wg,  pubilc key share to client outbounds
         "peers": [
           {
-            "publicKey": "cb5f25b2f3ea0040e4ddfac4ca09d52019d9f4be833db6916d7db226a9bae26c"
+           //    "publicKey": "Qe6Uj2jLK/XyrP02Sd2QSYaFoYi4N6CWKeOmwL85Qmw=", //server wg pubilc key , share to client
+          "publicKey": "msr1eNiiOkotnkQliNZLqTUWg1CaTfta/VR4Mqn7iQw=",    //client wg pubilc key 
+          "allowedIPs": ["0.0.0.0/0"]
+ 
           }
-        ]
+        ],
+         "mtu": 1420
       },
       "streamSettings": {
         "finalmask": {
