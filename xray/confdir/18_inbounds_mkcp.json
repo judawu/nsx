@@ -16,34 +16,26 @@
       },
    
       "streamSettings": {
-        "network": "mkcp",
-        "kcpSettings": {
-          "mtu": 1350,
-          "tti": 20,
-          "uplinkCapacity": 5,
-          "downlinkCapacity": 20,
-          "congestion": true,
-          "readBufferSize": 1,
-          "writeBufferSize": 1              
-                },
+      
         "finalmask": {
           "udp": [
-              {
-              "type": "xicmp",
-              "settings": {
-                 "listenIp": "0.0.0.0",
-                  "id": 0
-                    }
-           },
-           {
-              "type": "xdns",
-              "settings": {
-                "domain": "pre.yourdomain"
-                           }
-          },
-            {
-            "type": "header-wechat"
-            },
+     // xicmp,xdns,header-wechat,sudoku not working ???
+      //        {
+      //        "type": "xicmp",
+       //       "settings": {
+       //          "listenIp": "0.0.0.0",
+        //          "id": 0
+        //            }
+       //    },
+        //   {
+         //     "type": "xdns",
+        //      "settings": {
+        //        "domain": "pre.yourdomain"
+        //                   }
+       //   },
+        //    {
+        //    "type": "header-wechat"
+       //     },
            {
             "type": "header-dtls"
             },
@@ -84,32 +76,41 @@
             "settings": {
               "password": "QvofbfMIil7768oFAyTpyA=="
             }
-          },
+          } //,
         
-          {
-            "type": "sudoku",
-             "settings": {
-            "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
-            "ascii": "prefer_entropy",
-            "customTables": [
-              "xpxvvpvv",
-              "vxpvxvvp",
-              "pxvvxvvp",
-              "vpxvxvpv",
-              "xvpvvxpv",
-              "vvxpxpvv"
-                             ],
-            "paddingMin": 2,
-            "paddingMax": 7
-                          }
-          }
+     //     {
+      //      "type": "sudoku",
+       //      "settings": {
+       //     "password": "Vs31de_Zsbf-mLO5hsPggGsuDtk6FkEwaoZoGAksunk",
+       //     "ascii": "prefer_entropy",
+      //      "customTables": [
+     //         "xpxvvpvv",
+     //         "vxpvxvvp",
+     //         "pxvvxvvp",
+     //         "vpxvxvpv",
+     //         "xvpvvxpv",
+    //          "vvxpxpvv"
+    //                         ],
+     //       "paddingMin": 2,
+     //       "paddingMax": 7
+      //                    }
+      //    }
         
           ]
         },
+          "network": "mkcp",
+          "kcpSettings": {
+               "congestion": false,
+              "downlinkCapacity": 20,
+              "mtu": 1350,
+              "readBufferSize": 2,
+              "tti": 50,
+              "uplinkCapacity": 5,
+              "writeBufferSize": 2
+           
+                },
         "security": "tls",
         "tlsSettings": {
-          "serverName": "pre.yourdomain",
-          "rejectUnknownSni": true,
           "alpn": [    
             "h2",
             "http/1.1"
@@ -121,7 +122,10 @@
             }
                           ],
           "disableSystemRoot": true,
-          "enableSessionResumption": false
+          "enableSessionResumption": false,
+          "rejectUnknownSni": false,
+          "serverName": "pre.yourdomain"
+    
                          }
         }
      }  
