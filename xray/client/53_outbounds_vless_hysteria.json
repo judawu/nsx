@@ -11,39 +11,52 @@
                     "users": [
                       {
                         "id": "808cf3a7-f4e0-4f11-8975-e4a2c2302805", // 和服务器端的一致   
-                        "encryption": "none"
+                        "encryption": "mlkem768x25519plus.random.0rtt.fXttUnG2WiSCNsBoD_ti0DrnI0ZV1j18RgiVk0pFYUQ"
                       }
                     ]
                   }
                 ]
               },
             "streamSettings": {
+                "finalmask": {
+          "quicParams": {
+            "brutalDown": "100 mbps",
+            "brutalUp": "30 mbps",
+            "congestion": "bbr",
+            "debug": false,
+            "disablePathMTUDiscovery": false,
+            "initConnectionReceiveWindow": 20971520,
+            "initStreamReceiveWindow": 8388608,
+            "keepAlivePeriod": 0,
+            "maxConnectionReceiveWindow": 20971520,
+            "maxIdleTimeout": 30,
+            "maxIncomingStreams": 1024,
+            "maxStreamReceiveWindow": 8388608
+                  },
+          "udp": [
+            {
+              "settings": {
+                "password": "QvofbfMIil7768oFAyTpyA=="
+              },
+              "type": "salamander"
+            }
+          ]
+        },
                 "network": "hysteria",
                 "security": "tls",
                 "tlsSettings": {
-                    "serverName": "YOUT_REMOTE_VPS_DOMAIN" ,// SNI
+                   "serverName": "YOUT_REMOTE_VPS_DOMAIN" ,// SNI
                    "alpn": ["h3"],
-                   "pinnedPeerCertSha256": "31647e1d6374d36b96cf139584f5a7cbd88c120a806db919820002c95d98480f"
+                   "pinnedPeerCertSha256": "31647e1d6374d36b96cf139584f5a7cbd88c120a806db919820002c95d98480f",
+                   "echConfigList": "AGX+DQBhAAAgACDwnhaD/uk8XpzZ7+h9jlM7ECLGTHt+gRTVbCBwIDrZBgAkAAEAAQABAAIAAQADAAIAAQACAAIAAgADAAMAAQADAAIAAwADABJiZXJyeS5qdWRhLm1vbnN0ZXIAAA=="
+              
                 // xray tls ping 
                 },
                 "hysteriaSettings": {
                     "version": 2,
                     "auth": "QvofbfMIil7768oFAyTpyA==" // Hysteria 密码
-                },
-                "finalmask": {
-                    "udp": [
-                        {
-                            "type": "salamander",
-                            "settings": {
-                                "password": "QvofbfMIil7768oFAyTpyA==" // salamander 混淆密码
-                            }
-                        }
-                    ],
-                    "quicParams": {
-                        "congestion": "bbr", // 可改为 brutal，若如此做请自行修改下面宽带
-                        "brutalUp": "30 mbps",
-                        "brutalDown": "100 mbps"
-                    }
+                }
+              
                 }
             }
         }
