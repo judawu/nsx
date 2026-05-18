@@ -6,8 +6,8 @@
       "settings": {
         "vnext": [
           {
-            "address": "berry.juda.monster",
-            "port": 10806,
+            "address": "YOUT_REMOTE_VPS_IP",
+            "port": 10806, // nginx proxy to port 4006
             "users": [
               {
                 "id": "3fb7d8a0-b609-4f80-9fd2-2197535e260d",
@@ -86,7 +86,7 @@
         "http/1.1"
        ],  
        "fingerprint": "chrome",
-      "serverName": "berry.juda.monster" ,
+      "serverName": "YOUT_REMOTE_VPS_IP" ,
       "pinnedPeerCertSha256": "31647e1d6374d36b96cf139584f5a7cbd88c120a806db919820002c95d98480f"
        
        }
