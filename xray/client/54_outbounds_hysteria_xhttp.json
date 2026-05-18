@@ -5,27 +5,66 @@
             "protocol": "hysteria",
             "settings": {
                 "address": "YOUT_REMOTE_VPS_IP",
-                "port": 4013,
+                   "port": 10816, // nginx proxy port (tcp) // "port": 4013,
+                  "users": [
+                      {
+                        "auth": "CxWBWzV8czU+GFVmUqrvMQ==",
+                        "level": 0,
+                        "email": "hysteria@hysteria,xray"
+                      }
+                    ],
                 "version": 2
             },
             "streamSettings": {
+                 "finalmask": {
+                  "quicParams": {
+                    "congestion": "reno",
+                    "debug": false,
+                    "disablePathMTUDiscovery": false,
+                    "initConnectionReceiveWindow": 0,
+                    "initStreamReceiveWindow": 0,
+                    "keepAlivePeriod": 0,
+                    "maxConnectionReceiveWindow": 0,
+                    "maxIdleTimeout": 0,
+                    "maxIncomingStreams": 0,
+                    "maxStreamReceiveWindow": 0
+                 
+                  }
+                },
                 "network": "xhttp",
+                "xhttpSettings": {
+                  "mode": "auto",
+                  "noGRPCHeader": false,
+                  "noSSEHeader": false,
+                  "path": "/reality/xhttp",
+                  "scMaxBufferedPosts": 30,
+                  "scMaxEachPostBytes": 1000000,
+                  "scMinPostsIntervalMs": 30,
+                  "scStreamUpServerSecs": "20-80",
+                  "serverMaxHeaderBytes": 0,
+                  "uplinkChunkSize": 0,
+                  "xPaddingBytes": "100-1000",
+                  "xPaddingObfsMode": false,
+                  "xmux": {
+                    "cMaxReuseTimes": 0,
+                    "hKeepAlivePeriod": 0,
+                    "hMaxRequestTimes": "600-900",
+                    "hMaxReusableSecs": "1800-3000",
+                    "maxConcurrency": "16-32",
+                    "maxConnections": 0
+                  }
+                },
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": "YOUT_REMOTE_VPS_DOMAIN" ,// SNI
-                   "alpn": ["h3"],
+                   "alpn": [  
+                       "h3",
+                       "h2"], //只支持H2
                    "pinnedPeerCertSha256": "31647e1d6374d36b96cf139584f5a7cbd88c120a806db919820002c95d98480f"
                 // xray tls ping 
-                },
+                }
                
-                "finalmask": {
-                    "quicParams": {
-                        "congestion": "reno",
-                        "udpHop": {
-                        "ports": "20000-21000",
-                        "interval": "5-10"
-                      }
-                    }
+               
                 }
             }
         }
