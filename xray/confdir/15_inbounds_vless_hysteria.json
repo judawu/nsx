@@ -4,8 +4,10 @@
 	{
          "tag": "vless-hysteria2",
           "protocol": "vless",
-		   "listen": "0.0.0.0",
-           "port": 4014,
+		 //  "listen": "0.0.0.0",
+          // "port": 4014,
+		"listen": "/dev/shm/nsx/vless_hysteria.sock,0666",
+
 		  "settings": {
 			"clients": [
 			  {
