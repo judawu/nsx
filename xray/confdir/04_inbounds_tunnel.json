@@ -1,0 +1,45 @@
+{
+  "inbounds": [  
+     {
+      "tag": "http-in",
+      "protocol": "http",
+      "listen": "127.0.0.1", 
+      "port": 4008 
+    },
+  {
+      "tag": "socks-in",
+      "protocol": "socks",
+      "listen": "127.0.0.1", 
+      "port": 4009,
+        "settings": {
+        "auth": "noauth",
+        "udp": false,
+        "ip": "127.0.0.1",
+        "userLevel": 0
+       },
+         "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ],
+                "routeOnly": true
+            }
+    },
+
+ {
+      "listen": "/dev/shm/nsx/xray_tunnel1.sock,0666",
+   
+      "protocol": "tunnel",
+      "tag": "cmplex-reverse-in"
+    },
+    {
+      "listen": "/dev/shm/nsx/xray_tunnel2.sock,0666", 
+    
+      "protocol": "tunnel",
+      "tag": "simple-reverse-in"
+       }
+
+]
+}
