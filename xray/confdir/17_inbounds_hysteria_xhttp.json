@@ -2,8 +2,10 @@
 "inbounds": [
 	{
             "tag": "hysteria-xhttp",
-            "listen": "0.0.0.0",
-            "port": 4013,
+		
+          //  "listen": "0.0.0.0",
+        //    "port": 4013,
+		    "listen": "/dev/shm/nsx/hysteria_xhttp.sock,0666", 
             "protocol": "hysteria",
             "settings": {
                 "version": 2,
