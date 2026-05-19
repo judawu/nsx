@@ -63,12 +63,12 @@
             "www.historians.org",
             "www.visittheusa.com"
           ],
-          "privateKey": "oK7K8sOcoiLcdS1vayvQT7rb5RY1j4BQQkfNCPOzxVI",
-          "password": "FeZkCok3ermqBaJ1WdAusSUBvN7lsaBLwlS3UzrSdj0",
+          "privateKey": "wDtyU0M_y0UQcFDz4eN45hx5ISojJi0xhNxSfClDCWI",
+          "password": "UOl3dGnrsRlNXxrHHIDlXh2lCt0QDFS-fodyW5lQlBM0",
           "maxTimeDiff": 0,
           "shortIds": [
-            "a8ccbfd4",
-            "64f1914d508165d5"
+            "c1552349",
+            "c8f077b7d76dee27"
           ],
           "limitFallbackUpload": {
             "afterBytes": 0,
