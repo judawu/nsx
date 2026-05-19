@@ -110,7 +110,7 @@
         "user": [
           "upload.forward@loopback.download"
         ],
-        "outboundTag": "loopack_up_down"
+        "outboundTag": "loopback_up_down"
       },
 
       {
