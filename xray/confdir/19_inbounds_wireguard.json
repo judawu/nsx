@@ -3,9 +3,9 @@
   "inbounds": [
     {
       "tag": "wg-in",
-     // "listen": "0.0.0.0",
-    //  "port": 4007,  // nginx proxy port 10813
-     "listen": "/dev/shm/nsx/wg_udp.sock,0666",
+     "listen": "0.0.0.0",
+    "port": 4007,  // nginx proxy port 10813
+   
       "protocol": "wireguard",
       "settings": {
         "secretKey": "AKKlp0mgqz9QoYGFy329W3sp6Oj7DhbKWvdvF9837Go=",  //xray wg,  pubilc key share to client outbounds
