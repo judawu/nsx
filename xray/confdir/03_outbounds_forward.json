@@ -19,6 +19,13 @@
       "protocol": "blackhole"
     },
     {
+      "protocol": "loopback",
+      "tag":"loopack_up_down",
+      "settings": {
+        "inboundTag": "vless_xhttp_down" 
+      }
+    },
+    {
       "tag": "vps1",
       "protocol": "shadowsocks",
       "settings": {
