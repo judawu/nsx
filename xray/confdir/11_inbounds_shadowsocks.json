@@ -18,8 +18,9 @@
  
 	{
       "tag": "ss-ws",
-      "listen": "127.0.0.1",
-      "port": 4001,
+   //   "listen": "127.0.0.1",
+    //  "port": 4001,
+	  "listen": "/dev/shm/nsx/ss_ws.sock,0666",
       "protocol": "shadowsocks",
       "settings": {
         "email": "shadowsocks@ss.ws",
@@ -44,8 +45,9 @@
     },
 	{
       "tag": "ss-tcp",
-      "listen": "127.0.0.1",
-      "port": 4002,
+   //   "listen": "127.0.0.1",
+    //  "port": 4002,
+	  "listen":"/dev/shm/nsx/ss_tcp.sock,0666",
       "protocol": "shadowsocks",
       "settings": {
         "email": "shadowsocks@ss.tcp",
@@ -77,8 +79,9 @@
     },
 	{
        "tag": "ss-grpc",
-	"listen": "127.0.0.1", 
-      "port": 4003,
+//	"listen": "127.0.0.1", 
+   //   "port": 4003,
+	  "listen": "/dev/shm/nsx/ss_grpc.sock,0666",
       "protocol": "shadowsocks",
       "settings": {
           "email": "shadowsocks@ss.tcp",
