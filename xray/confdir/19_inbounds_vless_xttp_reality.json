@@ -1,0 +1,98 @@
+{
+  "inbounds": [  
+    {
+      "tag": "VLESS-XHTTP-REALITY-DOWNLOAD",
+      "listen": "127.0.0.1",
+       "port":4434,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "email": "vless@xtls.reality",
+            "id": "28dd46c1-6865-44f2-9222-199e5997ae40",
+            "flow": "xtls-rprx-vision",
+            "level": 0
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "dest": "/dev/shm/nsx/vless_xhttp_reality.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+          "xhttpSettings": {
+          "host": "",
+          "path": "/reality/xhttp",
+          "mode": "auto",
+          "xPaddingBytes": "100-1000",
+          "scMaxEachPostBytes": 1000000,
+          "scMinPostsIntervalMs": 30, 
+          "scMaxBufferedPosts": 30, 
+          "scStreamUpServerSecs": "20-80",
+           "xmux": { 
+            "maxConcurrency": "16-32",
+            "maxConnections": 0,
+            "cMaxReuseTimes": 0,
+            "hMaxRequestTimes": "600-900",
+            "hMaxReusableSecs": "1800-3000",
+            "hKeepAlivePeriod": 0
+               }
+         },
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "target": "www.emerson.com:443",
+          "xver": 0,
+          "serverNames": [
+            "tls.yourdomain",
+            "reality.yourdomain",
+            "pre.yourdomain",
+            "www.yourdomain",
+            "mid.yourdomain",
+            "abc.xyz",
+            "www.mckesson.com",
+            "www.emerson.com",         
+            "www.science.org", 
+            "www.mlb.com", 
+            "www.openai.com",
+            "www.cloudflare.com",
+            "www.historians.org",
+            "www.visittheusa.com"
+          ],
+          "privateKey": "oK7K8sOcoiLcdS1vayvQT7rb5RY1j4BQQkfNCPOzxVI",
+          "password": "FeZkCok3ermqBaJ1WdAusSUBvN7lsaBLwlS3UzrSdj0",
+          "maxTimeDiff": 0,
+          "shortIds": [
+            "a8ccbfd4",
+            "64f1914d508165d5"
+          ],
+          "limitFallbackUpload": {
+            "afterBytes": 0,
+            "bytesPerSec": 0,
+            "burstBytesPerSec": 0
+          },
+          "limitFallbackDownload": {
+            "afterBytes": 0,
+            "bytesPerSec": 0,
+            "burstBytesPerSec": 0
+          }   
+        }
+       
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
+      }
+    }
+   
+   
+  ]
+}
