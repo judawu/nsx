@@ -1,18 +1,13 @@
 
 {
 "inbounds": [
-    {
-      "tag": "simple-reverse-in",
-      "listen": "127.0.0.1",
-      "port": 5544,
-      "protocol": "tunnel"
-      
-    },
+  
   
 {
   "tag": "vless_simple_tunnel_reverse",
-	"listen": "0.0.0.0",
-	"port": 4455,
+//	"listen": "0.0.0.0",
+//	"port": 4455,
+	 "listen": "/dev/shm/nsx/reverse_simplex.sock,0666",
 	"protocol": "vless",
 	"settings": {
 		"decryption": "none",	
