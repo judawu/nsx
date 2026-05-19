@@ -70,15 +70,24 @@
       
           {
             "path": "/ss/ws",
-            "dest": 4001
+       //  "dest": 4001
+            "dest": "/dev/shm/nsx/ss_ws.sock",
+            "xver": 0
+
           },
           {
             "path": "/ss/tcp",
-            "dest": 4002
+          //  "dest": 4002
+                "dest": "/dev/shm/nsx/ss_tcp.sock",
+            "xver": 0
+
           },
           {
             "path": "/ss/grpc",
-            "dest": 4003
+          //  "dest": 4003
+               "dest": "/dev/shm/nsx/ss_grpc.sock",
+            "xver": 0
+
           },
      
           {
