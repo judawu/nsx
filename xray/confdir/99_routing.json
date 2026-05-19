@@ -106,6 +106,13 @@
         ],
         "outboundTag": "simple-reverse-out"
       },
+       {
+        "user": [
+          "upload.forward@loopback.download"
+        ],
+        "outboundTag": "loopack_up_down"
+      },
+
       {
         "inboundTag": [
           "simple-reverse-in"
