@@ -2,8 +2,9 @@
   "inbounds": [  
     {
       "tag": "vless_xhttp_down",
-      "listen": "127.0.0.1",
-       "port":4434,
+    //  "listen": "127.0.0.1",
+    //   "port":4434,
+       "listen": "/dev/shm/nsx/vless_xhttp_down.sock,0666",
       "protocol": "vless",
       "settings": {
         "clients": [
