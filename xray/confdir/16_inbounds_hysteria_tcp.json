@@ -2,8 +2,9 @@
 "inbounds": [
 	{
             "tag": "hysteria-tcp",
-            "listen": "0.0.0.0",
-            "port": 4012,
+         //   "listen": "0.0.0.0",
+         //   "port": 4012,
+		    "listen": "/dev/shm/nsx/hysteria_tcp.sock,0666", 
             "protocol": "hysteria",
             "settings": {
                 "version": 2,
