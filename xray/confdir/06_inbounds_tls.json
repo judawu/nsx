@@ -16,7 +16,12 @@
         ],
         "decryption": "none",
         "fallbacks": [
-       
+            {
+            "path": "/reality/xhttp",
+            "dest": "/dev/shm/nsx/vless_xhttp_reality.sock",
+            "xver": 0
+          },
+
           {
             "path": "/vlesssplithttp",
             "dest": "/dev/shm/nsx/vlesssplithttp.sock",
