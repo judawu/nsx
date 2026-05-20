@@ -1407,7 +1407,8 @@ singbox_config() {
 }
 configNginx() {
             echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\n
-            nginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击\N
+            nginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击\n
+            请先申请网站证书再执行下一步的操作\n
             "      
             read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
             if [[ -z "$NEW_IP" ]]; then
