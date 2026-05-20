@@ -17,7 +17,7 @@
             "port": 443,
             "users": [
               {
-                "id": "36884f09-aa7d-422c-89e9-5b1e04991075",
+                "id": "",
                 "encryption": "none",
                 "email": "vless@xhttp.reality.6",
                 "level": 0
@@ -116,7 +116,7 @@
         "address": "cherry.juda.monster",
         "port": 443,
         "encryption": "none",
-        "id": "36884f09-aa7d-422c-89e9-5b1e04991075"
+        "id": ""
       },
       "streamSettings": {
         "network": "xhttp",
@@ -208,7 +208,7 @@
         "address": "banana.juda.monster",
         "port": 443,
         "encryption": "none",
-        "id": "36884f09-aa7d-422c-89e9-5b1e04991075"
+        "id": ""
       },
       "streamSettings": {
         "network": "xhttp",
@@ -294,7 +294,7 @@
         "address": "cherry.juda.monster",
         "port": 443,
         "encryption": "none",
-        "id": "36884f09-aa7d-422c-89e9-5b1e04991075"
+        "id": ""
       },
       "streamSettings": {
         "network": "xhttp",
@@ -348,7 +348,7 @@
         "address": "banana.juda.monster",
         "port": 443,
         "encryption": "none",
-        "id": "36884f09-aa7d-422c-89e9-5b1e04991075"
+        "id": ""
       },
       "streamSettings": {
         "network": "xhttp",
@@ -410,7 +410,7 @@
         "address": "cherry.juda.monster",
         "port": 443,
         "encryption": "none",
-        "id": "dbb6f309-0c8b-4fce-acf0-525bed193dd1"
+        "id": ""
       },
       "streamSettings": {
         "network": "xhttp",
