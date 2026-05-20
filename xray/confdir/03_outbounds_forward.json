@@ -19,10 +19,12 @@
       "protocol": "blackhole"
     },
     {
+
+      //for smoe rules to loopback
       "protocol": "loopback",
       "tag":"loopback_up_down",
       "settings": {
-        "inboundTag": "vless_xhttp_down" 
+        "inboundTag": "loopback-in" 
       }
     },
     {
