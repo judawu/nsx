@@ -1407,12 +1407,19 @@ singbox_config() {
 }
 configNginx() {
     echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\nnginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击"
-            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (后端xray tls解密,需要ssl证书): " TLS_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (后端xray reality解密,该域名可以不用申请SSL证书，但是需要与IP绑定): " REALITY_YOURDOMAIN
+            TLS_YOURDOMAIN="apple.juda.monster"
+            REALITY_YOURDOMAIN="banana.juda.monster"
+            XHTTP_YOURDOMAIN="berry.juda.monster"
+            MID_YOURDOMAIN="cherry.juda.monster"
+            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (vless/trojan+tls): " TLS_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (vless/trojan+reality): " REALITY_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换xhttp.yourdomain的新域名 (vless/trojan+reality): " XHTTP_YOURDOMAIN
+            read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (转发给xray 的VLESS-ENCRYPTION-REALITY-MIDSA65端口): " MID_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流，需要ssl证书): " PRE_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密，需要ssl证书): " SING_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站，需要ssl证书): " WWW_YOURDOMAIN
             read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (转发给xray 的VLESS-ENCRYPTION-REALITY-MIDSA65端口): " MID_YOURDOMAIN
+           
             read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
             if [[ -z "$NEW_IP" ]]; then
                 NEW_IP="$LOCAL_IP"
