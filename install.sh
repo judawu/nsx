@@ -1418,15 +1418,6 @@ configNginx() {
                 NEW_PORT="443"
             fi
 
-            TLS_YOURDOMAIN="apple.juda.monster"
-            REALITY_YOURDOMAIN="banana.juda.monster"
-            XHTTP_YOURDOMAIN="berry.juda.monster"
-            MID_YOURDOMAIN="cherry.juda.monster"
-            UPDOWN_YOURDOMAIN="grape.juda.monster"
-            REVERSE_YOURDOMAIN="melon.juda.monster"
-            PRE_YOURDOMAIN="orange.juda.monster"
-            SING_YOURDOMAIN="pear.juda.monster"
-            SING_YOURDOMAIN="tomato.juda.monster"
             read -p "是否用默认域名进行替换: " enable_default_your_domain < /dev/tty
             if [[ "$default_your_domain" == "y" ]]; then
                 
@@ -1435,12 +1426,23 @@ configNginx() {
                     default_your_domain="juda.monster"
                 fi
                 sed -i "s/yourdomain/$default_your_domain/g" "$NGINX_CONF"
+                sed -i "s/yourdomain/$default_your_domain/g" "$XRAY_CONF"
                 sed -i "s/yourdomain/$default_your_domain/g" "$SINGBOX_CONF"           
                 sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
                 sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
                 sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
                 echoContent skyblue "nsx 配置文件$NGINX_CONF $XRAY_CONF $SINGBOX_CONF更新域名成功." 
             else
+                
+                TLS_YOURDOMAIN="apple.juda.monster"
+                REALITY_YOURDOMAIN="banana.juda.monster"
+                XHTTP_YOURDOMAIN="berry.juda.monster"
+                MID_YOURDOMAIN="cherry.juda.monster"
+                UPDOWN_YOURDOMAIN="grape.juda.monster"
+                REVERSE_YOURDOMAIN="melon.juda.monster"
+                PRE_YOURDOMAIN="orange.juda.monster"
+                SING_YOURDOMAIN="pear.juda.monster"
+                SING_YOURDOMAIN="tomato.juda.monster"
                 read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (vless/trojan+tls,例如：$TLS_YOURDOMAIN): " TLS_YOURDOMAIN_1  
                 if [[ -z "$TLS_YOURDOMAIN_1" ]]; then
                     TLS_YOURDOMAIN="$TLS_YOURDOMAIN_1"
