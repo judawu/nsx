@@ -1406,19 +1406,54 @@ singbox_config() {
     fi
 }
 configNginx() {
-    echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\nnginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击"
+    echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\n
+    nginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击\N
+    "
             TLS_YOURDOMAIN="apple.juda.monster"
             REALITY_YOURDOMAIN="banana.juda.monster"
             XHTTP_YOURDOMAIN="berry.juda.monster"
             MID_YOURDOMAIN="cherry.juda.monster"
-            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (vless/trojan+tls): " TLS_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (vless/trojan+reality): " REALITY_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换xhttp.yourdomain的新域名 (vless/trojan+reality): " XHTTP_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (转发给xray 的VLESS-ENCRYPTION-REALITY-MIDSA65端口): " MID_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流，需要ssl证书): " PRE_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密，需要ssl证书): " SING_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站，需要ssl证书): " WWW_YOURDOMAIN
-            read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (转发给xray 的VLESS-ENCRYPTION-REALITY-MIDSA65端口): " MID_YOURDOMAIN
+            UPDOWN_YOURDOMAIN="grape.juda.monster"
+            REVERSE_YOURDOMAIN="melon.juda.monster"
+            PRE_YOURDOMAIN="orange.juda.monster"
+            SING_YOURDOMAIN="pear.juda.monster"
+            SING_YOURDOMAIN="tomato.juda.monster"
+            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (vless/trojan+tls,例如：$TLS_YOURDOMAIN): " TLS_YOURDOMAIN_1  
+            if [[ -z "$TLS_YOURDOMAIN_1" ]]; then
+                TLS_YOURDOMAIN="$TLS_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (vless/trojan+reality,例如：$REALITY_YOURDOMAIN): " REALITY_YOURDOMAIN_1
+            if [[ -z "$REALITY_YOURDOMAIN_1" ]]; then
+                REALITY_YOURDOMAIN="$REALITY_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换xhttp.yourdomain的新域名 (vless/trojan+reality,例如：$XHTTP_YOURDOMAIN): " XHTTP_YOURDOMAIN_1
+            if [[ -z "$XHTTP_YOURDOMAIN_1" ]]; then
+                XHTTP_YOURDOMAIN="$XHTTP_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (vless/trojan+reality+mid,例如：$MID_YOURDOMAIN): " MID_YOURDOMAIN_1
+            if [[ -z "$MID_YOURDOMAIN_1" ]]; then
+                MID_YOURDOMAIN="$MID_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换updown.yourdomain 的新域名 (vless/trojan+reality+mid 例如：$ UPDOWN_YOURDOMAIN): " UPDOWN_YOURDOMAIN_1
+            if [[ -z "$UPDOWN_YOURDOMAIN" ]]; then
+                UPDOWN_YOURDOMAIN="$UPDOWN_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换reverse.yourdomain 的新域名 (vless/trojan+reality+reverse 例如：$REVERSE_YOURDOMAIN): " REVERSE_YOURDOMAIN_1
+            if [[ -z "$REVERSE_YOURDOMAIN_1" ]]; then
+                REVERSE_YOURDOMAIN="$REVERSE_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流,例如：$PRE_YOURDOMAIN): " PRE_YOURDOMAIN_1
+             if [[ -z "$PRE_YOURDOMAIN_1" ]]; then
+                PRE_YOURDOMAIN="$PRE_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密，需要ssl证书 ,例如：$SING_YOURDOMAIN): " SING_YOURDOMAIN_1
+             if [[ -z "$SING_YOURDOMAIN_1" ]]; then
+                SING_YOURDOMAIN="$SING_YOURDOMAIN_1"
+            fi
+            read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站，需要ssl证书，：$WWW_YOURDOMAIN): " WWW_YOURDOMAIN_1
+            if [[ -z "$WWW_YOURDOMAIN" ]]; then
+                WWW_YOURDOMAIN="$WWW_YOURDOMAIN_1"
+            fi
            
             read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
             if [[ -z "$NEW_IP" ]]; then
