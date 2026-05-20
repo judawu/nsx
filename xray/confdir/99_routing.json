@@ -107,10 +107,13 @@
         "outboundTag": "simple-reverse-out"
       },
        {
+
+        // just for a testing
+        "inboundTag": ["loopback-in"],
         "user": [
-          "upload.forward@loopback.download"
+          "forward@loopback.inbounds"
         ],
-        "outboundTag": "loopback_up_down"
+        "outboundTag": "direct"
       },
 
       {
