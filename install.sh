@@ -2920,9 +2920,20 @@ menu() {
     echoContent red "\n=============================================================="
     echoContent green "NSX 安装管理脚本"
     echoContent green "作者: JudaWu"
-    echoContent green "版本: v0.0.5"
+    echoContent green "版本: v0.0.8"
     echoContent green "Github: https://github.com/judawu/nsx"
     echoContent green "描述: 一个集成 Nginx、Sing-box 和 Xray 的代理环境"
+    echoContent green "版本更新:\n v0.0.1  intial,添加xray服务
+                               \n v0.0.2  xray:add vless/trojan+tls，实现域名证书申请
+                               \n v0.0.2  xray:add vless/trojan+reality+xhttp
+                               \n v0.0.3  增加订阅和nginx网站,添加singbox服务
+                               \n v0.0.4  ｎginx实现 layer4 劫持和流量转发，xray实现去广告和rules
+                               \n v0.0.５　xray实现xhttp　MID 和　enc，xray实现端口转发和tunnel
+                               \n v0.0.６　xray添加confdir 文件夹实现多config文件合并
+                            　 　\n v0.0.7　xray add vless+hysteria,hysteria+hysteria,hysteria+tcp,vless+sonkou,vless+mkcp,wireguard
+                            　　\n v0.0.８　xray实现上下行流量分离
+                              　\n v0.0.９　xray实现反响代理
+                               "
     echoContent red "\n=============================================================="
    
     echoContent yellow "1. 阅读说明"   
