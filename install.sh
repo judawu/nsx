@@ -869,7 +869,7 @@ xray_config() {
 
     read -p "是否设置inbounds shadowsocks: " in_ss < /dev/tty
     if [[ -z "$in_ss" ]]; then
-        echoContent green "xray配置文件里面的nbounds shadowsocks保持默认"
+        echoContent green "xray配置文件里面的inbounds shadowsocks保持默认"
     else
        jq -c '.inbounds[] | select(.protocol=="shadowsocks")' "$TEMP_FILE" | while IFS= read -r ss_inbound; do
              client_index=0
@@ -980,7 +980,55 @@ xray_config() {
         done
     fi
 
-     read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
+     read -p "是否设置inbounds wireguard: " in_wg < /dev/tty
+    if [[ -z "$in_wg" ]]; then
+        echoContent green "xray配置文件里面的inbounds wireguard保持默认"
+    else
+           jq -c '.inbounds[] | select(.protocol=="wireguard")' "$TEMP_FILE" | while IFS= read -r wg_inbound; do
+             client_index=0
+            peer_pub= $(echo "$wg_inbound" | jq -r '.settings.peers.publicKey')
+            self_private= $(echo "$wg_inbound" | jq -r '.settings.secretKey')
+            read -p "输入 wireguard的peer的public key 默认($peer_pub): " wg_peer_pub < /dev/tty
+            if [[ -z "$wg_peer_pub" ]]; then
+                    wg_peer_pub="$peer_pub"
+            fi
+            read -p "是否替换secretKey($self_private) y or n: " replace_private < /dev/tty
+             if [[  "$replace_private" == "y" ]]; then
+                     wg_key_pair=$(xray wg 2>/dev/null) || {
+                            echoContent red "错误: 无法生成 wireguard 密钥"
+                            exit 1
+                        }
+                    new_wg_self_pub="$(echo "$wg_key_pair" | grep "Password" | awk '{print $3}')"
+                    new_wg_self_private="$(echo "$wg_key_pair" | grep "Password" | awk '{print $2}')"   
+              else
+                 wg_key_pair=$(xray wg -i "$self_private" 2>/dev/null) || {
+                            echoContent red "错误: 无法生成 wireguard 密钥"
+                            exit 1
+                        }
+                 new_wg_self_pub="$(echo "$wg_key_pair" | grep "Password" | awk '{print $3}')"
+                 new_wg_self_private="$(echo "$wg_key_pair" | grep "Password" | awk '{print $2}')"  
+            fi
+            wg_tag=$(echo "$wg_inbound"  | jq -r '.tag')
+            wg_port=$(echo "$wg_inbound"  | jq -r '.port')
+             echoContent green "\n更新 $tag:\n"
+            jq --arg tag "$wg_tag"  --arg wg_peer_pub "$wg_peer_pub" --arg wg_private "$new_wg_self_private"  \
+            '(.inbounds[] | select(.tag == $tag)) |=  .settings.secretKey = $wg_private | .settings.peers.publicKey = $wg_peer_pub)' \
+            "$TEMP_FILE" > "${TEMP_FILE}.tmp" && mv "${TEMP_FILE}.tmp" "$TEMP_FILE" || {
+            echoContent red "错误: 无法更新 wireguard inbound"
+            exit 1
+            }
+            new_url="wg://@$YOURDOMAIN:$port?pub=$new_wg_self_pub#$wg_tag"
+            echo "$new_url" >> "$XRAY_SUB_FILE"
+            echoContent skyblue "\n生成 $protocol 订阅链接: $new_url"
+            if command -v qrencode &> /dev/null; then
+                    qrencode -t ANSIUTF8 "$new_url" || echoContent red "生成二维码失败: $new_url"
+            else
+                    echoContent yellow "警告: qrencode 未安装，跳过二维码生成"
+            fi
+            ((client_index++))
+           done
+    fi
+    read -p "是否设置outbounds shadowsocks分流: " split_ss < /dev/tty
     if [[ -z "$split_ss" ]]; then
         echoContent green "不设置ss分流，xray配置文件里面的shadowsocks保持默认"
     else
