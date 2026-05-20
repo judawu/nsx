@@ -1406,9 +1406,18 @@ singbox_config() {
     fi
 }
 configNginx() {
-    echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\n
-    nginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击\N
-    "
+            echoContent green "nginx的TCP/IP layer4层stream模块分流:包括tls,reality,pre,sing等前缀域名进行sni分流 .\n
+            nginx的layer 7层http模块可以用于path分流,在http模块 nginx还可以进行http_user_agent和ip block来过滤恶意攻击\N
+            "      
+            read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
+            if [[ -z "$NEW_IP" ]]; then
+                NEW_IP="$LOCAL_IP"
+            fi
+            read -r -p "请输入 nginx.conf 的新端口 (默认 443): " NEW_PORT
+            if [[ -z "$NEW_PORT" ]]; then
+                NEW_PORT="443"
+            fi
+
             TLS_YOURDOMAIN="apple.juda.monster"
             REALITY_YOURDOMAIN="banana.juda.monster"
             XHTTP_YOURDOMAIN="berry.juda.monster"
@@ -1418,68 +1427,82 @@ configNginx() {
             PRE_YOURDOMAIN="orange.juda.monster"
             SING_YOURDOMAIN="pear.juda.monster"
             SING_YOURDOMAIN="tomato.juda.monster"
-            read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (vless/trojan+tls,例如：$TLS_YOURDOMAIN): " TLS_YOURDOMAIN_1  
-            if [[ -z "$TLS_YOURDOMAIN_1" ]]; then
-                TLS_YOURDOMAIN="$TLS_YOURDOMAIN_1"
+            read -p "是否用默认域名进行替换: " enable_default_your_domain < /dev/tty
+            if [[ "$default_your_domain" == "y" ]]; then
+                
+                read -r -p "请输入默认域名,例如：juda.monster): " default_your_domain  
+                if [[ -z "$default_your_domain" ]]; then
+                    default_your_domain="juda.monster"
+                fi
+                sed -i "s/yourdomain/$default_your_domain/g" "$NGINX_CONF"
+                sed -i "s/yourdomain/$default_your_domain/g" "$SINGBOX_CONF"           
+                sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
+                sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
+                sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
+                echoContent skyblue "nsx 配置文件$NGINX_CONF $XRAY_CONF $SINGBOX_CONF更新域名成功." 
+            else
+                read -r -p "请输入 nginx.conf 配置中替换tls.yourdomain的新域名 (vless/trojan+tls,例如：$TLS_YOURDOMAIN): " TLS_YOURDOMAIN_1  
+                if [[ -z "$TLS_YOURDOMAIN_1" ]]; then
+                    TLS_YOURDOMAIN="$TLS_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (vless/trojan+reality,例如：$REALITY_YOURDOMAIN): " REALITY_YOURDOMAIN_1
+                if [[ -z "$REALITY_YOURDOMAIN_1" ]]; then
+                    REALITY_YOURDOMAIN="$REALITY_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换xhttp.yourdomain的新域名 (vless/trojan+reality,例如：$XHTTP_YOURDOMAIN): " XHTTP_YOURDOMAIN_1
+                if [[ -z "$XHTTP_YOURDOMAIN_1" ]]; then
+                    XHTTP_YOURDOMAIN="$XHTTP_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (vless/trojan+reality+mid,例如：$MID_YOURDOMAIN): " MID_YOURDOMAIN_1
+                if [[ -z "$MID_YOURDOMAIN_1" ]]; then
+                    MID_YOURDOMAIN="$MID_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换updown.yourdomain 的新域名 (vless/trojan+reality+mid 例如：$ UPDOWN_YOURDOMAIN): " UPDOWN_YOURDOMAIN_1
+                if [[ -z "$UPDOWN_YOURDOMAIN" ]]; then
+                    UPDOWN_YOURDOMAIN="$UPDOWN_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换reverse.yourdomain 的新域名 (vless/trojan+reality+reverse 例如：$REVERSE_YOURDOMAIN): " REVERSE_YOURDOMAIN_1
+                if [[ -z "$REVERSE_YOURDOMAIN_1" ]]; then
+                    REVERSE_YOURDOMAIN="$REVERSE_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流,例如：$PRE_YOURDOMAIN): " PRE_YOURDOMAIN_1
+                 if [[ -z "$PRE_YOURDOMAIN_1" ]]; then
+                    PRE_YOURDOMAIN="$PRE_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密，需要ssl证书 ,例如：$SING_YOURDOMAIN): " SING_YOURDOMAIN_1
+                 if [[ -z "$SING_YOURDOMAIN_1" ]]; then
+                    SING_YOURDOMAIN="$SING_YOURDOMAIN_1"
+                fi
+                read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站，需要ssl证书，：$WWW_YOURDOMAIN): " WWW_YOURDOMAIN_1
+                if [[ -z "$WWW_YOURDOMAIN" ]]; then
+                    WWW_YOURDOMAIN="$WWW_YOURDOMAIN_1"
+                fi
+               
+                
+                sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/xhttp\.yourdomain/$XHTTP_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/updown\.yourdomain/$UPDOWN_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/reverse\.yourdomain/$REVERSE_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/mid\.yourdomain/$MID_YOURDOMAIN/g" "$NGINX_CONF"
+                sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$XRAY_CONF" 
+                sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$XRAY_CONF" 
+                sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$XRAY_CONF"
+                sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$XRAY_CONF"
+                sed -i "s/mid\.yourdomain/$MID_YOURDOMAIN/g" "$XRAY_CONF"
+                sed -i "s/xhttp\.yourdomain/$XHTTP_YOURDOMAIN/g" "$XRAY_CONF"
+                sed -i "s/updown\.yourdomain/$UPDOWN_YOURDOMAIN/g" "$XRAY_CONF"
+                sed -i "s/reverse\.yourdomain/$REVERSE_YOURDOMAIN/g" "$XRAY_CONF"
+                sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$SINGBOX_CONF"           
+                sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
+                sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
+                sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
+                echoContent skyblue "nsx 配置文件$NGINX_CONF $XRAY_CONF $SINGBOX_CONF更新域名成功."   
             fi
-            read -r -p "请输入 nginx.conf 配置中替换reality.yourdomain的新域名 (vless/trojan+reality,例如：$REALITY_YOURDOMAIN): " REALITY_YOURDOMAIN_1
-            if [[ -z "$REALITY_YOURDOMAIN_1" ]]; then
-                REALITY_YOURDOMAIN="$REALITY_YOURDOMAIN_1"
-            fi
-            read -r -p "请输入 nginx.conf 配置中替换xhttp.yourdomain的新域名 (vless/trojan+reality,例如：$XHTTP_YOURDOMAIN): " XHTTP_YOURDOMAIN_1
-            if [[ -z "$XHTTP_YOURDOMAIN_1" ]]; then
-                XHTTP_YOURDOMAIN="$XHTTP_YOURDOMAIN_1"
-            fi
-            read -r -p "请输入 nginx.conf 配置中替换mid.yourdomain的新域名 (vless/trojan+reality+mid,例如：$MID_YOURDOMAIN): " MID_YOURDOMAIN_1
-            if [[ -z "$MID_YOURDOMAIN_1" ]]; then
-                MID_YOURDOMAIN="$MID_YOURDOMAIN_1"
-            fi
-            read -r -p "请输入 nginx.conf 配置中替换updown.yourdomain 的新域名 (vless/trojan+reality+mid 例如：$ UPDOWN_YOURDOMAIN): " UPDOWN_YOURDOMAIN_1
-            if [[ -z "$UPDOWN_YOURDOMAIN" ]]; then
-                UPDOWN_YOURDOMAIN="$UPDOWN_YOURDOMAIN_1"
-            fi
-            read -r -p "请输入 nginx.conf 配置中替换reverse.yourdomain 的新域名 (vless/trojan+reality+reverse 例如：$REVERSE_YOURDOMAIN): " REVERSE_YOURDOMAIN_1
-            if [[ -z "$REVERSE_YOURDOMAIN_1" ]]; then
-                REVERSE_YOURDOMAIN="$REVERSE_YOURDOMAIN_1"
-            fi
-            read -r -p "请输入 nginx.conf 配置中替换pre.yourdomain的新域名 (前端nginx解密，用nginx path分流,例如：$PRE_YOURDOMAIN): " PRE_YOURDOMAIN_1
-             if [[ -z "$PRE_YOURDOMAIN_1" ]]; then
-                PRE_YOURDOMAIN="$PRE_YOURDOMAIN_1"
-            fi
-            read -r -p "请输入 nginx.conf 配置中替换sing.yourdomain的新域名 (后端singbox解密，需要ssl证书 ,例如：$SING_YOURDOMAIN): " SING_YOURDOMAIN_1
-             if [[ -z "$SING_YOURDOMAIN_1" ]]; then
-                SING_YOURDOMAIN="$SING_YOURDOMAIN_1"
-            fi
-            read -r -p "请输入 nginx.conf 配置中替换www.yourdomain的新域名 (前端nginx正常网站，需要ssl证书，：$WWW_YOURDOMAIN): " WWW_YOURDOMAIN_1
-            if [[ -z "$WWW_YOURDOMAIN" ]]; then
-                WWW_YOURDOMAIN="$WWW_YOURDOMAIN_1"
-            fi
-           
-            read -r -p "请输入 nginx.conf 的新 IP 地址 (例如: $LOCAL_IP): " NEW_IP
-            if [[ -z "$NEW_IP" ]]; then
-                NEW_IP="$LOCAL_IP"
-            fi
-            read -r -p "请输入 nginx.conf 的新端口 (默认 443): " NEW_PORT
-            if [[ -z "$NEW_PORT" ]]; then
-                NEW_PORT="443"
-            fi
-            sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/mid\.yourdomain/$MID_YOURDOMAIN/g" "$NGINX_CONF"
-            sed -i "s/tls\.yourdomain/$TLS_YOURDOMAIN/g" "$XRAY_CONF" 
-            sed -i "s/reality\.yourdomain/$REALITY_YOURDOMAIN/g" "$XRAY_CONF" 
-            sed -i "s/pre\.yourdomain/$PRE_YOURDOMAIN/g" "$XRAY_CONF"
-            sed -i "s/www\.yourdomain/$WWW_YOURDOMAIN/g" "$XRAY_CONF"
-            sed -i "s/mid\.yourdomain/$MID_YOURDOMAIN/g" "$XRAY_CONF"
-            sed -i "s/sing\.yourdomain/$SING_YOURDOMAIN/g" "$SINGBOX_CONF"           
-            sed -i "s/yourIP/$NEW_IP/g" "$NGINX_CONF"
-            sed -i "s/yourIP/$NEW_IP/g" "$XRAY_CONF"
-            sed -i "s/listen 443/listen $NEW_PORT/g" "$NGINX_CONF"
-            echoContent skyblue "nsx 配置文件$NGINX_CONF $XRAY_CONF $SINGBOX_CONF更新域名成功."        
-}
+    }
 # Manage configurations
 manageConfigurations() {
     echoContent green "配置nsx服务 只适用本地安装\n如果通过docker ，可以用nano编辑\n usr/local/nsx/nginx.conf\nusr/local/nsx/xray/config.json\nusr/local/nsx/sing-box/config.json"
