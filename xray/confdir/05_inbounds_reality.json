@@ -46,6 +46,9 @@
             "pre.yourdomain",
             "www.yourdomain",
             "mid.yourdomain",
+            "xhttp.yourdomain",
+            "reverse.yourdomain",
+            "updown.yourdomain",
             "abc.xyz",
             "www.mckesson.com",
             "www.emerson.com",         
@@ -115,14 +118,21 @@
           },
           {
             "id": "0131f2a7-0fde-4325-9f4c-52fe1e5cf401",
-            "email": "vless@xhttp.reality.5",
+            "email": "forward@loopback.inbounds",
             "level": 0
           },
             {
             "id": "77dd376e-9a71-4c25-a882-25baf0674c32",
-           "email": "vless@xhttp.reality.6",
+           "email": "vless@xhttp.up.down.final",
             "level": 0
-          }
+          },
+           {
+            "email": "reverse@reality.xhttp.vless",
+            "id": "ac04551d-6ebf-4685-86e2-17c12491f7f4",
+            "reverse": {
+              "tag": "complex-reverse-out"
+            }
+
         ],
         "decryption": "none",
         "fallbacks": [
